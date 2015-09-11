@@ -1,0 +1,10 @@
+-Documentation
+-Make the init routine easier- there are ways to ask if a dictionary element exists so I can change to "does this exists and is it not None" instead of defining all the attributes I'll eventually use as None
+-Get rid of the unmasked option
+-Improve masking- either do a rotated rectangle or a footprint finder or something
+-Check normalization for jackknife errors
+-Change over to numpy read/write of normal text files
+
+
+
+Check to see if the re-use of RR in the bootstrap calculation makes any difference. 
