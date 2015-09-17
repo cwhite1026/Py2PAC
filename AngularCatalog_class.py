@@ -170,7 +170,7 @@ class AngularCatalog(object):
     def setup_mask(self, force_remake=False):
         #Create an image mask (from the weight file if given one)
         if (self._image_mask is None) or force_remake:
-            self._image_mask = imclass.image_mask(angular_catalog=self,
+            self._image_mask = imclass.ImageMask(angular_catalog=self,
                                                   weight_file=self._weight_file_name)
         
         #Ask the mask for the completenesses of each data object
