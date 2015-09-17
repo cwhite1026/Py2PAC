@@ -500,7 +500,7 @@ class AngularCatalog(object):
         
         print "make_datatree says: Computing the BallTree for data."
         data = np.asarray(corr.ra_dec_to_xyz(self._ra[self._use], self._dec[self._use]), order='F').T
-        self._masked_data_tree = BallTree(data, leaf_size=2)
+        self._data_tree = BallTree(data, leaf_size=2)
         
         return
 
@@ -518,7 +518,7 @@ class AngularCatalog(object):
         #Make the tree
         print "make_randomtree says: Computing the BallTree for the randoms."
         random_data=np.asarray(corr.ra_dec_to_xyz(self._ra_random, self._dec_random), order='F').T
-        self._masked_random_tree = BallTree(random_data, leaf_size=2)                
+        self._random_tree = BallTree(random_data, leaf_size=2)                
                 
         return          
 
@@ -556,7 +556,7 @@ class AngularCatalog(object):
             self.generate_random_sample()
 
         #See if we're properly oversampled.
-        nR=len(self._ra_random_masked)
+        nR=len(self._ra_random)
         if nR != len(self._ra)*self._random_oversample_factor:
             self.generate_random_sample()
             
@@ -760,8 +760,8 @@ class AngularCatalog(object):
         n_jacks=len(use_regions)
 
         #Figure out where the randoms are
-        random_subregions=self._image_mask.return_subregions(self._ra_random_masked,
-                                                             self._dec_random_masked)
+        random_subregions=self._image_mask.return_subregions(self._ra_random,
+                                                             self._dec_random)
         
         #Now loop through the regions that you should be using 
         #and calculate the correlation function leaving out each
@@ -850,8 +850,8 @@ class AngularCatalog(object):
         use_regions=np.array(use_regions)
 
         #Figure out where the randoms are
-        random_subregions=self._image_mask.return_subregions(self._ra_random_masked,
-                                                             self._dec_random_masked)
+        random_subregions=self._image_mask.return_subregions(self._ra_random,
+                                                             self._dec_random)
 
         #Make a dictionary of arrays containing the indices of the members of each sub-region we need
         indices={}
@@ -965,7 +965,7 @@ class AngularCatalog(object):
             Nbins = len(bins) - 1
             counts_RR = np.zeros(Nbins + 1)
             for i in range(Nbins + 1):
-                counts_RR[i] = np.sum(self._masked_random_tree.query_radius(data_R, bins[i],
+                counts_RR[i] = np.sum(self._random_tree.query_radius(data_R, bins[i],
                                                                             count_only=True))
             rr = np.diff(counts_RR)
             #Landy and Szalay define G_p(theta) as <N_p(theta)>/(n(n-1)/2)
