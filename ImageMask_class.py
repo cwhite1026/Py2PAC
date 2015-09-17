@@ -9,7 +9,7 @@ from copy import deepcopy
 
 #Py2PAC code
 import miscellaneous as misc
-import cosmo as cos
+import cosmology as cos
 import image_mask_cybits as cybits
 
 class ImageMask:
@@ -87,8 +87,8 @@ class ImageMask:
     #---------------------------#
     def make_bin_edges(self, rng, n_pix):
         #This guy will return the bin edges given a particular range and number of bins
-        bin_size=np.diff(rng)[0]/n_pix
-        return bin_size, np.arange(rng[0], rng[1]+bin_size, bin_size)
+        bin_size=np.float(np.diff(rng)[0])/n_pix
+        return bin_size, np.linspace(rng[0], rng[1], n_pix+1)
 
     #----------------------------------------------------------------#
     #- Returns the solid angle subtended by the "true" region in sr -#

@@ -15,7 +15,7 @@ from sklearn.neighbors import BallTree
 #Py2PAC code
 import correlations as corr
 import cosmology as cos
-import image_mask as im
+import ImageMask_class as imclass
 import miscellaneous as misc
 import ThetaBins_class as binclass
 import CorrelationFunction_class as cfclass
@@ -81,8 +81,6 @@ class AngularCatalog(object):
         self._thetas_for_rr=None
         self._rr_ngals=None
         self._G_p=None               
-        self._G_t=None               
-        self._thetas_for_G_t=None
         #Completenesses
         self._completeness=None
         self._use=None             
@@ -94,6 +92,65 @@ class AngularCatalog(object):
         if generate_randoms:
             self.generate_random_sample()
 
+    #------------------------------------------------------------------------------------------
+    #--------------------------------------------#
+    #- Class method for making a random catalog -#
+    #--------------------------------------------#
+    @classmethod
+    def random_catalog(cls, n_randoms, image_mask = None, ra_range=None,
+                       dec_range=None):
+        """
+        Creates an AngularCatalog populated with RAs and Decs placed
+        randomly within the mask.  This can be passed either an image
+        mask or an RA and Dec range
+
+        Syntax
+        ------
+        * cat = ac_class.AngularCatalog.random_catalog(n_randoms, image_mask=ImageMask_object)
+        OR
+        * cat = ac_class.AngularCatalog.random_catalog(n_randoms, ra_range=[min, max],
+                                                       dec_range=[min, max])
+
+        Parameters
+        ----------
+        n_randoms : scalar
+            The number of randoms that you want in you catalog
+        image_mask : ImageMask object (optional)
+            An ImageMask object with the outline that you want for your
+            randoms.  This is one option.
+        ra_range : two-element array-like (optional)
+            The minimum and maximum RA you would like your randoms to have.
+            This is an alternative to the image_mask option.  This must be
+            combined with the dec_range argument as well.
+        dec_range : two-element array-like (optional)
+            The minimum and maximum Dec you would like your randoms to have.
+            This is an alternative to the image_mask option.  This must be
+            combined with the ra_range argument.
+
+        Returns
+        -------
+        cat : AngularCatalog object
+            An AngularCatalog instance with n_randoms distributed over either
+            the image_mask or over the RA and Dec range.
+        """
+
+        #Make an image mask from the RA and Dec ranges if we don't have an
+        #image mask already
+        need_image_mask = image_mask is None
+        if need_image_mask:
+            image_mask = imclass.ImageMask(forced_ra_range=ra_range,
+                                           forced_dec_range=dec_range)
+
+        #Make a dummy catalog and generate the randoms we want
+        dummy_cat = cls([0], [0], generate_randoms=False,
+                        image_mask=image_mask)
+        temp = dummy_cat.generate_random_sample(store=False,
+                                                make_exactly=n_randoms)
+        rand_ras, rand_decs = temp[0:2]
+
+        #Return the angular catalog with the RAs and Decs
+        return AngularCatalog(rand_ras, rand_decs, image_mask=image_mask)
+        
     #------------------------------------------------------------------------------------------
 
     #----------------------------#
@@ -113,8 +170,8 @@ class AngularCatalog(object):
     def setup_mask(self, force_remake=False):
         #Create an image mask (from the weight file if given one)
         if (self._image_mask is None) or force_remake:
-            self._image_mask = im.image_mask(angular_catalog=self,
-                                             weight_file=self._weight_file_name)
+            self._image_mask = imclass.image_mask(angular_catalog=self,
+                                                  weight_file=self._weight_file_name)
         
         #Ask the mask for the completenesses of each data object
         self._completeness = self._image_mask.return_completenesses(self._ra, self._dec)
@@ -334,10 +391,10 @@ class AngularCatalog(object):
         #----------------------------
         #- Generate a random sample
         #----------------------------      
-        ra_min=min(self._image_mask._ra_range[0], self._ra_range[0]) -.05
-        ra_max=max(self._image_mask._ra_range[1], self._ra_range[1]) +.05
-        dec_min=min(self._image_mask._dec_range[0], self._dec_range[0]) -.05
-        dec_max=max(self._image_mask._dec_range[1], self._dec_range[1]) +.05
+        ra_min=min(self._image_mask._ra_range[0], self._ra_range[0]) #-.05
+        ra_max=max(self._image_mask._ra_range[1], self._ra_range[1]) #+.05
+        dec_min=min(self._image_mask._dec_range[0], self._dec_range[0]) #-.05
+        dec_max=max(self._image_mask._dec_range[1], self._dec_range[1]) #+.05
         ra_R, dec_R= corr.uniform_sphere((ra_min, ra_max),
                                               (dec_min, dec_max),
                                               number_to_start_with)
@@ -350,26 +407,28 @@ class AngularCatalog(object):
         compare_to = rand.random(size=len(ra_R))
         use_random = compare_to < random_completeness
         number_we_have = len(ra_R[use_random])
-        print "AngularCatalog.generate_random_sample says: At first pass, we made", number_we_have
+        print ("AngularCatalog.generate_random_sample says: At first pass,"
+               " we made "+str(number_we_have))
         print "      We need ", number_to_make
                 
         #Check to see by how many we've overshot
         number_excess = number_we_have - number_to_make
         
-        #If we've actually made too few, make more until we have the right number
+        #If we've actually made too few, make more
         if number_excess<0:
             print ("AngularCatalog.generate_random_sample says: I have made too "
                   "few objects within the target area. Making more.")
             #Figure out what fraction of the guys that we made were used so if my mask is 
             #teeny and in a big field, it won't take forever to get to where we want to be
-            fraction_used_last_time = number_we_have / len(ra_R)
+            fraction_used_last_time = float(number_we_have) / len(ra_R)
             if fraction_used_last_time < 1.e-3:
                 fraction_used_last_time = 1e-3
                 
             #Recursive things are fun!  Ask for exactly how many more we need.
             new_multiplier = 1. / fraction_used_last_time
-            newguys = self.generate_random_sample(store=False, multiplier = new_multiplier,
-                                                 make_exactly=abs(number_excess))
+            newguys = self.generate_random_sample(store=False,
+                                                  multiplier=new_multiplier,
+                                                  make_exactly=abs(number_excess))
             #Unpack
             more_ras, more_decs, more_comps, more_use = newguys
             
@@ -378,7 +437,11 @@ class AngularCatalog(object):
             dec_R= np.concatenate((dec_R, more_decs))
             random_completeness = np.concatenate((random_completeness, more_comps))
             use_random= np.concatenate((use_random, more_use))
-        elif number_excess > 0:
+            number_we_have = len(ra_R[use_random])
+            number_excess = number_we_have - number_to_make
+
+        #If we overshot, cut some off
+        if number_excess > 0:
             print ("AngularCatalog.generate_random_sample says: "
                   "Cutting down to exactly as many unmasked objects as the data")
             #Now we want to cut down to exactly n_objects in our masked random.
@@ -410,7 +473,8 @@ class AngularCatalog(object):
                 self.make_random_tree()
         else:
             return (ra_R[use_random], dec_R[use_random],
-                   random_completeness[use_random], use_random)
+                   random_completeness[use_random],
+                   np.ones(sum(use_random)).astype(bool))
         
     #------------------------------------------------------------------------------------------
         
@@ -868,14 +932,13 @@ class AngularCatalog(object):
             nbins=set_nbins
 
         #Make the bins
-        self._rr_theta_bins = binclass.ThetaBins(min_sep, max_sep, nbins,
-                                                unit='d', logbins=logbins)
-        use_centers, use_theta_bins = self._rr_theta_bins.get_thetas(unit='degrees')
+        rr_theta_bins = binclass.ThetaBins(min_sep, max_sep, nbins,
+                                           unit='d', logbins=logbins)
+        use_centers, use_theta_bins = rr_theta_bins.get_thetas(unit='degrees')
 
         #Do the loop
-        self._G_p=np.zeros(nbins)
-        self._G_q=np.zeros(nbins)
-        self._rr_counts=np.zeros(nbins)
+        G_p=np.zeros(nbins)
+        rr_counts=np.zeros(nbins)
         for n_i in np.arange(n_chunks):
             print "doing chunk #", n_i
             #Remake the random sample so we're sure we have the right oversample factor            
@@ -891,11 +954,10 @@ class AngularCatalog(object):
             for i in range(Nbins + 1):
                 counts_RR[i] = np.sum(self._masked_random_tree.query_radius(data_R, bins[i],
                                                                             count_only=True))
-            raw_rr = np.diff(counts_RR)
-            rr = raw_rr / float(self._random_oversample_factor)**2.
+            rr = np.diff(counts_RR)
             #Landy and Szalay define G_p(theta) as <N_p(theta)>/(n(n-1)/2)
-            self._G_p += raw_rr/(number_needed*(number_needed-1)) 
-            self._rr_counts +=rr
+            G_p += rr/(number_needed*(number_needed-1)) 
+            rr_counts += rr
 
         print "Dividing out the theta bin sizes and number of chunks"
         
@@ -905,12 +967,15 @@ class AngularCatalog(object):
         #which is what they assume everywhere else.
         #Dividing out the bin width gives you that and lets you pretend
         #G_p is a continuous but chunky-looking function.
-        self._G_p /= np.diff(use_theta_bins)                    
-        self._G_p /= n_chunks                                   
+        G_p /= np.diff(use_theta_bins)                    
+        G_p /= n_chunks                                   
         self._rr_ngals=[total_number, n_chunks]
+        self._Gp = gpclass.Gp(min_sep, max_sep, nbins, G_p, total_number,
+                              n_chunks, logbins=logbins, unit='d',
+                              RR=rr_counts)
 
         if save_to is not None:
-            self.save_rr(save_to)
+            self.save_gp(save_to)
         
     #------------------------------------------------------------------------------------------
 
@@ -1165,90 +1230,29 @@ class AngularCatalog(object):
         for k in cf_keys:
             filen = file_base + k
             self._cfs[k].save(filen)
-            
-    #------------------------------------------------------------------------------------------
-
-    #--------------------------------------------#
-    #- Read in previously calculated G_t(theta) -#
-    #--------------------------------------------#
-    def load_G_t(self, filename):
-        #Take the ASCII files with the calculated triplet counts and read it in
-    
-        table=read_numtab(filename, lastcomment=True)
-        self._G_t=table['G_t']
-        self._thetas_for_G_t=table['theta']
-
-    #------------------------------------------------------------------------------------------
-
-    #--------------------------------------------#
-    #- Save the random-random counts for the IC -#
-    #--------------------------------------------#
-    def save_G_t(self, filename):
-        #If we have done the triplet counts, save to a file
-        
-        if self._G_t is not None:
-            #Open the file (overwriting it if it's already there)
-            try:
-                f=open(filename, 'w')
-            except IOError:
-                raise ValueError('Invalid file name.')      
-
-            f.write('# theta\n')
-            f.write('# G_t\n')
-            f.write('# theta G_t\n')
-
-            for i in range(len(self._thetas_for_G_t)):
-                 line_out = str(self._thetas_for_G_t[i])+' '+str(self._G_t[i])+'\n'
-                 f.write(line_out)
-
-            #We have all the lines out, so close the file.
-            f.close()
-        else:
-            print "save_G_t says: I do not see G_t stored for me to output."
         
     #------------------------------------------------------------------------------------------
 
     #-----------------------------------------------------------------#
     #- Read in previously calculated random-random counts for the IC -#
     #-----------------------------------------------------------------#
-    def load_rr(self, filename, overwrite_existing=False):
+    def load_gp(self, filename, overwrite_existing=False):
         #Take the ASCII files with the normed random-random counts calculated and read it in
 
-        if (self._rr_counts is None) or overwrite_existing:
-            table=read_numtab(filename, lastcomment=True)
-            self._rr_counts=table['rr']
-            self._G_p=table['G_p']
-            self._thetas_for_rr=table['theta']
+        if (self._Gp is None) or overwrite_existing:
+            self._Gp = gpclass.Gp.from_file(filename)
         else:
-            print "angular_catalog.load_rr says: You've asked me not to overwrite the existing RR counts and there's already an RR file loaded."
+            print ("angular_catalog.load_rr says: You've asked me not "
+                   "to overwrite the existing RR counts and there's "
+                   "already Gp information .")
 
     #------------------------------------------------------------------------------------------
 
     #--------------------------------------------#
     #- Save the random-random counts for the IC -#
     #--------------------------------------------#
-    def save_rr(self, filename):
-        #If we have done the random-random counts for the integral constraint, save to a file
-        
-        if self._rr_counts is not None:
-            #Open the file (overwriting it if it's already there)
-            try:
-                f=open(filename, 'w')
-            except IOError:
-                raise ValueError('Invalid file name.')      
-
-            f.write('# Number of random galaxies used: '+ str(self._rr_ngals)+'\n')
-            f.write('# theta\n')
-            f.write('# rr\n')
-            f.write('# G_p\n')
-            f.write('# theta rr G_p\n')
-
-            for i in range(len(self._thetas_for_rr)):
-                 line_out = str(self._thetas_for_rr[i])+' '+str(self._rr_counts[i])+' '+str(self._G_p[i])+'\n'
-                 f.write(line_out)
-
-            #We have all the lines out, so close the file.
-            f.close()
-        else:
-            print "save_rr says: I do not see the random-random counts stored for me to output."
+    def save_gp(self, filename):
+        #If we have done the random-random counts for the integral
+        #constraint, save to a file
+        self._Gp.save(filename)
         

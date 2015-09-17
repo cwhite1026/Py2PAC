@@ -16,44 +16,41 @@ class Gp(object):
     Parameters
     ----------
     min_theta : float
-              The minimum of the theta bin edges for constructing the
-              theta bins.
+        The minimum of the theta bin edges for constructing the theta bins.
     max_theta : float
-              The maximum of the theta bin edges for constructing the
-              theta bins
+        The maximum of the theta bin edges for constructing the theta bins
     nbins : float
-          The number of theta bins
+        The number of theta bins
     Gp : array of length nbins
-       The Gp function from Landy and Szalay 1993, with the modification
-       that the bin width is divided out of how they tell you to calculate
-       it from randoms.  The given formula has the property that
-       Sum[G_p,i]=1.  This is not equivalent to Integral[G_p d(theta)]=1,
-       which is what they assume everywhere else.  Dividing out the bin
-       width gives you that and lets you pretend G_p is a continuous but
-       chunky-looking function.
+        The Gp function from Landy and Szalay 1993, with the modification
+        that the bin width is divided out of how they tell you to calculate
+        it from randoms.  The given formula has the property that
+        Sum[G_p,i]=1.  This is not equivalent to Integral[G_p d(theta)]=1,
+        which is what they assume everywhere else.  Dividing out the bin
+        width gives you that and lets you pretend G_p is a continuous but
+        chunky-looking function.
     n_randoms : scalar
-              The total number of randoms used to calculate G_p
+        The total number of randoms used to calculate G_p
     n_chunks : scalar
-             The number of pieces into which n_randoms was broken into in
-             order to keep the integration time down.  If n_chunks > 1,
-             G_p was calculated n_chunks time for n_randoms/n_chunks randoms
-             in each and then averaged.
+        The number of pieces into which n_randoms was broken into in
+        order to keep the integration time down.  If n_chunks > 1,
+        G_p was calculated n_chunks time for n_randoms/n_chunks randoms
+        in each and then averaged.
     logbins : True | False (optional)
-            Sets theta bins to be even in log space if True and and linear
-            space if False.  Default is True.
+        Sets theta bins to be even in log space if True and and linear
+        space if False.  Default is True.
     unit : string (optional)
-         Tells the theta bin object what unit min_theta and max_theta are in.
-         The options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-         'r', 'rad', 'radians'.  Default is 'arcseconds'
+        Tells the theta bin object what unit min_theta and max_theta are in.
+        The options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
+        'r', 'rad', 'radians'.  Default is 'arcseconds'
     RR : array of length nbins (optional)
-       The non-normalized RR counts that the G_p came from.  This does not
-       have the bin width divided out because it doesn't need to be
-       integrated anywhere.  Default is None.
+        The non-normalized RR counts that the G_p came from.  This does not
+        have the bin width divided out because it doesn't need to be
+        integrated anywhere.  Default is None.
     creation_string : string (optional)
-                    A time stamp of when the G_p function was actually
-                    calculated.  Default is None, at which point it's
-                    generated to be the time and date when the object is
-                    created.    
+        A time stamp of when the G_p function was actually calculated.
+        Default is None, at which point it's generated to be the time
+        and date when the object is created.    
     """
 
     #======================================================================
@@ -98,13 +95,13 @@ class Gp(object):
         Parameters
         ----------
         filename : string
-              The name of the saved Gp object.  This should be the path
-              from /
+            The name of the saved Gp object.  This should be the path
+            from /
 
         Returns
         -------
         new_gp : Gp class instance
-               A Gp instance that matches the saved Gp
+            A Gp instance that matches the saved Gp
         """
 
         #Pull in the file and get the keys it has
@@ -149,17 +146,17 @@ class Gp(object):
         Parameters
         ----------
         unit : string (optional)
-             The unit that you want the thetas to be in when they're
-             returned.  The options are 'a', 'arcsec', 'arcseconds';
-             'd', 'deg', 'degrees'; 'r', 'rad', 'radians'.
-             Default is 'arcseconds'
+            The unit that you want the thetas to be in when they're
+            returned.  The options are 'a', 'arcsec', 'arcseconds';
+            'd', 'deg', 'degrees'; 'r', 'rad', 'radians'.
+            Default is 'arcseconds'
              
         Returns
         -------
         centers : array
-                A list of the bin centers in the unit requested
+            A list of the bin centers in the unit requested
         edges : array
-              A list of the bin edges in the unit requested
+            A list of the bin edges in the unit requested
         """
         
         #Return the theta binning in the unit requested
@@ -174,17 +171,17 @@ class Gp(object):
         Parameters
         ----------
         unit : string (optional)
-             The unit that you want the thetas to be in when they're
-             returned.  The options are 'a', 'arcsec', 'arcseconds';
-             'd', 'deg', 'degrees'; 'r', 'rad', 'radians'.
-             Default is 'arcseconds'
+            The unit that you want the thetas to be in when they're
+            returned.  The options are 'a', 'arcsec', 'arcseconds';
+            'd', 'deg', 'degrees'; 'r', 'rad', 'radians'.
+            Default is 'arcseconds'
 
         Returns
         -------
         centers : array
-                A list of the bin centers in the unit requested
+            A list of the bin centers in the unit requested
         Gp : array
-           The values of G_p in each bin
+            The values of G_p in each bin
         """
         
         #Return the centers of the bins and the Gp
@@ -203,7 +200,7 @@ class Gp(object):
         Returns
         -------
         Gp : array
-           The values of G_p in each bin
+            The values of G_p in each bin
         """
         
         #Return the Gp
@@ -219,22 +216,22 @@ class Gp(object):
         Parameters
         ----------
         print_only : True | False (optional)
-                  If True, no information is returned.  If False, returns
-                  N_randoms, N_chunks, and time_created.
+            If True, no information is returned.  If False, returns
+            N_randoms, N_chunks, and time_created.
 
         Returns
         -------
         N_randoms : integer
-                  The total number of randoms used to calculate G_p.  Only
-                  returned if print_only == False
+            The total number of randoms used to calculate G_p.  Only
+            returned if print_only == False
         N_chunks : integer
-                 The number of chunks into which N_randoms was broken.  G_p
-                 was calulated in N_chunks instances of N_randoms/N_chunks
-                 random points and then averaged.  Only returned if
-                 print_only == False
+            The number of chunks into which N_randoms was broken.  G_p
+            was calulated in N_chunks instances of N_randoms/N_chunks
+            random points and then averaged.  Only returned if
+            print_only == False
         time_created : string
-                     The date and time that the G_p was initially calculated.
-                     Only returned if print_only == False
+            The date and time that the G_p was initially calculated.
+            Only returned if print_only == False
         """
         
         #Return info about how the Gp was calculated
@@ -258,8 +255,8 @@ class Gp(object):
         Parameters
         ----------
         filename : string
-                 Where to save the file.  This should be a path from /
-                 and can either include .npz or not
+            Where to save the file.  This should be a path from /
+            and can either include .npz or not
         """
         #Grab the dictionary form
         to_save = self.get_dictionary()
@@ -282,8 +279,8 @@ class Gp(object):
         Returns
         -------
         Gp_dict : python dictionary
-                A dictionary that contains all the information that the
-                Gp object contains.
+            A dictionary that contains all the information that the
+            Gp object contains.
         """
 
         #Put everything into dictionary form
@@ -322,14 +319,14 @@ class Gp(object):
         Parameters
         ----------
         A : float
-          The amplitude of the power law (A*theta ^-beta)
+            The amplitude of the power law (A*theta ^-beta)
         beta : float
-             The power in the power law (A*theta ^-beta)
+            The power in the power law (A*theta ^-beta)
 
         Returns
         -------
         deg_A : float
-              The amplitude for theta in degrees
+            The amplitude for theta in degrees
         """
 
         #figure out which unit we're in and set the conversion factor
@@ -360,26 +357,26 @@ class Gp(object):
         Parameters
         ----------
         A : float
-          The amplitude of the power law for theta in units param_unit
+            The amplitude of the power law for theta in units param_unit
         beta : float
-             The power in the power law
+            The power in the power law
         lowlim : float
-               The lower limit of the theta range to integrate over
+            The lower limit of the theta range to integrate over
         highlim : float
-                The upper limit of the theta range to integrate over
+            The upper limit of the theta range to integrate over
         param_unit : string (optional)
-                   The units of theta for which A was calculated.  The
-                   options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg',
-                   'degrees'; 'r', 'rad', 'radians'.  Default is 'd'
+            The units of theta for which A was calculated.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r',
+            'rad', 'radians'.  Default is 'd'
         theta_unit : string (optional)
-                   The units of lowlim and highlim.  The
-                   options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg',
-                   'degrees'; 'r', 'rad', 'radians'.  Default is 'd'
+            The units of lowlim and highlim.  The options are 'a',
+            'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r',
+            'rad', 'radians'.  Default is 'd'
 
         Returns
         -------
         integral : float
-                 The integral of the power law over the specified range
+            The integral of the power law over the specified range
         """
         
         #Do the integral of a power law A*theta^-beta from lowlim to highlim
@@ -413,26 +410,26 @@ class Gp(object):
         Parameters
         ----------
         A : float
-          The amplitude of the power law for theta in units param_unit
+            The amplitude of the power law for theta in units param_unit
         beta : float
-             The power in the power law
+            The power in the power law
         lowlim : float
-               The lower limit of the theta range to integrate over
+            The lower limit of the theta range to integrate over
         highlim : float
-                The upper limit of the theta range to integrate over
+            The upper limit of the theta range to integrate over
         param_unit : string (optional)
-                   The units of theta for which A was calculated.  The
-                   options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg',
-                   'degrees'; 'r', 'rad', 'radians'.  Default is 'd'
+            The units of theta for which A was calculated.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r',
+            'rad', 'radians'.  Default is 'd'
         theta_unit : string (optional)
-                   The units of lowlim and highlim.  The
-                   options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg',
-                   'degrees'; 'r', 'rad', 'radians'.  Default is 'd'
+            The units of lowlim and highlim.  The options are 'a',
+            'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r', 'rad',
+            'radians'.  Default is 'd'
 
         Returns
         -------
         integral : float
-                 The integral of G_p * A * theta^-beta
+            The integral of G_p * A * theta^-beta
         """
         #Compute the integral of G_p * A * theta^-beta from lowlim to
         #highlim.  A and beta are for the unit specified 
@@ -504,18 +501,18 @@ class Gp(object):
         Parameters
         ----------
         lowlim : float
-               The lower limit of the theta range to integrate over
+            The lower limit of the theta range to integrate over
         highlim : float
-                The upper limit of the theta range to integrate over
+            The upper limit of the theta range to integrate over
         theta_unit : string (optional)
-                   The units of lowlim and highlim.  The
-                   options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg',
-                   'degrees'; 'r', 'rad', 'radians'.  Default is 'd'
+            The units of lowlim and highlim.  The options are 'a',
+            'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r',
+            'rad', 'radians'.  Default is 'd'
 
         Returns
         -------
         integral : float
-                 The integral of G_p from lowlim to highlim
+            The integral of G_p from lowlim to highlim
         """
         #Integrate G_p over a portion of its range by hijacking
         #integrate_gp_times_powerlaw
@@ -534,18 +531,17 @@ class Gp(object):
         Parameters
         ----------
         new_bin_edges: array
-                     The values of theta defining the bin edges that you
-                     want to integrate to.  The theta values are in
-                     units theta_unit
+            The values of theta defining the bin edges that you want to
+            integrate to.  The theta values are in units theta_unit
         theta_unit : string (optional)
-                   The unit in which new_bin_edges are given.  The options
-                   are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-                   'r', 'rad', 'radians'.  Default is 'arcseconds'
+            The unit in which new_bin_edges are given.  The options are
+            'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r',
+            'rad', 'radians'.  Default is 'arcseconds'
 
         Returns
         -------
         new_gp : array
-               Gp integrated over the new bins
+            Gp integrated over the new bins
         """
 
         #Convert the thetas to degrees
@@ -571,18 +567,18 @@ class Gp(object):
         Parameters
         ----------
         A : float
-          The amplitude of the power law for theta in units param_unit
+            The amplitude of the power law for theta in units param_unit
         beta : float
-             The power in the power law
+            The power in the power law
         param_unit : string (optional)
-                   The units of theta for which A was calculated.  The
-                   options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg',
-                   'degrees'; 'r', 'rad', 'radians'.  Default is 'd'
+            The units of theta for which A was calculated.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r',
+            'rad', 'radians'.  Default is 'd'
 
         Returns
         -------
         w_Omega : float
-                The constant w_Omega from Landy and Szalay.
+            The constant w_Omega from Landy and Szalay.
                 w_Omega = integral[ G_p(theta) * w(theta) d(theta)]
         """
 

@@ -1,72 +1,69 @@
 import scipy.ndimage as img
+import scipy.ndimage.measurements as meas
+import scipy.ndimage.filters as filt
 import numpy as np
 import numpy.random as rand
 import matplotlib.pyplot as plt
 import matplotlib.path as path
 import matplotlib.patches as patch
+import scipy.stats as stat
 
 four_connection = np.array([[0,1,0],[1,1,1],[0,1,0]])
+eight_connection = np.ones(9).reshape((3,3))
 
-test_image = rand.rand(1200).reshape((30,40))
-test_image[5:7,15:20]=0
-test_image[18:23,1:5]=0
-test_image[17, 3:7]=0
-test_image[22:27, 8:13]=0
-test_image[0,:] = 0
-test_image[-1,:] = 0
-test_image[:,0] = 0
-test_image[:,-1] = 0
+#=========================================================================
+# Try a fits file (sshed to shiva for this)
+import astropy.io.fits as fits
 
-plt.matshow(test_image)
-plt.savefig('/Users/cathyc/Dropbox/plots/plots_for_notes/test_array_finding_holes.pdf')
-plt.show()
+#Pull in the file
+filename = '/astro/candels1/data/goodss/mosaics/current/goods_s_all_combined_v0.5/gs_all_candels_ers_udf_f160w_060mas_v0.5_wht.fits'
+weightmap = fits.open(filename)
+weight_array=np.asarray(weightmap[0].data)
 
-threshold = 1e-4
-only_holes = np.where(test_image <=threshold, 1, 0)
-plt.matshow(only_holes)
-plt.show()
+#Figure out the cutoff
+# weight_max = weights.max()
+n_subset = min(np.int(1e6), nx*ny)
+nx=weights.shape[0]
+ny=weights.shape[1]
+xinds=np.random.choice(np.arange(nx), n_subset)
+yinds=np.random.choice(np.arange(ny), n_subset)
+subsamp = weights[xinds, yinds]    
+subsamp_nonzero = subsamp[subsamp>0]
+percentile_cutoff= 10
+cutoff_val = stat.scoreatpercentile(subsamp_nonzero, percentile_cutoff)
+weight_poly = construct_mask_with_holes(weights, threshold=cutoff_val)
 
-labeled_holes, n_holes = img.label(only_holes, four_connection)
-plt.matshow(labeled_holes)
-plt.savefig('/Users/cathyc/Dropbox/plots/plots_for_notes/test_array_labeled_holes.pdf')
-plt.show()
-
-just_outside = np.where(labeled_holes == 1, 0, 1)
-unsorted_border_pix, border_pix = detect_border_pixels(just_outside)
-plt.scatter(outside_border_pix.T[0], outside_border_pix.T[1])
-plt.show()
+plot_polygon(weight_poly, save_to='/Users/cathyc/Dropbox/plots/plots_for_notes/goodss_polygon_mask.pdf')
 
 
-outside_as_1s = np.where(labeled_holes == 1, 1, 0)
-new_outside_border_pix = detect_border_pixels(outside_as_1s)
-just_one_hole = np.where(labeled_holes == 2, 1, 0)
-hole_border_pix = detect_border_pixels(just_one_hole)
+weight_array = weights
+threshold = cutoff_val
 
-outside_border_poly = poly.Polygon(border_pix)
-outside_border_poly.area()
-
-plot_polygon(outside_border_poly)
-
-whole_mask = construct_mask_with_holes(test_image)
-plot_polygon(whole_mask)
-
-def construct_mask_with_holes(weight_array, threshold=1e-4):
+def construct_mask_with_holes(weight_array, threshold=1e-4,
+                              filter_sigma = 2):
     #Take an image and construct a polygon that contains only the
     #part of the image greater than threshold.  Allows for holes in
     #the image.
+    #Trim down excess blank space if we can
+    weight_array = np.array(weight_array)
+    filtered_weights = filt.gaussian_filter(weight_array, filter_sigma)
+    binary_weights = np.where(filtered_weights >=threshold, 1, 0)
+    weight_slices = meas.find_objects(binary_weights)[0]
+    binary_weights = binary_weights[weight_slices]
     #Put a border of 0s around the image so I know that the label of
     #[0,0] is the label of the outermost border
-    weight_array=np.array(weight_array)
-    image_dims = np.array(weight_array.shape)
-    image_with_border = np.zeros(image_dims+2)
-    image_with_border[1:-1, 1:-1] = weight_array
-    #Start by masking to a binary image that has 1s where we're below
-    #threshold and 0s above
-    four_connection = np.array([[0,1,0],[1,1,1],[0,1,0]])
-    below_threshold = np.where(image_with_border <=threshold, 1, 0)
+    image_dims = np.array(binary_weights.shape)
+    binary_image_with_border = np.zeros(image_dims+2)
+    binary_image_with_border[1:-1, 1:-1] = binary_weights
+    #Flip the binary weights so we have the holes/outside as ones and
+    #the inside as 0
+    below_threshold = np.invert(binary_image_with_border.astype(bool))
+    below_threshold = below_threshold.astype(np.float)
     #Use scipy to group the below threshold areas into distinct connected
     #regions
-    labeled_regions, n_regions = img.label(below_threshold, four_connection)
+    four_connection = np.array([[0,1,0],[1,1,1],[0,1,0]])
+    eight_connections = np.ones(9).reshape((3,3))
+    labeled_regions, n_regions = img.label(below_threshold, eight_connection)
     label_of_outermost = labeled_regions[0, 0]
     #Now loop through the regions and get the border pixels for each
     #distinct region.  The outermost gets treated differently from the
@@ -158,6 +155,7 @@ def order_border_pixels(borderpixels):
         one_up = np.array([current_pix[0], current_pix[1] + 1])
         one_right = np.array([current_pix[0] + 1, current_pix[1]])
         one_down = np.array([current_pix[0], current_pix[1] - 1])
+        plt.scatter(current_pix[0], current_pix[1])
         # print current_pix
         # print one_left, one_right, one_up, one_down
         #Find the next pixel
@@ -232,10 +230,53 @@ def plot_polygon(polygon, save_to='/Users/cathyc/Desktop/testdisplay.pdf'):
     plt.savefig(save_to, bbox_inches='tight')
     plt.close()
     
-    
 
+#=========================================================================
+#Try on a dumb test image
+
+test_image = rand.rand(1200).reshape((30,40))
+test_image[5:7,15:20]=0
+test_image[18:23,1:5]=0
+test_image[17, 3:7]=0
+test_image[22:27, 8:13]=0
+test_image[0,:] = 0
+test_image[-1,:] = 0
+test_image[:,0] = 0
+test_image[:,-1] = 0
+
+plt.matshow(test_image)
+plt.savefig('/Users/cathyc/Dropbox/plots/plots_for_notes/test_array_finding_holes.pdf')
+plt.show()
+
+threshold = 1e-4
+only_holes = np.where(test_image <=threshold, 1, 0)
+plt.matshow(only_holes)
+plt.show()
+
+labeled_holes, n_holes = img.label(only_holes, four_connection)
+plt.matshow(labeled_holes)
+plt.savefig('/Users/cathyc/Dropbox/plots/plots_for_notes/test_array_labeled_holes.pdf')
+plt.show()
+
+just_outside = np.where(labeled_holes == 1, 0, 1)
+unsorted_border_pix, border_pix = detect_border_pixels(just_outside)
+plt.scatter(outside_border_pix.T[0], outside_border_pix.T[1])
+plt.show()
+
+
+outside_as_1s = np.where(labeled_holes == 1, 1, 0)
+new_outside_border_pix = detect_border_pixels(outside_as_1s)
+just_one_hole = np.where(labeled_holes == 2, 1, 0)
+hole_border_pix = detect_border_pixels(just_one_hole)
+
+outside_border_poly = poly.Polygon(border_pix)
+outside_border_poly.area()
+
+plot_polygon(outside_border_poly)
+
+whole_mask = construct_mask_with_holes(test_image)
+plot_polygon(whole_mask)
 
 borderpixels=np.array(borderpixels)
 plt.scatter(borderpixels.T[0], borderpixels.T[1])
 plt.savefig('/Users/cathyc/Dropbox/plots/plots_for_notes/test_array_border_pixel_locations_8connection.pdf')
-
