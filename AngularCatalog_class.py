@@ -157,7 +157,15 @@ class AngularCatalog(object):
     #- Set the weight file name -#
     #----------------------------#            
     def set_mask_to_weight_file(self, filename):
-        #Set the weight file name
+        """
+        Set the weight file name and process the file to an image mask
+
+        Parameters
+        ----------
+        filename : string
+            The location of the FITS file that you want to process to
+            a weight mask.  The file name should be specified from /
+        """
         self._weight_file_name=filename
         self.setup_mask(force_remake=True)
         return
@@ -193,15 +201,20 @@ class AngularCatalog(object):
     #-------------#
     #- Move mask -#
     #-------------#
-    def move_mask(self, delta_ra=None, delta_dec=None, theta_degrees=None, preview=False):
+    def move_mask(self, delta_ra=None, delta_dec=None,
+                  theta_degrees=None, preview=False):
         #Calls the image mask's translation/rotation routine.
         if preview:
-            newmask=self._image_mask.move_mask_on_sky(delta_ra=delta_ra, delta_dec=delta_dec,
-                                                      theta_degrees=theta_degrees, preview=preview)
+            newmask=self._image_mask.move_mask_on_sky(delta_ra=delta_ra,
+                                                      delta_dec=delta_dec,
+                                                      theta_degrees=theta_degrees,
+                                                      preview=preview)
             return newmask
         else:
-            self._image_mask.move_mask_on_sky(delta_ra=delta_ra, delta_dec=delta_dec,
-                                              theta_degrees=theta_degrees, preview=preview)
+            self._image_mask.move_mask_on_sky(delta_ra=delta_ra,
+                                              delta_dec=delta_dec,
+                                              theta_degrees=theta_degrees,
+                                              preview=preview)
     
     #------------------------------------------------------------------------------------------
 
