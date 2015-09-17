@@ -1,6 +1,0 @@
-Py2PAC is built on the back of other existing python code that is available for free.  
-This is a list of the packages that it requires.
-
-Numpy
-Scipy
-sklearn

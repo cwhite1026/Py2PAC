@@ -1,8 +1,0 @@
-angular_position_catalog -> AngularCatalog
-white_correlations.py -> correlations.py
-wcorr -> corr
-cosmo.py -> cosmology.py 
-_n_objects_masked -> _n_objects
-_n_objects -> _input_n_objects
-
-Deletions
