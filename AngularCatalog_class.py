@@ -605,7 +605,7 @@ class AngularCatalog(object):
              'cf_type'          : 'no_error',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'estimator'           : estimator
+             'estimator'        : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -622,7 +622,7 @@ class AngularCatalog(object):
                                                      edges,
                                                      BT_D=self._data_tree, 
                                                      BT_R=self._random_tree,
-                                                     estimator=estimator, 
+                                                     method=estimator, 
                                                      ra_R=self._ra_random,
                                                      dec_R=self._dec_random,
                                                      return_DD=True)
@@ -669,7 +669,7 @@ class AngularCatalog(object):
              'cf_type'          : 'single_galaxy_bootstrap',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'estimator'           : estimator
+             'estimator'        : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -702,7 +702,7 @@ class AngularCatalog(object):
             bootstrap_boots[i], rr = corr.two_point_angular(ra_b, dec_b, edges, 
                                                             BT_D=self._data_tree, 
                                                             BT_R=self._random_tree,
-                                                            estimator=estimator, 
+                                                            method=estimator, 
                                                             ra_R=self._ra_random, 
                                                             dec_R=self._dec_random, 
                                                             RR=rr, return_RR=True)
@@ -748,7 +748,7 @@ class AngularCatalog(object):
              'cf_type'          : 'jackknife',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'estimator'           : estimator
+             'estimator'        : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -789,7 +789,7 @@ class AngularCatalog(object):
             print "calculating jackknife", i
             jackknife_jacks[r] = corr.two_point_angular(self._ra[this_jackknife], 
                                                         self._dec[this_jackknife], 
-                                                        edges, estimator=estimator, 
+                                                        edges, method=estimator, 
                                                         ra_R = self._ra_random[random_this_jackknife],
                                                         dec_R = self._dec_random[random_this_jackknife])
             temp[i]=jackknife_jacks[r]
@@ -836,7 +836,7 @@ class AngularCatalog(object):
              'cf_type'          : 'jackknife',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'estimator'           : estimator
+             'estimator'        : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -879,7 +879,7 @@ class AngularCatalog(object):
             print "calculating boot", i
             temp[i] = corr.two_point_angular(self._ra[this_boot_indices], 
                                              self._dec[this_boot_indices], 
-                                             edges, estimator=estimator, 
+                                             edges, method=estimator, 
                                              ra_R=self._ra_random[this_boot_random_indices],
                                              dec_R=self._dec_random[this_boot_random_indices])
             block_bootstrap_boots[i] = temp[i]
