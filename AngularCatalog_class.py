@@ -581,7 +581,7 @@ class AngularCatalog(object):
     #-----------------------------------------------------#
     #- Calculate the correlation function without errors -#
     #-----------------------------------------------------# 
-    def cf(self, method='landy-szalay', n_iter=1, clobber=False,
+    def cf(self, estimator='landy-szalay', n_iter=1, clobber=False,
           random_oversample=None, save_steps_file=None, name='cf'):
         #This uses the info we have plus the astroML correlation package
         #   to compute the angular correlation function.
@@ -605,7 +605,7 @@ class AngularCatalog(object):
              'cf_type'          : 'no_error',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'method'           : method
+             'estimator'           : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -622,7 +622,7 @@ class AngularCatalog(object):
                                                      edges,
                                                      BT_D=self._data_tree, 
                                                      BT_R=self._random_tree,
-                                                     method=method, 
+                                                     estimator=estimator, 
                                                      ra_R=self._ra_random,
                                                      dec_R=self._dec_random,
                                                      return_DD=True)
@@ -648,7 +648,7 @@ class AngularCatalog(object):
     #- Find the CF and error by single-galaxy bootstrap -#
     #----------------------------------------------------#
     def cf_bootstrap(self, n_boots=10, bootstrap_oversample=1,
-                     random_oversample=None, method='landy-szalay',
+                     random_oversample=None, estimator='landy-szalay',
                      save_steps_file=None, name='galaxy_bootstrap',
                      clobber=False):
         #Calculate the  correlation function with single-galaxy bootstrapping
@@ -669,7 +669,7 @@ class AngularCatalog(object):
              'cf_type'          : 'single_galaxy_bootstrap',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'method'           : method
+             'estimator'           : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -702,7 +702,7 @@ class AngularCatalog(object):
             bootstrap_boots[i], rr = corr.two_point_angular(ra_b, dec_b, edges, 
                                                             BT_D=self._data_tree, 
                                                             BT_R=self._random_tree,
-                                                            method=method, 
+                                                            estimator=estimator, 
                                                             ra_R=self._ra_random, 
                                                             dec_R=self._dec_random, 
                                                             RR=rr, return_RR=True)
@@ -725,7 +725,7 @@ class AngularCatalog(object):
     #----------------------------------------#
     #- Find the CF and error by jackknifing -#
     #----------------------------------------#
-    def cf_jackknife(self, ignore_regions=[], method='landy-szalay',
+    def cf_jackknife(self, ignore_regions=[], estimator='landy-szalay',
                      random_oversample=None, save_steps_file=None,
                      name='jackknife', clobber=False):
         #This takes a divided mask and performs the correlation
@@ -748,7 +748,7 @@ class AngularCatalog(object):
              'cf_type'          : 'jackknife',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'method'           : method
+             'estimator'           : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -789,7 +789,7 @@ class AngularCatalog(object):
             print "calculating jackknife", i
             jackknife_jacks[r] = corr.two_point_angular(self._ra[this_jackknife], 
                                                         self._dec[this_jackknife], 
-                                                        edges, method=method, 
+                                                        edges, estimator=estimator, 
                                                         ra_R = self._ra_random[random_this_jackknife],
                                                         dec_R = self._dec_random[random_this_jackknife])
             temp[i]=jackknife_jacks[r]
@@ -813,7 +813,7 @@ class AngularCatalog(object):
     #- Find the CF and error by block bootstrap -#
     #--------------------------------------------#
     def cf_block_bootstrap(self, n_boots=10, ignore_regions=None,
-                           method='landy-szalay', random_oversample=None,
+                           estimator='landy-szalay', random_oversample=None,
                            bootstrap_oversample=1, save_steps_file=None,
                            name='block_bootstrap', clobber=False):
         #Use the subdivided mask to bootstrap on blocks rather than
@@ -836,7 +836,7 @@ class AngularCatalog(object):
              'cf_type'          : 'jackknife',
              'ngals'            : self._n_objects,
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
-             'method'           : method
+             'estimator'           : estimator
              }
         self._cfs[name] = cfclass.CorrelationFunction(**info)
         centers, edges = self._cfs[name].get_thetas(unit='degrees')
@@ -879,7 +879,7 @@ class AngularCatalog(object):
             print "calculating boot", i
             temp[i] = corr.two_point_angular(self._ra[this_boot_indices], 
                                              self._dec[this_boot_indices], 
-                                             edges, method=method, 
+                                             edges, estimator=estimator, 
                                              ra_R=self._ra_random[this_boot_random_indices],
                                              dec_R=self._dec_random[this_boot_random_indices])
             block_bootstrap_boots[i] = temp[i]
