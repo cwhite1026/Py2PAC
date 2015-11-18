@@ -1,4 +1,5 @@
-#This is a copy of the astroML.correlation package with some modifications made by Cathy White.  The main body of work is not hers!
+#This is a copy of the astroML.correlation package with some
+#modifications made by Cathy White.  The main body of work is not hers!
 
 import numpy as np
 import numpy.ma as ma
