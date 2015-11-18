@@ -7,7 +7,7 @@ import numpy.random as rand
 import astropy.wcs as wcs
 import astropy.io.fits as fits
 from copy import deepcopy
-import Polygon as poly
+import matplotlib.pyplot as plt
 
 #Py2PAC code
 import miscellaneous as misc
@@ -46,8 +46,7 @@ class ImageMask:
     #------------------#
     #- Initialization -#
     #------------------#
-    def __init__(self, mask, wcs_instance, saved_convex_hull=None,
-                 save_convex_hull_to=None):
+    def __init__(self, mask, wcs_instance):
         """
         Takes the mask and WCS instance and stores them, along with
         extracting some useful information from them
@@ -708,16 +707,16 @@ class ImageMask:
 
             #Print out the parameters
             ax.text(.05, .95, "theta= "+str(np.degrees(use_theta))[0:5],
-                    transform=ax.transAxes)
-            ax.text(.05, .9, "padding="+str(padding),
-                    transform=ax.transAxes)
-            ax.text(.05, .85, "n_longside="+str(n_longside),
-                    transform=ax.transAxes)
-            ax.text(.05, .8, "n_shortside="+str(n_shortside),
-                    transform=ax.transAxes)
+                    transform=ax.transAxes, fontsize=8)
+            ax.text(.05, .925, "padding="+str(padding),
+                    transform=ax.transAxes, fontsize=8)
+            ax.text(.05, .9, "n_longside="+str(n_longside),
+                    transform=ax.transAxes, fontsize=8)
+            ax.text(.05, .875, "n_shortside="+str(n_shortside),
+                    transform=ax.transAxes, fontsize=8)
             ax.text(.5, .05, ("box size: "+str(x_side)[0:5]+" by "+
                               str(y_side)[0:5]+" arcsec"),
-                    transform=ax.transAxes)
+                    transform=ax.transAxes, fontsize=8)
 
             #Label the subregions
             y_label_coord=.85
@@ -1005,13 +1004,6 @@ class ImageMask:
         inside_y=ma.masked_inside(yinds, 0, ny-1).mask
         on_image= inside_x & inside_y
         
-        #If we have a convex hull, narrow it down even further
-        if self._convex_hull is not None:
-            loop_through_inds = np.arange(len(xinds))[on_image]
-            for i in loop_through_inds:
-                on_image[i] = self._convex_hull.isInside(xinds[i],
-                                                         yinds[i])
-
         #Now make the completeness array
         complete=np.zeros(len(ra_list))
         temp_complete = np.zeros(len(ra_list[in_ranges]))
@@ -1119,135 +1111,3 @@ class ImageMask:
                 subregion[thismask]=bin_number
 
         return subregion
-    
-#==========================================================================
-#==========================================================================
-
-    # #----------------------------------------------------------------------
-    # #             Convex hull stuff
-    # #----------------------------------------------------------------------
-
-    # #-----------------------#
-    # #- Saves a convex hull -#
-    # #-----------------------#
-    # def save_convex_hull(self, filename):
-    #     """
-    #     Saves a list of points in the convex hull of the mask.  Uses the
-    #     numpy save format.
-
-    #     Parameters
-    #     ----------
-    #     filename: string
-    #         The file name with the path from / where you want the list of
-    #         points saved
-    #     """
-
-    #     if self._convex_hull:
-    #         points = np.array(self._convex_hull[0])
-    #         np.save(filename, points)
-    #     else:
-    #         raise ValueError("In order to save the convex hull, I have to "
-    #                          "have a convex hull polygon to save.  Please "
-    #                          "run make_convex_hull first.")
-            
-    # #----------------------------------------------------------------------    
-    # #-----------------------------#
-    # #- Loads a saved convex hull -#
-    # #-----------------------------#
-    # def load_convex_hull(self, filename):
-    #     """
-    #     Loads a list of points from a file and makes a Polygon object from
-    #     them.  The points are assumed to be the convex hull around the mask
-    #     but the routine *will not check*.
-
-    #     Parameters
-    #     ----------
-    #     filename: string
-    #         The file name containing the list of points in the convex hull.
-    #         Should include path from /
-    #     """
-    #     loaded_points = np.load(filename)
-    #     self._convex_hull = poly.Polygon(loaded_points)
-
-    # #----------------------------------------------------------------------
-    # #----------------------------#
-    # #- Generate the convex hull -#
-    # #----------------------------#
-    # def make_convex_hull(self):
-    #     """
-    #     Uses scipy.spatial.ConvexHull to create a convex hull around all
-    #     the valid centers of points.  They are stored in a Polygon object.
-    #     It has no parameters and stores the result in self._convex_hull.
-
-    #     WARNING: if you have a large mask, this routine can take a while.
-    #     """
-
-    #     #Make a list of points where the mask is nonzero
-    #     y_coords, x_coords= np.where(self._mask > 0)
-    #     points = np.transpose([x_coords, y_coords])
-
-    #     #Make a convex hull of those points and store as a polygon
-    #     convex_hull_object = spatial.ConvexHull(points)
-    #     vertices = convex_hull_object.vertices
-    #     self._convex_hull = poly.Polygon(points[vertices,:])
-
-    #     #Update the RA and Dec ranges
-    #     vert_RA, vert_Dec = self.xy_to_ra_dec(points[vertices, 0], 
-    #                                           points[vertices, 1]) 
-    #     self._ra_range=[vert_RA.min(), vert_RA.max()]
-    #     self._dec_range=[vert_Dec.min(), vert_Dec.max()]
-
-    # #----------------------------------------------------------------------
-    # #---------------------------#
-    # #- Sets up the convex hull -#
-    # #---------------------------#
-    # def convex_hull(self, load_from=None, save_to=None,
-    #                 recalculate_hull=False):
-    #     """
-    #     Either creates or reads in a polygon with the convex hull of the
-    #     region that has nonzero completeness.  If you specify a filename,
-    #     the polygon will be read from that file.  If you don't, a new one
-    #     will be created.  This can take a little bit.
-
-    #     With no parameters, convex_hull will check to see if there's a
-    #     convex_hull object already.  If there isn't, it will calculate one.
-    #     If there is, nothing will be done.
-
-    #     If load_from is specified, it will load the convex hull polygon
-    #     from the file.
-
-    #     If save_to is specified, it will save the convex hull points to a
-    #     file.  This will happen regardless of the source of the convex hull
-
-    #     Parameters
-    #     ----------
-    #     load_from: string (optional)
-    #         The file name of a saved list of points that define the convex
-    #         hull of the region of the mask where there is a nonzero
-    #         probability of observing an object.  Should include the path
-    #         from /.
-    #         If not specified, the routine will compute the convex hull from
-    #         the mask
-    #     save_to: string (optional)
-    #         The file name to save the list of points defining the convex
-    #         hull to.  Should include the path from /.
-    #         If not specified, don't save
-    #     recalculate_hull: boolean
-    #         If True, the convex hull will be calculated again regardless of
-    #         whether or not a convex hull already exists.  If False, the
-    #         program won't calculate the convex hull if one already exists.
-    #         Defaults to False.
-    #     """
-        
-    #     #Get the convex hull somehow
-    #     if load_from is None:
-    #         calculate = recalculate_hull | (self._convex_hull is None)
-    #         if calculate:
-    #             self.make_convex_hull()
-    #     else:
-    #         self.load_convex_hull(load_from)
-
-    #     #Save the convex hull if we have a file to do so
-    #     if save_to:
-    #         self.save_convex_hull(save_to)
-            

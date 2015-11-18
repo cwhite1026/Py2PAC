@@ -9,6 +9,47 @@ radian_opts = ['radians', 'radian', 'rad', 'r']
 degree_opts = ['degrees', 'degree', 'deg', 'd']
 
 #--------------------------------------------------------------------------
+#-----------------------------#
+#- Rotate coordinate systems -#
+#-----------------------------#
+def rotate_coords(x1, y1, theta):
+    """
+    Applies a rotation matrix to rotate the coordinate frame by an angle
+    theta in RADIANS
+
+    Parameters
+    ----------
+    x1: array-like or scalar
+        The x coordinate(s) to rotate
+    y1: array-like or scalar
+        The y-coordinate(s) to rotate
+    theta: scalar
+        The angle to rotate the coordinates, given in radians
+
+    Returns
+    -------
+    x2: array-like or scalar (matches x1)
+        The rotated x coordinates
+    y2: array-like or scalar (matches y1)
+        The rotated y coordinates
+    """
+    
+    #If we have an array, make sure it's a numpy array
+    try:
+        nx=len(x1)
+    except:
+        pass
+    else:
+        x1=np.array(x1)
+        y1=np.array(y1)
+
+    #Apply the rotation matrix
+    x2 = x1 * np.cos(theta) - y1 * np.sin(theta)
+    y2 = x1 * np.sin(theta) + y1 * np.cos(theta)
+
+    return x2, y2
+
+#--------------------------------------------------------------------------
 
 def centers(arr):
     """
