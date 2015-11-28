@@ -46,7 +46,7 @@ class ImageMask:
     #------------------#
     #- Initialization -#
     #------------------#
-    def __init__(self, mask, wcs_instance):
+    def __init__(self, mask, wcs_instance, wcs_moveable=True):
         """
         Takes the mask and WCS instance and stores them, along with
         extracting some useful information from them
@@ -54,6 +54,7 @@ class ImageMask:
         
         #Store what we were given
         self._mask = np.array(mask)
+        self._wcs_moveable = wcs_moveable
         if isinstance(wcs_instance, wcs.WCS):
             self._wcs_instance = wcs_instance
         else:
@@ -158,7 +159,7 @@ class ImageMask:
             An image mask that has the mask provided and the corresponding
             WCS instance.
         """
-        print ra_range, dec_range
+
         #Check some basic stuff
         if (len(ra_range) !=2) or (len(dec_range) !=2):
             raise ValueError("ImageMask.from_array says:  The RA and Dec"
@@ -184,7 +185,7 @@ class ImageMask:
         wcs_inst.wcs.ctype = ['RA---TAN', 'DEC--TAN']
 
         #Make the image mask and return
-        immask=cls(mask, wcs_inst)
+        immask=cls(mask, wcs_inst, wcs_moveable=False)
         return immask
 
     #----------------------------------------------------------------------
@@ -296,6 +297,19 @@ class ImageMask:
         pass_ys = [y_min, y_max, y_max, y_min]
         ras, decs = self.xy_to_ra_dec(pass_xs, pass_ys)
 
+        #Make sure that we don't have any slightly negative guys rolling
+        #over into the 359s
+        def correct_pair(arr, i, j):
+            if abs(arr[i] - arr[j]) > 359:
+                if arr[i] > arr[j]:
+                    arr[i] = arr[i]-360
+                else:
+                    arr[j] = arr[j]-360
+        correct_pair(ras, 0, 3)
+        correct_pair(ras, 1, 2)
+        correct_pair(decs, 0, 1)
+        correct_pair(decs, 2, 3)
+        
         #Store the RA and Dec ranges
         self._ra_range = np.array([ras.min(), ras.max()])
         self._dec_range = np.array([decs.min(), decs.max()])        
@@ -720,7 +734,7 @@ class ImageMask:
 
             #Label the subregions
             y_label_coord=.85
-            avg_ngals=float(len(ra[inside]))/(nx*ny)
+            avg_ngals=float(len(ra[np.invert(outside)]))/(nx*ny)
             ax.text(0.8, 0.95, "N_bin/N_avg", transform=ax.transAxes,
                     fontsize=12)
             ax.text(0.8, 0.9, "outside-> "+str(float(len(ra[outside]))/avg_ngals)[0:4],
@@ -825,44 +839,44 @@ class ImageMask:
             calling ImageMask instance with a changed WCS instance.
         """
 
-        #If we're not going to keep the mask this way, store the original
-        #values
-        if preview:
-            original_crval=deepcopy(self._wcs_instance.wcs.crval)
-            original_cd=deepcopy(self._wcs_instance.wcs.cd)
-            original_ra_range=deepcopy(self._ra_range)
-            original_dec_range=deepcopy(self._dec_range)
+        #First, check to make sure that the instance is such that it can be
+        #moved on the sky without causing problems
+        if not self._wcs_moveable:
+            raise ValueError("This mask has a WCS instance that is flagged"
+                             " as not moveable.  If it's something that "
+                             "came from Py2PAC and not from the user, it's"
+                             " because the astropy WCS package is uncooperative"
+                             " and I couldn't figure out how to get it to "
+                             "move the masks that I created by hand "
+                             "(in the from_array class method) "
+                             "properly.  The scales ended up messed up.  "
+                             "If you know how to fix this, I would be more"
+                             " than happy to hear your suggestions.")
 
+        #If we're previewing, make a copy to work with.  If not, use the
+        #WCS instance that we have already
+        if preview:
+            work_with = self._wcs_instance.deepcopy()
+        else:
+            work_with = self._wcs_instance
+    
         #Update the center
-        self._wcs_instance.wcs.crval[0] += delta_ra
-        self._wcs_instance.wcs.crval[1] += delta_dec
+        work_with.wcs.crval[0] += delta_ra
+        work_with.wcs.crval[1] += delta_dec
 
         #Apply the rotation
         sine = np.sin(np.radians(theta_degrees))
         cosine = np.cos(np.radians(theta_degrees))
         rotation_matrix=np.array([[cosine, -sine] , [sine, cosine]])
-        self._wcs_instance.wcs.cd = np.dot(rotation_matrix,
-                                           self._wcs_instance.wcs.cd)
+        work_with.wcs.cd = np.dot(rotation_matrix,
+                                           work_with.wcs.cd)
 
-        #Update the corners in the ImageMask object
-        try:
-            image_corners=self._wcs_instance.calc_footprint()
-        except AttributeError:
-            image_corners=self._wcs_instance.calcFootprint()
-        self._ra_range=[image_corners[:,0].min(), image_corners[:,0].max()]
-        self._dec_range=[image_corners[:,1].min(), image_corners[:,1].max()]
-        
-        #If this is a preview, send the altered instance back and switch
-        #things back
-        if preview:
-            to_return=deepcopy(self)
-            self._wcs_instance.wcs.crval=original_crval
-            self._wcs_instance.wcs.cd=original_cd
-            self._ra_range=original_ra_range
-            self._dec_range=original_dec_range
-            return to_return
-
-
+        #If this is a preview, send the altered instance back.  If not,
+        #update the RA and Dec ranges.  
+        if not preview:
+            self._calc_footprint()
+        else:
+            return ImageMask(self._mask, work_with)
 
 #==========================================================================
 #==========================================================================
@@ -929,7 +943,7 @@ class ImageMask:
         npix_true=np.sum(true_false)
 
         #What solid angle is covered by the whole RA and Dec range?
-        #Convert the RA and Decs to theta and phi (in radian)
+        #Convert the RA and Decs to theta and phi (in radians)
         #Dec is pi/2 at theta=0 and -pi/2 at theta=pi
         theta_range= - np.radians(self._dec_range) + np.pi/2. 
         theta_range.sort()
@@ -942,6 +956,9 @@ class ImageMask:
         theta_int, theta_int_err= intg.quad(lambda theta: np.sin(theta),
                                             theta_range[0], theta_range[1])
         solid_angle = phi_int * theta_int
+        print solid_angle
+        print npix_true
+        print total_npix
 
         #Return the fraction of the solid angle that's covered
         #by the true part
@@ -1111,3 +1128,4 @@ class ImageMask:
                 subregion[thismask]=bin_number
 
         return subregion
+

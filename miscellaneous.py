@@ -94,7 +94,8 @@ def files_starting_with(file_base):
     file_base : string
               The path from / that you want to complete.  For instance
               if I wanted files /a/b/thing1.txt and /a/b/thing2.txt, I
-              would put in '/a/b/thing' even if I'm in /a/b/.
+              would put in '/a/b/thing' even if the working directory is
+              /a/b/.
 
     Returns
     -------
