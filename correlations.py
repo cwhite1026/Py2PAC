@@ -1,5 +1,6 @@
 #This is a copy of the astroML.correlation package with some
-#modifications made by Cathy White.  The main body of work is not hers!
+#modifications made by Cathy White.  The main body of work was done
+#by Jake VanderPlas.
 
 import numpy as np
 import numpy.ma as ma
@@ -10,7 +11,8 @@ from astroML.utils import check_random_state
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 def uniform_sphere(RAlim, DEClim, size=1):
-    """Draw a uniform sample on a sphere
+    """
+    Draw a uniform sample on a sphere
 
     Parameters
     ----------
@@ -40,7 +42,8 @@ def uniform_sphere(RAlim, DEClim, size=1):
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 def ra_dec_to_xyz(ra, dec):
-    """Convert ra & dec to Euclidean points
+    """
+    Convert ra & dec to Euclidean points
 
     Parameters
     ----------
@@ -64,7 +67,8 @@ def ra_dec_to_xyz(ra, dec):
 #-----------------------------------------------------------------------
 def xyz_to_ra_dec(x, y, z):
     #Written by CW
-    """Convert Euclidean points to ra and dec
+    """
+    Convert Euclidean points to ra and dec
 
     Parameters
     ----------
@@ -84,11 +88,34 @@ def xyz_to_ra_dec(x, y, z):
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 def euclidian_dist_to_angular_dist(dist, r=1):
-    """convert euclidian distances to angular distances
-    Cathy White added 9/26/14- inverts angular_dist_to_euclidian_dist
-       -argument is euclidian distance in the same units as r
-       -returns angular sep in degrees"""
-    
+    """
+    The inverse of angular_dist_to_euclidian_dist.
+
+    Parameters
+    ----------
+    dist: array-like or scalar
+        Euclidian distance in the same units as r
+    r: scalar (optional)
+        The radius of the sphere that you're projecting onto.  Default
+        is 1.
+
+    Returns
+    -------
+    angular_separation: numpy array or scalar (matches input)
+       Angular separation in degrees that corresponds to the Euclidean
+       distance(s)
+    """
+
+    #If it's an array, make sure that it's a numpy array so that nothing
+    #weird happens in the vector operations
+    try:
+        n_dists = len(dist)
+    except TypeError:
+        n_dists = 1
+    else:
+        dist = np.array(dist)
+
+    #Return the distance
     return 180./np.pi * 2. * np.asin(dist/(2.*r))
 
 
@@ -96,10 +123,32 @@ def euclidian_dist_to_angular_dist(dist, r=1):
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 def angular_dist_to_euclidean_dist(D, r=1):
-    """convert angular distances to euclidean distances
-       -argument is angle in degrees
-       -returns in whatever units r is in"""
-    
+    """
+    Convert angular distances to euclidean distances
+
+    Parameters
+    ----------
+    D: array-like or scalar
+       Angle in degrees
+    r: scalar (optional)
+       The radius of the sphere you're projecting onto
+
+    Returns
+    -------
+    dist: array-like or scalar
+        Euclidean distance in whatever units r is in
+    """
+
+    #If it's an array, make sure that it's a numpy array so that nothing
+    #weird happens in the vector operations
+    try:
+        n_Ds = len(D)
+    except TypeError:
+        n_Ds = 1
+    else:
+        D = np.array(D)
+
+    #Return the distance(s)
     return 2 * r * np.sin(0.5 * D * np.pi / 180.)
 
 #-----------------------------------------------------------------------
@@ -109,39 +158,52 @@ def angular_dist_to_euclidean_dist(D, r=1):
 def two_point(data, bins, BT_D=None, BT_R=None, method='standard',
               data_R=None, random_state=None, return_trees=False, 
               verbose=False, RR=None, return_RR=False, return_DD=False):
-    #Edited by CW to allow user to supply the BallTrees or ask
-    #for them to be returned
-    """Two-point correlation function
+    #Edited by CW to allow user to supply more things and have more things
+    #returned.
+    """
+    Two-point correlation function in Euclidean space.  Options to return
+    a number of things.  What gets returned is up to the user but the order
+    will always be correlation_function, data_balltree, random_balltree,
+    random_random, data_data.  If the user asks for a subset of those, the
+    list will be shorter but the order will be maintained.
 
     Parameters
     ----------
     data : array_like
-        input data, shape = [n_samples, n_features]
+        Input data, shape = [n_samples, n_features]
     bins : array_like
-        bins within which to compute the 2-point correlation.
-        shape = Nbins + 1
+        Bins within which to compute the 2-point correlation.
+        Shape = Nbins + 1
     BT_D : BallTree (optional)
-        ball tree created with the data positions
+        Ball tree created with the data positions
     BT_R : BallTree (optional)
-        ball tree created with the random positions
-    method : string
-        "standard" or "landy-szalay".
+        Ball tree created with the random positions
+    method : string (optional)
+        "standard" or "landy-szalay".  Default is 'standard'.
     data_R : array_like (optional if no BT_R)
-        if specified, use this as the random comparison sample
-    random_state : integer, np.random.RandomState, or None
-        specify the random state to use for generating background
-    return_trees : True | False
-        if True, the returns will be corr, data_tree,
-        random_tree.  Default is False.
-    RR : if this exact set of randoms and theta bins has been
+        If specified, use this as the random comparison sample.  This must
+        be included if you wish to use a pre-computed random ball tree
+    random_state : integer, np.random.RandomState, or None (optional)
+        Specify the random state to use for generating background.  Not
+        used if the randoms are provided by the user.  Default is None
+    RR : 1D array-like, shape = Nbins
+        If this exact set of randoms and theta bins has been
         run, you can supply the RR counts and not calculate them again.
-        You also need the data in case you're running landy-szalay.
-    return_RR : If you know you'll be running a CF with this
+        You also need the data if you're running with method='landy-szalay'
+    return_trees : boolean (optional)
+        If True, the returns will include the data and random ball trees.
+        Default is False.
+    return_RR : boolean (optional)
+        If you know you'll be running a CF with this
         exact same random sample and binning (like with a bootstrap),
         you can get the RR counts returned and feed them back in the
         next time
-    return_DD : In case you want to fit to the pair counts rather
+    return_DD : boolean (optional)
+        In case you want to fit to the pair counts rather
         than the w(theta) estimator, you can get this back too
+    verbose: boolean (optional)
+        Determines whether or not the function narrates what it's doing.
+        Default is False.
  
     Returns
     -------
@@ -256,147 +318,61 @@ def two_point(data, bins, BT_D=None, BT_R=None, method='standard',
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
-def bootstrap_two_point(data, bins, Nbootstrap=10, BT_D=None, BT_R=None,
-                        method='standard', return_bootstraps=False,
-                        return_trees=False, random_state=None):
-    """Bootstrapped two-point correlation function
-
-    Parameters
-    ----------
-    data : array_like
-        input data, shape = [n_samples, n_features]
-    bins : array_like
-        bins within which to compute the 2-point correlation.
-        shape = Nbins + 1
-    Nbootstrap : integer
-        number of bootstrap resamples to perform (default = 10)
-    BT_D : BallTree
-        ball tree created with the data positions (optional)
-    BT_R : BallTree
-        ball tree created with the random positions (optional)
-    method : string
-        "standard" or "landy-szalay".
-    return_bootstraps: bool
-        if True, return full bootstrapped samples
-    random_state : integer, np.random.RandomState, or None
-        specify the random state to use for generating background
-    return_trees : True | False
-        if True, the returns will include the ball
-        trees for the data and random sets
-
-    Returns
-    -------
-    This has several options for the returns.  The order will be
-    corr, corr_err, bootstraps, BallTree_Data, BallTree_Rand
-
-    Whatever subset of this you choose to have returned will
-    retain this ordering.
-    
-    corr, corr_err : ndarrays
-        the estimate of the correlation function and the bootstrap
-        error within each bin. shape = Nbins
-    bootstraps: thingy of some sort (optional)
-        only returned when return_bootstraps == True
-    data_tree : BallTree (optional)
-        the ball tree used to calculate distances between objects
-        quickly in the data.  only returned if return_trees == True
-    random_tree : BallTree (optional)
-        the ball tree used to calculate distances between objects
-        quickly in the randomly generated set.  only returned if
-        return_trees == True
+def two_point_angular(ra, dec, bins, BT_D=None, BT_R=None,
+                      method='standard', ra_R=None, dec_R=None,
+                      random_state=None, return_trees=False, verbose=False,
+                      RR=None, return_RR=False, return_DD=False):
     """
-    data = np.asarray(data)
-    bins = np.asarray(bins)
-    rng = check_random_state(random_state)
-
-    if method not in ['standard', 'landy-szalay']:
-        raise ValueError("method must be 'standard' or 'landy-szalay'")
-
-    if bins.ndim != 1:
-        raise ValueError("bins must be a 1D array")
-
-    if data.ndim == 1:
-        data = data[:, np.newaxis]
-    elif data.ndim != 2:
-        raise ValueError("data should be 1D or 2D")
-
-    if Nbootstrap < 2:
-        raise ValueError("Nbootstrap must be greater than 1")
-
-    n_samples, n_features = data.shape
-
-    # get the baseline estimate
-    if return_trees:
-        corr, BT_D, BT_R = two_point(data, bins, BT_D=BT_D, BT_R=BT_R, method=method, random_state=rng, return_trees=True)
-    else:
-        corr = two_point(data, bins, BT_D=BT_D, BT_R=BT_R, method=method, random_state=rng)
-
-    bootstraps = np.zeros((Nbootstrap, len(corr)))
-
-    for i in range(Nbootstrap):
-        indices = rng.randint(0, n_samples, n_samples)
-        bootstraps[i] = two_point(data[indices, :], bins, method=method,
-                                  random_state=rng)
-
-    # use masked std dev in case of NaNs
-    corr_err = np.asarray(np.ma.masked_invalid(bootstraps).std(0, ddof=1))
-
-    if return_bootstraps and return_trees:
-        return corr, corr_err, bootstraps, BT_D, BT_R
-    if return_bootstraps and not return_trees:
-        return corr, corr_err, bootstraps
-    if not return_bootstraps and return_trees:
-        return corr, corr_err, BT_D, BT_R
-    if not return_boostraps and not return_trees:
-        return corr, corr_err
-
-#-----------------------------------------------------------------------
-#-----------------------------------------------------------------------
-#-----------------------------------------------------------------------
-def two_point_angular(ra, dec, bins, BT_D=None, BT_R=None, method='standard',
-                      ra_R=None, dec_R=None, random_state=None, return_trees=False, 
-                      verbose=False, RR=None, return_RR=False, return_DD=False):
-    """Angular two-point correlation function
+    Angular two-point correlation function
 
     A separate function is needed because angular distances are not
     euclidean, and random sampling needs to take into account the
     spherical volume element.
+
+    There are a number of options for what gets returned.  The order
+    will always be correlation_function, data_balltree, random_balltree,
+    random_random, data_data.  If the user asks for a subset of those, the
+    list will be shorter but the order will be maintained.
 
     Parameters
     ----------
     ra : array_like
         input right ascention, shape = (n_samples,)
     dec : array_like
-        input declination
-    completeness : array_like (optional)
-        completenesses for each object if performing weighted CF
+        input declination, shape = (n_samples,)
     bins : array_like
         bins within which to compute the 2-point correlation.
         shape = Nbins + 1
     BT_D : BallTree (optional)
-        ball tree created with the data positions
+        ball tree created with the data positions.  The positions given to
+        the BallTree should be Euclidean and not angular
     BT_R : BallTree (optional)
-        ball tree created with the random positions
-    method : string
-        "standard" or "landy-szalay".
+        ball tree created with the random positions. The positions given to
+        the BallTree should be Euclidean and not angular
+    method : string (optional)
+        "standard" or "landy-szalay".  Default is 'standard'
     ra_R, dec_R : array_like (optional if no BT_R)
         the random sample to be used.  If you pass BT_R
         as an argument, you must also pass the random sample
         it was made from with this
-    random_state : integer, np.random.RandomState, or None
-        specify the random state to use for generating background
-    return_trees : True | False
-        if True, the returns will include the ball
-        trees for the data and random sets
-    RR : if this exact set of randoms and theta bins has been
+    random_state : integer, np.random.RandomState, or None (optional)
+        specify the random state to use for generating background.
+        Default is None
+    RR : array-like, shape = Nbins (optional)
+        If this exact set of randoms and theta bins has been
         run, you can supply the RR counts and not calculate them again.
-        You also need the data in case you're running landy-szalay.
-    return_RR : If you know you'll be running a CF with this
+        You also need the data if you're running landy-szalay.
+    return_RR : boolean (optional)
+        If you know you'll be running a CF with this
         exact same random sample and binning (like with a bootstrap),
         you can get the RR counts returned and feed them back in the
-        next time
-    return_DD : In case you want to fit to the pair counts rather
-        than the w(theta) estimator, you can get this back too
+        next time.  Default is False.
+    return_DD : boolean (optional)
+        In case you want to fit to the pair counts rather than the w(theta)
+        estimator, you can get this back too.  Default is False
+    return_trees : boolean (optional)
+        if True, the returns will include the ball trees for the data and
+        random sets.  Default is False
         
     Returns
     -------
@@ -454,97 +430,3 @@ def two_point_angular(ra, dec, bins, BT_D=None, BT_R=None, method='standard',
                      return_trees=return_trees, RR=RR, return_RR=return_RR,
                      return_DD=return_DD)
 
-#-----------------------------------------------------------------------
-#-----------------------------------------------------------------------
-#-----------------------------------------------------------------------
-
-def bootstrap_two_point_angular(ra, dec, bins, method='standard', BT_D=None, BT_R=None,
-                                ra_R=None, dec_R=None, Nbootstraps=10, random_state=None, oversample_factor=1):
-    """Angular two-point correlation function
-
-    A separate function is needed because angular distances are not
-    euclidean, and random sampling needs to take into account the
-    spherical volume element.
-
-    Parameters
-    ----------
-    ra : array_like
-        input right ascention, shape = (n_samples,)
-    dec : array_like
-        input declination
-    ra_R, dec_R : array_like (taken but ignored)
-        the random sample to be used.  If you pass BT_R
-        as an argument, you must also pass the random sample
-        it was made from with this
-    bins : array_like
-        bins within which to compute the 2-point correlation.
-        shape = Nbins + 1
-    BT_D : BallTree
-        ball tree created with the data positions (taken but ignored)
-    BT_R : BallTree
-        ball tree created with the random positions (taken but ignored)
-    method : string
-        "standard" or "landy-szalay".
-    Nbootstraps : int
-        number of bootstrap resamples
-    random_state : integer, np.random.RandomState, or None
-        specify the random state to use for generating background
-        
-    Returns
-    -------
-    corr : ndarray
-        the estimate of the correlation function within each bin
-        shape = Nbins
-    dcorr : ndarray
-        error estimate on dcorr (sample standard deviation of
-        bootstrap resamples)
-    bootstraps : ndarray
-        The full sample of bootstraps used to compute corr and dcorr
-    """
-    ra = np.asarray(ra)
-    dec = np.asarray(dec)
-    rng = check_random_state(random_state)
-
-    if method not in ['standard', 'landy-szalay']:
-        raise ValueError("method must be 'standard' or 'landy-szalay'")
-
-    if bins.ndim != 1:
-        raise ValueError("bins must be a 1D array")
-
-    if (ra.ndim != 1) or (dec.ndim != 1) or (ra.shape != dec.shape):
-        raise ValueError('ra and dec must be 1-dimensional '
-                         'arrays of the same length')
-
-    n_features = len(ra)
-    Nbins = len(bins) - 1
-    data = np.asarray(ra_dec_to_xyz(ra, dec), order='F').T
-
-    # convert spherical bins to cartesian bins
-    bins_transform = angular_dist_to_euclidean_dist(bins)
-
-    bootstraps = []
-
-    for i in range(Nbootstraps):
-        # draw a random sample with N points if we don't have a random set already
-        if (ra_R is None) or (dec_R is None):
-            ra_R, dec_R = uniform_sphere((min(ra), max(ra)),
-                                         (min(dec), max(dec)),
-                                         2 * len(ra))
-
-        data_R = np.asarray(ra_dec_to_xyz(ra_R, dec_R), order='F').T
-
-        if i > 0:
-            # random sample of the data
-            ind = np.random.randint(0, data.shape[0], oversample_factor*data.shape[0])
-            data_b = data[ind]
-        else:
-            data_b = data
-
-        bootstraps.append(two_point(data_b, bins_transform, method=method,
-                                    data_R=data_R, random_state=rng))
-
-    bootstraps = np.asarray(bootstraps)
-    corr = np.mean(bootstraps, 0)
-    corr_err = np.std(bootstraps, 0, ddof=1)
-
-    return corr, corr_err, bootstraps
