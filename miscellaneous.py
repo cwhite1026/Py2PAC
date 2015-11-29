@@ -9,6 +9,61 @@ radian_opts = ['radians', 'radian', 'rad', 'r']
 degree_opts = ['degrees', 'degree', 'deg', 'd']
 
 #--------------------------------------------------------------------------
+def ang_sep(ra1, dec1, ra2, dec2, radians_out=True, radians_in=False):
+    """
+    Calculates the angular separation between point in RA/Dec space.  If
+    the RAs and Decs given are scalars, it computes the single separation
+    and returns the result as a scalar.  If the RAs and Decs are arrays,
+    they must all be the same length and the returned value will be an
+    array where theta[i] = separation between ra1[i], dec1[i] and ra2[i],
+    dec2[i].
+
+    Parameters
+    ----------
+    ra1: array-like or scalar
+        The right ascensions of the first points
+    dec1: array-like or scalar
+        The declinations of the first points
+    ra2: array-like or scalar
+        The right ascensions of the second points
+    dec2: array-like or scalar
+        The declinations of the second points
+    radians_in: boolean (optional)
+        If True, assumes the RAs and Decs are in radians.  If False,
+        assumes they are in degrees.  Default is False.
+    radians_out: boolean (optional)
+        If True, returns the angular separations in radians.  If False,
+        returns the angular separations in degrees.
+
+    Returns
+    -------
+    theta: array-like or scalar (matches input)
+        The angular separations between the points given.  
+    """
+    #Convert to radians 
+    if radians_in==False:
+        ra1 = np.radians(ra1)
+        ra2 = np.radians(ra2)
+        dec1 = np.radians(dec1)
+        dec2 = np.radians(dec2)
+        
+    #Define the numerator for the arctan.  It's gross
+    numer=(np.cos(dec2)**2.) * (np.sin(ra2-ra1)**2.)
+    numer+=(np.cos(dec1)*np.sin(dec2) - np.sin(dec1)*np.cos(dec2)*np.cos(ra2-ra1))**2.
+    numer=numer**.5
+    
+    #Define the denominator. Also gross
+    denom=np.sin(dec1)*np.sin(dec2) + np.cos(dec1)*np.cos(dec2)*np.cos(ra2-ra1)
+    
+    #Find the separation
+    theta = np.arctan(numer/denom)
+    if not radians_out:
+        theta=np.degrees(np.arctan(numer/denom))
+        
+    return theta
+
+
+#--------------------------------------------------------------------------
 #-----------------------------#
 #- Rotate coordinate systems -#
 #-----------------------------#

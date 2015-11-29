@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 
 #Py2PAC code
 import miscellaneous as misc
-import cosmology as cos
 import image_mask_cybits as cybits
 import correlations as corr
 
@@ -714,9 +713,9 @@ class ImageMask:
             x2=[x2edges[0], x2edges[0], x2edges[1]]
             y2=[y2edges[0], y2edges[1], y2edges[0]]
             ra_box, dec_box=self.xy_to_ra_dec(x2, y2)
-            y_side=cos.ang_sep(ra_box[0], dec_box[0], ra_box[1], dec_box[1],
+            y_side=misc.ang_sep(ra_box[0], dec_box[0], ra_box[1], dec_box[1],
                                radians_in=False, radians_out=False) * 3600
-            x_side=cos.ang_sep(ra_box[0], dec_box[0], ra_box[2], dec_box[2],
+            x_side=misc.ang_sep(ra_box[0], dec_box[0], ra_box[2], dec_box[2],
                                radians_in=False, radians_out=False) * 3600
 
             #Print out the parameters

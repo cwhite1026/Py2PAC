@@ -14,7 +14,6 @@ from sklearn.neighbors import BallTree
 
 #Py2PAC code
 import correlations as corr
-import cosmology as cos
 import ImageMask_class as imclass
 import miscellaneous as misc
 import ThetaBins_class as binclass
@@ -657,7 +656,7 @@ class AngularCatalog(object):
         min_dec = self._dec[self._use].min()
         max_ra = self._ra[self._use].max()
         max_dec = self._dec[self._use].max()
-        max_sep=cos.ang_sep(min_ra, min_dec, max_ra, max_dec,
+        max_sep=misc.ang_sep(min_ra, min_dec, max_ra, max_dec,
                            radians_in=False, radians_out=False)
 
         #Choose how many bins
