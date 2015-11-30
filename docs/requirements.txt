@@ -1,5 +1,1 @@
-numpy
-scipy
 numpydoc
-sklearn
-astropy
