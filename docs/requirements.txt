@@ -3,5 +3,3 @@ scipy
 numpydoc
 sklearn
 astropy
-matplotlib
-time
