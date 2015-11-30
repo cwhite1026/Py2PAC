@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../corrfunction.html">CorrelationFunction class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../gpclass.html">Gp class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../thetabins.html">ThetaBins class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc.html">Miscellaneous functions</a></li>
 </ul>
 
             
@@ -352,8 +353,10 @@
 <div class="viewcode-block" id="AngularCatalog.setup_mask"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.setup_mask">[docs]</a>    <span class="k">def</span> <span class="nf">setup_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_remake</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
         <span class="c">#Create an image mask (from the weight file if given one)</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force_remake</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span> <span class="o">=</span> <span class="n">imclass</span><span class="o">.</span><span class="n">ImageMask</span><span class="p">(</span><span class="n">angular_catalog</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-                                                  <span class="n">weight_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_file_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">immask</span> <span class="o">=</span> <span class="n">imclass</span><span class="o">.</span><span class="n">ImageMask</span><span class="o">.</span><span class="n">from_FITS_weight_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_file_name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">immask</span> <span class="o">=</span> <span class="n">imclass</span><span class="o">.</span><span class="n">ImageMask</span><span class="o">.</span><span class="n">from_ranges</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">)</span>
         
         <span class="c">#Ask the mask for the completenesses of each data object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_completeness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span><span class="o">.</span><span class="n">return_completenesses</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">)</span>

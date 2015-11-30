@@ -1,0 +1,431 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>miscellaneous &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpclass.html">Gp class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thetabins.html">ThetaBins class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc.html">Miscellaneous functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>miscellaneous</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for miscellaneous</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c">#--------------------------------------------------------------------------</span>
+<span class="c">#Some constants</span>
+<span class="n">arcsec_opts</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;arcseconds&#39;</span><span class="p">,</span> <span class="s">&#39;arcsecond&#39;</span><span class="p">,</span> <span class="s">&#39;arcsec&#39;</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">]</span>
+<span class="n">radian_opts</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;radians&#39;</span><span class="p">,</span> <span class="s">&#39;radian&#39;</span><span class="p">,</span> <span class="s">&#39;rad&#39;</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">]</span>
+<span class="n">degree_opts</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;degrees&#39;</span><span class="p">,</span> <span class="s">&#39;degree&#39;</span><span class="p">,</span> <span class="s">&#39;deg&#39;</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">]</span>
+
+<span class="c">#--------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="ang_sep"><a class="viewcode-back" href="../misc.html#miscellaneous.ang_sep">[docs]</a><span class="k">def</span> <span class="nf">ang_sep</span><span class="p">(</span><span class="n">ra1</span><span class="p">,</span> <span class="n">dec1</span><span class="p">,</span> <span class="n">ra2</span><span class="p">,</span> <span class="n">dec2</span><span class="p">,</span> <span class="n">radians_out</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">radians_in</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the angular separation between point in RA/Dec space.  If</span>
+<span class="sd">    the RAs and Decs given are scalars, it computes the single separation</span>
+<span class="sd">    and returns the result as a scalar.  If the RAs and Decs are arrays,</span>
+<span class="sd">    they must all be the same length and the returned value will be an</span>
+<span class="sd">    array where theta[i] = separation between ra1[i], dec1[i] and ra2[i],</span>
+<span class="sd">    dec2[i].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ra1: array-like or scalar</span>
+<span class="sd">        The right ascensions of the first points</span>
+<span class="sd">    dec1: array-like or scalar</span>
+<span class="sd">        The declinations of the first points</span>
+<span class="sd">    ra2: array-like or scalar</span>
+<span class="sd">        The right ascensions of the second points</span>
+<span class="sd">    dec2: array-like or scalar</span>
+<span class="sd">        The declinations of the second points</span>
+<span class="sd">    radians_in: boolean (optional)</span>
+<span class="sd">        If True, assumes the RAs and Decs are in radians.  If False,</span>
+<span class="sd">        assumes they are in degrees.  Default is False.</span>
+<span class="sd">    radians_out: boolean (optional)</span>
+<span class="sd">        If True, returns the angular separations in radians.  If False,</span>
+<span class="sd">        returns the angular separations in degrees.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    theta: array-like or scalar (matches input)</span>
+<span class="sd">        The angular separations between the points given.  </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#Convert to radians </span>
+    <span class="k">if</span> <span class="n">radians_in</span><span class="o">==</span><span class="bp">False</span><span class="p">:</span>
+        <span class="n">ra1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">ra1</span><span class="p">)</span>
+        <span class="n">ra2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">ra2</span><span class="p">)</span>
+        <span class="n">dec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">dec1</span><span class="p">)</span>
+        <span class="n">dec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">dec2</span><span class="p">)</span>
+        
+    <span class="c">#Define the numerator for the arctan.  It&#39;s gross</span>
+    <span class="n">numer</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec2</span><span class="p">)</span><span class="o">**</span><span class="mf">2.</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra2</span><span class="o">-</span><span class="n">ra1</span><span class="p">)</span><span class="o">**</span><span class="mf">2.</span><span class="p">)</span>
+    <span class="n">numer</span><span class="o">+=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec2</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec2</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra2</span><span class="o">-</span><span class="n">ra1</span><span class="p">))</span><span class="o">**</span><span class="mf">2.</span>
+    <span class="n">numer</span><span class="o">=</span><span class="n">numer</span><span class="o">**.</span><span class="mi">5</span>
+    
+    <span class="c">#Define the denominator. Also gross</span>
+    <span class="n">denom</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec2</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra2</span><span class="o">-</span><span class="n">ra1</span><span class="p">)</span>
+    
+    <span class="c">#Find the separation</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">numer</span><span class="o">/</span><span class="n">denom</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">radians_out</span><span class="p">:</span>
+        <span class="n">theta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">numer</span><span class="o">/</span><span class="n">denom</span><span class="p">))</span>
+        
+    <span class="k">return</span> <span class="n">theta</span></div>
+
+
+<span class="c">#--------------------------------------------------------------------------</span>
+<span class="c">#-----------------------------#</span>
+<span class="c">#- Rotate coordinate systems -#</span>
+<span class="c">#-----------------------------#</span>
+<div class="viewcode-block" id="rotate_coords"><a class="viewcode-back" href="../misc.html#miscellaneous.rotate_coords">[docs]</a><span class="k">def</span> <span class="nf">rotate_coords</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies a rotation matrix to rotate the coordinate frame by an angle</span>
+<span class="sd">    theta in RADIANS</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x1: array-like or scalar</span>
+<span class="sd">        The x coordinate(s) to rotate</span>
+<span class="sd">    y1: array-like or scalar</span>
+<span class="sd">        The y-coordinate(s) to rotate</span>
+<span class="sd">    theta: scalar</span>
+<span class="sd">        The angle to rotate the coordinates, given in radians</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    x2: array-like or scalar (matches x1)</span>
+<span class="sd">        The rotated x coordinates</span>
+<span class="sd">    y2: array-like or scalar (matches y1)</span>
+<span class="sd">        The rotated y coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c">#If we have an array, make sure it&#39;s a numpy array</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+        <span class="n">y1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y1</span><span class="p">)</span>
+
+    <span class="c">#Apply the rotation matrix</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">-</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">+</span> <span class="n">y1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span></div>
+
+<span class="c">#--------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="centers"><a class="viewcode-back" href="../misc.html#miscellaneous.centers">[docs]</a><span class="k">def</span> <span class="nf">centers</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes an N+1 length array and returns an N length array that has</span>
+<span class="sd">    the (arr[i]+arr[i+1])/2 in element i (if you have the edges of</span>
+<span class="sd">    histogram bins, this will give you the centers)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : array-like</span>
+<span class="sd">        The array that you want the centers of</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    centers : numpy array</span>
+<span class="sd">            An array with length 1 shorter than arr that is</span>
+<span class="sd">            centers[i] = (arr[i]+arr[i+1])/2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    
+    <span class="c">#Make sure we can actually do this</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;centers says: You&#39;ve given me a 0 or &quot;</span>
+                         <span class="s">&quot;1 length array.  I can&#39;t work with that&quot;</span><span class="p">)</span>
+    
+    <span class="c">#Find the centers and return</span>
+    <span class="k">return</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span></div>
+
+<span class="c">#--------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="files_starting_with"><a class="viewcode-back" href="../misc.html#miscellaneous.files_starting_with">[docs]</a><span class="k">def</span> <span class="nf">files_starting_with</span><span class="p">(</span><span class="n">file_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This takes file_base and returns all the files that start with that</span>
+
+<span class="sd">    We have to look at everything in the directory and then pare down to</span>
+<span class="sd">    just what you care about because check_output is being a butt and</span>
+<span class="sd">    Popen will do it but is insecure for these purposes: you could put</span>
+<span class="sd">    in &#39;not_filename; rm -rf /*&#39; and you would be very, very sad.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_base : string</span>
+<span class="sd">              The path from / that you want to complete.  For instance</span>
+<span class="sd">              if I wanted files /a/b/thing1.txt and /a/b/thing2.txt, I</span>
+<span class="sd">              would put in &#39;/a/b/thing&#39; even if the working directory is</span>
+<span class="sd">              /a/b/.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    files : python list</span>
+<span class="sd">          A list of strings that specify the files that complete</span>
+<span class="sd">          file_base.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">#If it&#39;s a directory, just ls the directory</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">file_base</span><span class="p">):</span>
+        <span class="n">use_direc</span> <span class="o">=</span> <span class="n">file_base</span>
+        <span class="n">start_of_filename</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c">#If it&#39;s not a directory already, strip off the start of the</span>
+        <span class="c">#file name from the directory.</span>
+        <span class="n">stripped_file_base</span> <span class="o">=</span> <span class="n">file_base</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">stripped_file_base</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+        <span class="n">start_of_filename</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">use_direc</span> <span class="o">=</span> <span class="n">file_base</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">start_of_filename</span><span class="p">)</span>
+
+    <span class="c">#Ask for all the file names in the directory we care about</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s">&#39;ls&#39;</span><span class="p">,</span> <span class="n">use_direc</span><span class="p">])</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="c">#Now see which start with what I want</span>
+    <span class="n">nchars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_of_filename</span><span class="p">)</span>
+    <span class="n">use_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nchars</span><span class="p">]</span> <span class="o">==</span> <span class="n">start_of_filename</span><span class="p">:</span>
+            <span class="n">use_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">use_direc</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">use_files</span></div>
+
+<span class="c">#--------------------------------------------------------------------------</span>
+        
+<span class="c">#-----------------------------#</span>
+<span class="c">#- Convert angles to degrees -#</span>
+<span class="c">#-----------------------------#</span>
+<div class="viewcode-block" id="put_thetas_in_degrees"><a class="viewcode-back" href="../misc.html#miscellaneous.put_thetas_in_degrees">[docs]</a><span class="k">def</span> <span class="nf">put_thetas_in_degrees</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes thetas and turns them from whatever unit they&#39;re in</span>
+<span class="sd">    and converts everything to degrees</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    thetas : array-like</span>
+<span class="sd">            An array of angles.</span>
+<span class="sd">    unit : string</span>
+<span class="sd">         The unit that the thetas are in.  The options are &#39;a&#39;,</span>
+<span class="sd">         &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;, &#39;rad&#39;,</span>
+<span class="sd">         &#39;radians&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    deg_thetas : numpy array</span>
+<span class="sd">              The thetas you put in now converted into degrees</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c">#Take a min and a max and what unit they&#39;re in and convert</span>
+    <span class="c">#to degrees.</span>
+    
+    <span class="n">thetas</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    
+    <span class="c">#What input unit do we have?</span>
+    <span class="n">in_arcsec</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">arcsec_opts</span>
+    <span class="n">in_radians</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">radian_opts</span>
+    <span class="n">in_degrees</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">degree_opts</span>
+        
+    <span class="c">#Deal with each option</span>
+    <span class="k">if</span> <span class="n">in_arcsec</span><span class="p">:</span>
+        <span class="n">thetas</span><span class="o">/=</span><span class="mf">3600.</span>
+    <span class="k">elif</span> <span class="n">in_radians</span><span class="p">:</span>
+        <span class="n">thetas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">min_theta</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">in_degrees</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;miscellaneous.put_thetas_in_degrees says: you have chosen unit=&quot;</span><span class="p">,</span> <span class="n">unit</span>
+        <span class="k">print</span> <span class="s">&quot;This is not an option.&quot;</span>
+        <span class="k">print</span> <span class="s">&quot;For arcseconds, use &#39;arcseconds&#39;, &#39;arcsecond&#39;, &#39;arcsec&#39;, or &#39;a&#39;.&quot;</span>
+        <span class="k">print</span> <span class="s">&quot;For radians, use &#39;radians&#39;, &#39;radian&#39;, &#39;rad&#39;, or &#39;r&#39;.&quot;</span>
+        <span class="k">print</span> <span class="s">&quot;For degrees, use &#39;degrees&#39;, &#39;degree&#39;, &#39;deg&#39;, or &#39;d&#39;.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;You chose an invalid value of unit.&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">thetas</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

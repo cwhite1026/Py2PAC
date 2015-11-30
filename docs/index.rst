@@ -17,6 +17,7 @@ Contents:
    corrfunction
    gpclass
    thetabins
+   misc
 
 Indices and tables
 ==================

@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Miscellaneous functions &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="index.html"/>
+        <link rel="prev" title="ThetaBins class" href="thetabins.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpclass.html">Gp class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thetabins.html">ThetaBins class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Miscellaneous functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Miscellaneous functions</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/misc.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="miscellaneous-functions">
+<h1>Miscellaneous functions<a class="headerlink" href="#miscellaneous-functions" title="Permalink to this headline">¶</a></h1>
+<p>Functions that don&#8217;t really belong in any of the classes.</p>
+<span class="target" id="module-miscellaneous"></span><dl class="function">
+<dt id="miscellaneous.ang_sep">
+<code class="descclassname">miscellaneous.</code><code class="descname">ang_sep</code><span class="sig-paren">(</span><em>ra1</em>, <em>dec1</em>, <em>ra2</em>, <em>dec2</em>, <em>radians_out=True</em>, <em>radians_in=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/miscellaneous.html#ang_sep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#miscellaneous.ang_sep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the angular separation between point in RA/Dec space.  If
+the RAs and Decs given are scalars, it computes the single separation
+and returns the result as a scalar.  If the RAs and Decs are arrays,
+they must all be the same length and the returned value will be an
+array where theta[i] = separation between ra1[i], dec1[i] and ra2[i],
+dec2[i].</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ra1: array-like or scalar</strong></p>
+<blockquote>
+<div><p>The right ascensions of the first points</p>
+</div></blockquote>
+<p><strong>dec1: array-like or scalar</strong></p>
+<blockquote>
+<div><p>The declinations of the first points</p>
+</div></blockquote>
+<p><strong>ra2: array-like or scalar</strong></p>
+<blockquote>
+<div><p>The right ascensions of the second points</p>
+</div></blockquote>
+<p><strong>dec2: array-like or scalar</strong></p>
+<blockquote>
+<div><p>The declinations of the second points</p>
+</div></blockquote>
+<p><strong>radians_in: boolean (optional)</strong></p>
+<blockquote>
+<div><p>If True, assumes the RAs and Decs are in radians.  If False,
+assumes they are in degrees.  Default is False.</p>
+</div></blockquote>
+<p><strong>radians_out: boolean (optional)</strong></p>
+<blockquote>
+<div><p>If True, returns the angular separations in radians.  If False,
+returns the angular separations in degrees.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">theta: array-like or scalar (matches input)</p>
+<blockquote class="last">
+<div><p>The angular separations between the points given.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="miscellaneous.centers">
+<code class="descclassname">miscellaneous.</code><code class="descname">centers</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/miscellaneous.html#centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#miscellaneous.centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes an N+1 length array and returns an N length array that has
+the (arr[i]+arr[i+1])/2 in element i (if you have the edges of
+histogram bins, this will give you the centers)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr</strong> : array-like</p>
+<blockquote>
+<div><p>The array that you want the centers of</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centers</strong> : numpy array</p>
+<blockquote class="last">
+<div><p>An array with length 1 shorter than arr that is
+centers[i] = (arr[i]+arr[i+1])/2.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="miscellaneous.files_starting_with">
+<code class="descclassname">miscellaneous.</code><code class="descname">files_starting_with</code><span class="sig-paren">(</span><em>file_base</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/miscellaneous.html#files_starting_with"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#miscellaneous.files_starting_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>This takes file_base and returns all the files that start with that</p>
+<p>We have to look at everything in the directory and then pare down to
+just what you care about because check_output is being a butt and
+Popen will do it but is insecure for these purposes: you could put
+in &#8216;not_filename; rm -rf /<a href="#id1"><span class="problematic" id="id2">*</span></a>&#8216; and you would be very, very sad.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>file_base</strong> : string</p>
+<blockquote>
+<div><p>The path from / that you want to complete.  For instance
+if I wanted files /a/b/thing1.txt and /a/b/thing2.txt, I
+would put in &#8216;/a/b/thing&#8217; even if the working directory is
+/a/b/.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>files</strong> : python list</p>
+<blockquote class="last">
+<div><p>A list of strings that specify the files that complete
+file_base.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="miscellaneous.put_thetas_in_degrees">
+<code class="descclassname">miscellaneous.</code><code class="descname">put_thetas_in_degrees</code><span class="sig-paren">(</span><em>thetas</em>, <em>unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/miscellaneous.html#put_thetas_in_degrees"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#miscellaneous.put_thetas_in_degrees" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes thetas and turns them from whatever unit they&#8217;re in
+and converts everything to degrees</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>thetas</strong> : array-like</p>
+<blockquote>
+<div><p>An array of angles.</p>
+</div></blockquote>
+<p><strong>unit</strong> : string</p>
+<blockquote>
+<div><p>The unit that the thetas are in.  The options are &#8216;a&#8217;,
+&#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;, &#8216;rad&#8217;,
+&#8216;radians&#8217;.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>deg_thetas</strong> : numpy array</p>
+<blockquote class="last">
+<div><p>The thetas you put in now converted into degrees</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="miscellaneous.rotate_coords">
+<code class="descclassname">miscellaneous.</code><code class="descname">rotate_coords</code><span class="sig-paren">(</span><em>x1</em>, <em>y1</em>, <em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/miscellaneous.html#rotate_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#miscellaneous.rotate_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies a rotation matrix to rotate the coordinate frame by an angle
+theta in RADIANS</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x1: array-like or scalar</strong></p>
+<blockquote>
+<div><p>The x coordinate(s) to rotate</p>
+</div></blockquote>
+<p><strong>y1: array-like or scalar</strong></p>
+<blockquote>
+<div><p>The y-coordinate(s) to rotate</p>
+</div></blockquote>
+<p><strong>theta: scalar</strong></p>
+<blockquote>
+<div><p>The angle to rotate the coordinates, given in radians</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">x2: array-like or scalar (matches x1)</p>
+<blockquote>
+<div><p>The rotated x coordinates</p>
+</div></blockquote>
+<p>y2: array-like or scalar (matches y1)</p>
+<blockquote class="last">
+<div><p>The rotated y coordinates</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="thetabins.html" class="btn btn-neutral" title="ThetaBins class" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
