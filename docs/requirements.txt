@@ -1,5 +1,7 @@
 numpy
 scipy
-copy
 numpydoc
 sklearn
+astropy
+matplotlib
+time

@@ -1,8 +1,8 @@
 #External code
 import numpy as np
+import time
 
 #Py2PAC code
-import time
 import ThetaBins_class as binclass
 import Gp_class as gpclass
 
