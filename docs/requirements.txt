@@ -1,1 +1,5 @@
-numpydoc==0.5
+numpy
+scipy
+copy
+numpydoc
+sklearn
