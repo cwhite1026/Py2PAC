@@ -4,5 +4,5 @@ from setuptools import setup, find_packages
 setup(
     name = "Py2PAC",
     version = "0.1",
-    packages = find_packages(),
+    packages = ['py2pac'],
 )
