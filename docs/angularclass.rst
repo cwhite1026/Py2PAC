@@ -9,7 +9,7 @@ the rest.
 **WARNING**:  This is the part of the code that doesn't work yet.  I
 should have it up in the next week or two.
 
-.. automodule:: AngularCatalog_class
+.. automodule:: AngularCatalog
 		:members:
 		:undoc-members:
 		:show-inheritance:
