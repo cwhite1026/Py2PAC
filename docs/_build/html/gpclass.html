@@ -1,0 +1,701 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Gp class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="index.html"/>
+        <link rel="prev" title="ThetaBins class" href="thetabins.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thetabins.html">ThetaBins class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Gp class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Gp class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/gpclass.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gp-class">
+<h1>Gp class<a class="headerlink" href="#gp-class" title="Permalink to this headline">¶</a></h1>
+<p>This little class holds the information about Gp, which is the normalized
+RR from Landy and Szalay.</p>
+<span class="target" id="module-Gp_class"></span><dl class="class">
+<dt id="Gp_class.Gp">
+<em class="property">class </em><code class="descclassname">Gp_class.</code><code class="descname">Gp</code><span class="sig-paren">(</span><em>min_theta</em>, <em>max_theta</em>, <em>nbins</em>, <em>Gp</em>, <em>n_randoms</em>, <em>n_chunks</em>, <em>logbins=True</em>, <em>unit='arcsec'</em>, <em>RR=None</em>, <em>creation_string=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This object keeps all the info about the G_p function together.
+Also provides functions to calculate the integral constraint and
+rebinning G_p.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>min_theta</strong> : float</p>
+<blockquote>
+<div><p>The minimum of the theta bin edges for constructing the theta bins.</p>
+</div></blockquote>
+<p><strong>max_theta</strong> : float</p>
+<blockquote>
+<div><p>The maximum of the theta bin edges for constructing the theta bins</p>
+</div></blockquote>
+<p><strong>nbins</strong> : float</p>
+<blockquote>
+<div><p>The number of theta bins</p>
+</div></blockquote>
+<p><strong>Gp</strong> : array of length nbins</p>
+<blockquote>
+<div><p>The Gp function from Landy and Szalay 1993, with the modification
+that the bin width is divided out of how they tell you to calculate
+it from randoms.  The given formula has the property that
+Sum[G_p,i]=1.  This is not equivalent to Integral[G_p d(theta)]=1,
+which is what they assume everywhere else.  Dividing out the bin
+width gives you that and lets you pretend G_p is a continuous but
+chunky-looking function.</p>
+</div></blockquote>
+<p><strong>n_randoms</strong> : scalar</p>
+<blockquote>
+<div><p>The total number of randoms used to calculate G_p</p>
+</div></blockquote>
+<p><strong>n_chunks</strong> : scalar</p>
+<blockquote>
+<div><p>The number of pieces into which n_randoms was broken into in
+order to keep the integration time down.  If n_chunks &gt; 1,
+G_p was calculated n_chunks time for n_randoms/n_chunks randoms
+in each and then averaged.</p>
+</div></blockquote>
+<p><strong>logbins</strong> : True | False (optional)</p>
+<blockquote>
+<div><p>Sets theta bins to be even in log space if True and and linear
+space if False.  Default is True.</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>Tells the theta bin object what unit min_theta and max_theta are in.
+The options are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;;
+&#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+<p><strong>RR</strong> : array of length nbins (optional)</p>
+<blockquote>
+<div><p>The non-normalized RR counts that the G_p came from.  This does not
+have the bin width divided out because it doesn&#8217;t need to be
+integrated anywhere.  Default is None.</p>
+</div></blockquote>
+<p><strong>creation_string</strong> : string (optional)</p>
+<blockquote class="last">
+<div><p>A time stamp of when the G_p function was actually calculated.
+Default is None, at which point it&#8217;s generated to be the time
+and date when the object is created.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="Gp_class.Gp.convert_A_to_degrees">
+<code class="descname">convert_A_to_degrees</code><span class="sig-paren">(</span><em>A</em>, <em>beta</em>, <em>unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.convert_A_to_degrees"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.convert_A_to_degrees" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes A for A*theta^-beta for theta in one unit and converts
+it to what it should be for theta in degrees</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>A</strong> : float</p>
+<blockquote>
+<div><p>The amplitude of the power law (A*theta ^-beta)</p>
+</div></blockquote>
+<p><strong>beta</strong> : float</p>
+<blockquote>
+<div><p>The power in the power law (A*theta ^-beta)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>deg_A</strong> : float</p>
+<blockquote class="last">
+<div><p>The amplitude for theta in degrees</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="Gp_class.Gp.from_file">
+<em class="property">classmethod </em><code class="descname">from_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>An alternative way to create a Gp object.  You give it a file name
+and it reads the file and then creates the Gp object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>The name of the saved Gp object.  This should be the path
+from /</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_gp</strong> : Gp class instance</p>
+<blockquote class="last">
+<div><p>A Gp instance that matches the saved Gp</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.get_dictionary">
+<code class="descname">get_dictionary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.get_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.get_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all the information that the object contains as a
+dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Gp_dict</strong> : python dictionary</p>
+<blockquote class="last">
+<div><p>A dictionary that contains all the information that the
+Gp object contains.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.get_gp">
+<code class="descname">get_gp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.get_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.get_gp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Gps</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Gp</strong> : array</p>
+<blockquote class="last">
+<div><p>The values of G_p in each bin</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.get_points">
+<code class="descname">get_points</code><span class="sig-paren">(</span><em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.get_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.get_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bin centers and the values of G_p in each bin.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit that you want the thetas to be in when they&#8217;re
+returned.  The options are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;;
+&#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.
+Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centers</strong> : array</p>
+<blockquote>
+<div><p>A list of the bin centers in the unit requested</p>
+</div></blockquote>
+<p><strong>Gp</strong> : array</p>
+<blockquote class="last">
+<div><p>The values of G_p in each bin</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.get_thetas">
+<code class="descname">get_thetas</code><span class="sig-paren">(</span><em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.get_thetas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.get_thetas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pulls the theta centers and edges from the ThetaBins object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit that you want the thetas to be in when they&#8217;re
+returned.  The options are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;;
+&#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.
+Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centers</strong> : array</p>
+<blockquote>
+<div><p>A list of the bin centers in the unit requested</p>
+</div></blockquote>
+<p><strong>edges</strong> : array</p>
+<blockquote class="last">
+<div><p>A list of the bin edges in the unit requested</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.integrate_gp">
+<code class="descname">integrate_gp</code><span class="sig-paren">(</span><em>lowlim</em>, <em>highlim</em>, <em>theta_unit='d'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.integrate_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.integrate_gp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrates G_p over a range in thetas</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lowlim</strong> : float</p>
+<blockquote>
+<div><p>The lower limit of the theta range to integrate over</p>
+</div></blockquote>
+<p><strong>highlim</strong> : float</p>
+<blockquote>
+<div><p>The upper limit of the theta range to integrate over</p>
+</div></blockquote>
+<p><strong>theta_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The units of lowlim and highlim.  The options are &#8216;a&#8217;,
+&#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;,
+&#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;d&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>integral</strong> : float</p>
+<blockquote class="last">
+<div><p>The integral of G_p from lowlim to highlim</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.integrate_gp_times_powerlaw">
+<code class="descname">integrate_gp_times_powerlaw</code><span class="sig-paren">(</span><em>A</em>, <em>beta</em>, <em>lowlim</em>, <em>highlim</em>, <em>theta_unit='d'</em>, <em>param_unit='d'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.integrate_gp_times_powerlaw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.integrate_gp_times_powerlaw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrates G_p * A * theta^-beta over a range in thetas.  Useful
+for calculating the integral constraint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>A</strong> : float</p>
+<blockquote>
+<div><p>The amplitude of the power law for theta in units param_unit</p>
+</div></blockquote>
+<p><strong>beta</strong> : float</p>
+<blockquote>
+<div><p>The power in the power law</p>
+</div></blockquote>
+<p><strong>lowlim</strong> : float</p>
+<blockquote>
+<div><p>The lower limit of the theta range to integrate over</p>
+</div></blockquote>
+<p><strong>highlim</strong> : float</p>
+<blockquote>
+<div><p>The upper limit of the theta range to integrate over</p>
+</div></blockquote>
+<p><strong>param_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The units of theta for which A was calculated.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;,
+&#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;d&#8217;</p>
+</div></blockquote>
+<p><strong>theta_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The units of lowlim and highlim.  The options are &#8216;a&#8217;,
+&#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;, &#8216;rad&#8217;,
+&#8216;radians&#8217;.  Default is &#8216;d&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>integral</strong> : float</p>
+<blockquote class="last">
+<div><p>The integral of G_p * A * theta^-beta</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.integrate_powerlaw">
+<code class="descname">integrate_powerlaw</code><span class="sig-paren">(</span><em>A</em>, <em>beta</em>, <em>lowlim</em>, <em>highlim</em>, <em>param_unit='d'</em>, <em>theta_unit='d'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.integrate_powerlaw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.integrate_powerlaw" title="Permalink to this definition">¶</a></dt>
+<dd><p>A funtion that integrates the power law A * theta^-beta over a
+range of thetas</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>A</strong> : float</p>
+<blockquote>
+<div><p>The amplitude of the power law for theta in units param_unit</p>
+</div></blockquote>
+<p><strong>beta</strong> : float</p>
+<blockquote>
+<div><p>The power in the power law</p>
+</div></blockquote>
+<p><strong>lowlim</strong> : float</p>
+<blockquote>
+<div><p>The lower limit of the theta range to integrate over</p>
+</div></blockquote>
+<p><strong>highlim</strong> : float</p>
+<blockquote>
+<div><p>The upper limit of the theta range to integrate over</p>
+</div></blockquote>
+<p><strong>param_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The units of theta for which A was calculated.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;,
+&#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;d&#8217;</p>
+</div></blockquote>
+<p><strong>theta_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The units of lowlim and highlim.  The options are &#8216;a&#8217;,
+&#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;,
+&#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;d&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>integral</strong> : float</p>
+<blockquote class="last">
+<div><p>The integral of the power law over the specified range</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.integrate_to_bins">
+<code class="descname">integrate_to_bins</code><span class="sig-paren">(</span><em>new_bin_edges</em>, <em>theta_unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.integrate_to_bins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.integrate_to_bins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses integrate_gp to rebin the existing G_p.  Note that the new G_p
+does not have the new bin widths divided out so it follows
+Sum{G_p,i} = 1, not integral(G_p(theta) d theta) = 1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>new_bin_edges: array</strong></p>
+<blockquote>
+<div><p>The values of theta defining the bin edges that you want to
+integrate to.  The theta values are in units theta_unit</p>
+</div></blockquote>
+<p><strong>theta_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit in which new_bin_edges are given.  The options are
+&#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;,
+&#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_gp</strong> : array</p>
+<blockquote class="last">
+<div><p>Gp integrated over the new bins</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the information in the object to a .npz file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote class="last">
+<div><p>Where to save the file.  This should be a path from /
+and can either include .npz or not</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.stats">
+<code class="descname">stats</code><span class="sig-paren">(</span><em>print_only=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows and/or returns some information about when and how the G_p
+was calculated</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>print_only</strong> : True | False (optional)</p>
+<blockquote>
+<div><p>If True, no information is returned.  If False, returns
+N_randoms, N_chunks, and time_created.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>N_randoms</strong> : integer</p>
+<blockquote>
+<div><p>The total number of randoms used to calculate G_p.  Only
+returned if print_only == False</p>
+</div></blockquote>
+<p><strong>N_chunks</strong> : integer</p>
+<blockquote>
+<div><p>The number of chunks into which N_randoms was broken.  G_p
+was calulated in N_chunks instances of N_randoms/N_chunks
+random points and then averaged.  Only returned if
+print_only == False</p>
+</div></blockquote>
+<p><strong>time_created</strong> : string</p>
+<blockquote class="last">
+<div><p>The date and time that the G_p was initially calculated.
+Only returned if print_only == False</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Gp_class.Gp.w_Omega">
+<code class="descname">w_Omega</code><span class="sig-paren">(</span><em>A</em>, <em>beta</em>, <em>param_unit='d'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Gp_class.html#Gp.w_Omega"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Gp_class.Gp.w_Omega" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Compute the constant w_Omega that appears in Landy and Szalay</dt>
+<dd>w_Omega = integral[ G_p(theta) * w(theta) d(theta)]</dd>
+</dl>
+<p>This is just a special case of integrate_gp_times_powerlaw
+over the entire range of thetas.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>A</strong> : float</p>
+<blockquote>
+<div><p>The amplitude of the power law for theta in units param_unit</p>
+</div></blockquote>
+<p><strong>beta</strong> : float</p>
+<blockquote>
+<div><p>The power in the power law</p>
+</div></blockquote>
+<p><strong>param_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The units of theta for which A was calculated.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;; &#8216;r&#8217;,
+&#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;d&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>w_Omega</strong> : float</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>The constant w_Omega from Landy and Szalay.</dt>
+<dd><p class="first last">w_Omega = integral[ G_p(theta) * w(theta) d(theta)]</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="thetabins.html" class="btn btn-neutral" title="ThetaBins class" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

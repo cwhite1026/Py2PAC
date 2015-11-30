@@ -20,15 +20,67 @@ import ThetaBins_class as binclass
 import CorrelationFunction_class as cfclass
 import Gp_class as gpclass
 
-#===============================================================================
-#===============================================================================
-#===============================================================================
+#==========================================================================
+#==========================================================================
+#==========================================================================
 class AngularCatalog(object):
+    """
+    This class is the workhorse of Py2PAC.  It manages the actual catalogs
+    of objects, it creates various objects to hold information, and it
+    performs the correlation function calculations on the catalogs.
+    AngularCatalogs are single-bin objects, so if you want to sub-divide
+    your data set, do so before you pull it into AngularCatalogs.  Future
+    releases of Py2PAC will include a MultiCatalog that manages slicing a
+    catalog into bins.
+
+    Parameters
+    ----------
+    ra : array-like
+        A list of RAs for your objects in degrees
+        
+    dec : array-like
+        A list of declinations for your objects in degrees
+
+    generate_randoms : bool (optional)
+        If True, ``__init__`` will call the mask's random generation to
+        produce a random sample of size ``len(ra) * default_oversample``.
+        If False, no randoms will be generated.  Default is False.
+
+    default_oversample : float (optional)
+        The default number of randoms to make in units of the number of
+        data points.  If ``default_oversample==1``, then by default the
+        object will generate the same number of randoms as you have data
+        points.  If ``default_oversample==1``, then by default the
+        object will generate twice as many randoms as you have data points,
+        etc.  Default value is 1.
+
+    properties : dictionary (optional)
+        Any additional properties that you want to carry around with the
+        angular positions.  This isn't used at all by AngularCatalog, but
+        makes it easier to access things.
+
+    weight_file : string (optional)
+        A path from / to a FITS weight file to be used to generate the
+        ImageMask.
+
+    image_mask : ImageMask instance (optional)
+        An instance of an ImageMask object.
+
+    Returns
+    -------
+    cat : AngularCatalog instance
+        The AngularCatalog instance with all the properties that you gave
+        it.
+    """
+
     #------------------#
     #- Initialization -#
     #------------------#Your data and masked data will be the same
     def __init__(self, ra, dec, generate_randoms=False, default_oversample=1.,
                  properties=None, weight_file=None, image_mask=None):
+        """
+        The init function for the AngularCatalog class
+        """
 
         #Make sure we have Numpy arrays
         ra = np.array(ra)
@@ -45,45 +97,32 @@ class AngularCatalog(object):
         #Now store the RA and Dec information
         self._ra = ra
         self._dec = dec
-        self._ra_range =np.array([ra.min(), ra.max()])
+        self._ra_range = np.array([ra.min(), ra.max()])
         self._ra_span = np.diff(self._ra_range)[0]
         self._dec_range = np.array([dec.min(), dec.max()])
         self._dec_span = np.diff(self._dec_range)[0]
-        #Store how many objects are in the whole sample
         self._input_n_objects = ra.size
+        self._n_objects=None
 
         #Store the info from keywords
         self._image_mask = image_mask
         self._weight_file_name = weight_file
         self._properties = properties
-        self._random_oversample_factor = default_oversample
+        self._random_oversample = default_oversample
 
         #Store some defaults/holders
         self._theta_bins=None
         self._cfs={}
-        self._powerlaw_A={}
-        self._powerlaw_beta={}
-        self._powerlaw_offset={}
-        self._IC={}
 
         #Make blank things so I can ask "is None" rather than "exists"
-        self._n_objects=None
         self._data_tree=None
+        self._random_tree=None
         self._ra_random=None
         self._dec_random=None
-        self._random_tree=None
-        #Things for the correlation functions
-        self._cf_theta_bins=None
-        self._cf_thetas=None           
-        #Things needed for the fitting/integral constraint
-        self._rr_counts=None
-        self._thetas_for_rr=None
-        self._rr_ngals=None
-        self._G_p=None               
-        #Completenesses
+        self._Gp=None
         self._completeness=None
-        self._use=None             
-        self._use_random=None      
+        self._use=None
+        self._use_random=None
         self._subregion_number=None
 
         #Set up the mask and generate the randoms if asked
@@ -103,24 +142,26 @@ class AngularCatalog(object):
         randomly within the mask.  This can be passed either an image
         mask or an RA and Dec range
 
-        Syntax
-        ------
+        **Syntax**
+
         * cat = ac_class.AngularCatalog.random_catalog(n_randoms, image_mask=ImageMask_object)
         OR
-        * cat = ac_class.AngularCatalog.random_catalog(n_randoms, ra_range=[min, max],
-                                                       dec_range=[min, max])
+        * cat = ac_class.AngularCatalog.random_catalog(n_randoms, ra_range=[min, max], dec_range=[min, max])
 
         Parameters
         ----------
         n_randoms : scalar
             The number of randoms that you want in you catalog
+            
         image_mask : ImageMask object (optional)
             An ImageMask object with the outline that you want for your
             randoms.  This is one option.
+            
         ra_range : two-element array-like (optional)
             The minimum and maximum RA you would like your randoms to have.
             This is an alternative to the image_mask option.  This must be
             combined with the dec_range argument as well.
+            
         dec_range : two-element array-like (optional)
             The minimum and maximum Dec you would like your randoms to have.
             This is an alternative to the image_mask option.  This must be
@@ -177,8 +218,10 @@ class AngularCatalog(object):
     def setup_mask(self, force_remake=False):
         #Create an image mask (from the weight file if given one)
         if (self._image_mask is None) or force_remake:
-            self._image_mask = imclass.ImageMask(angular_catalog=self,
-                                                  weight_file=self._weight_file_name)
+            if self._weight_file_name is not None:
+                immask = imclass.ImageMask.from_FITS_weight_file(self._weight_file_name)
+            else:
+                immask = imclass.ImageMask.from_ranges(self._ra_range, self._dec_range)
         
         #Ask the mask for the completenesses of each data object
         self._completeness = self._image_mask.return_completenesses(self._ra, self._dec)
@@ -277,7 +320,7 @@ class AngularCatalog(object):
         
         #Change/store the random oversampling factor if it's given
         if random_oversample is not None:
-            self._random_oversample_factor=random_oversample
+            self._random_oversample=random_oversample
 
         #Check the existence of a random sample
         if self._ra_random is None:
@@ -285,7 +328,7 @@ class AngularCatalog(object):
 
         #See if we're properly oversampled.
         nR=len(self._ra_random)
-        if nR != len(self._ra)*self._random_oversample_factor:
+        if nR != len(self._ra)*self._random_oversample:
             self.generate_random_sample()
             
         #Check to make sure we have the trees for the appropriate guys
@@ -717,226 +760,6 @@ class AngularCatalog(object):
 
         if save_to is not None:
             self.save_gp(save_to)
-        
-    #------------------------------------------------------------------------------------------
-
-    #-----------------------------------------------------------#
-    #- Determine the integral constraint given a power law fit -#
-    #-----------------------------------------------------------#
-    def one_shot_integral_constraint(self, which_cf='all', A=None, beta=None, random_oversample=100, set_nbins=None, logbins=True, min_sep=0.01, allow_powerlaw_offset=False, use_thetas=None):
-        #Calculates the integral constraint given A and beta (as defined in 
-        #the structure for each estimator or as in the keywords)
-        # self._powerlaw_A
-        # self._powerlaw_beta
-
-        #Make use_thetas an all-true mask if it's none
-        if use_thetas is None:
-            use_thetas = ma.masked_greater(self._cf_thetas, -100.).mask
-        
-        #Make sure we have a valid which_cf
-        if which_cf not in ['all', 'cf', 'bootstrap', 'block_bootstrap', 'jackknife']:
-            raise ValueError("one_shot_integral_constraint says: You have given me an invalid value of which_cf.  Your options are ['all', 'cf', 'bootstrap', 'block_bootstrap', 'jackknife']")
-        
-        #Figure out which ones I'm actually doing
-        calculate_keys=[]  #The list of keys to the powerlaw and IC dictionaries that I'll be working with
-
-        have_cf = self._cf is not None
-        have_bootstrap = self._bootstrap_cf is not None
-        have_block_bootstrap = self._block_bootstrap_cf is not None
-        have_jackknife = self._jackknife_cf is not None
-
-        #add all the names that I both have and want to calculate to the list
-        if (which_cf == 'cf') or (which_cf == 'all'):
-            if have_cf:
-                calculate_keys.append('cf')
-        if (which_cf == 'bootstrap') or (which_cf == 'all'):
-            if have_bootstrap:
-                calculate_keys.append('bootstrap')
-        if (which_cf == 'block_bootstrap') or (which_cf == 'all'):
-            if have_block_bootstrap:
-                calculate_keys.append('block_bootstrap')
-        if (which_cf == 'jackknife') or (which_cf == 'all'):
-            if have_jackknife:
-                calculate_keys.append('jackknife')
-
-        #Make sure we have something to do
-        if len(calculate_keys)==0:
-            raise ValueError("one_shot_integral_constraint says: You have chosen a CF estimate that has not been run.  Try again.")
-
-        #See if we have the RR counts already or if we have to generate them
-        if self._rr_counts is None:
-            generate_rr=True
-        else:
-            generate_rr=False
-
-        if generate_rr:
-            self.generate_rr(set_nbins=set_nbins, random_oversample=random_oversample, logbins=logbins, min_sep=min_sep)
-            
-        rr=self._rr_counts
-        thetas=self._thetas_for_rr
-            
-        #Now do all the estimates that I want
-        for k in calculate_keys:
-            #Do just the plain old CF without errors
-            #First get the values of A and beta
-            #Check if they're given- that takes priority.  If there isn't any, recalculate by setting to None.
-            if A is not None:
-                self._powerlaw_A[k]=A
-            if beta is not None:
-                self._powerlaw_beta[k]=beta
-
-            #If they're not given and we don't have one or both, run a fit
-            if (self._powerlaw_A[k] is None) or (self._powerlaw_beta[k] is None):
-                # print "am I even doing anything?  yes, something"
-                #Pick out the CF and error for this method
-                if k == 'cf':
-                    cf = self._cf
-                    error = None
-                elif k == 'bootstrap':
-                    cf = self._bootstrap_cf
-                    error = self._bootstrap_cf_err
-                elif k == 'block_bootstrap':
-                    cf = self._block_bootstrap_cf
-                    error = self._block_bootstrap_cf_err
-                else:
-                    cf = self._jackknife_cf
-                    error = self._jackknife_cf_err
-                    
-                print use_thetas
-                if allow_powerlaw_offset:
-                    # print "in if"
-                    A, beta, offset= self.fit_power_law(self._cf_thetas[use_thetas], cf[use_thetas], 
-                                                        error[use_thetas], fixed_A=self._powerlaw_A[k],
-                                                        fixed_beta=self._powerlaw_beta[k], allow_offset=True)
-                    self._powerlaw_A[k]=A
-                    self._powerlaw_beta[k]=beta
-                    self._powerlaw_offset[k]=offset
-                    # print A, beta, offset
-                else:
-                    # print "in else"
-                    A, beta= self.fit_power_law(self._cf_thetas[use_thetas], cf[use_thetas], 
-                                                error[use_thetas], fixed_A=self._powerlaw_A[k],
-                                                fixed_beta=self._powerlaw_beta[k], allow_offset=False)
-                    self._powerlaw_A[k]=A
-                    self._powerlaw_beta[k]=beta
-                    offset=0
-                    self._powerlaw_offset[k]=offset
-                    # print A, beta, offset
-
-            #Calculate the integral constraint
-            print "A=", A, "beta=", beta, "offset=", offset
-            rr_times_powerlaw = rr *  (A * (thetas ** (-beta)) + offset)
-            IC= sum(rr_times_powerlaw)/sum(rr)
-
-            #Store it (if the iterative routine is calling this function, 
-            # it'll get overwritten on the next iteration)
-            self._IC[k]=IC
-
-    #------------------------------------------------------------------------------------------
-
-    #----------------#
-    #- Compute bias -#
-    #----------------#
-    def bias_bootstrap(self, redshift_range):
-        #Calculate the bias from the CF and IC (single gal bootstrap for now)
-
-        #Pull in the things that I'll need for the fit
-        zmin = redshift_range.min()
-        zmax = redshift_range.max()
-        x = self._cf_thetas
-        y = self._bootstrap_cf - self._IC['bootstrap']
-        err = self._bootstrap_cf_err
-
-        #Get a power law fit to the IC corrected CF
-        A, beta=self.fit_power_law(x, y, err)
-
-        #Define the redshift window
-        def Nz(z):
-            if (z<zmin) or (z>zmax):
-                return 0
-            else:
-                return 1
-
-        #Invert the Limber equation to get the 3D params
-        r0, gamma = t.inverted_limber_equation(Nz, A, beta, minimization_tol=1.e-5, ignore_failure=False)
-
-        #Call the bias
-        z=(zmin+zmax)/2.
-        self._bias = t.bias(r0, gamma, z)
-        
-    #------------------------------------------------------------------------------------------
-
-    #---------------------------------------------#
-    #- Fit a correlation function to a power law -#
-    #---------------------------------------------#
-    def fit_power_law(self, thetas, cf, cf_err, fixed_A=None, fixed_beta=None, return_covariance=False, allow_offset=False):
-        #This is a grunt function, mainly intended for use by the integral constraint function
-        print "thetas to fit:"
-        print thetas
-        print "CF to fit:"
-        print cf
-        #Figure out what we're fitting for and act accordingly
-        if (fixed_A is None) and (fixed_beta is None):
-            #I'm fitting both A and beta
-            #Define my function
-            if allow_offset:
-                def powerlaw(theta, A, beta, offset):
-                    return A*(theta**(-beta)) + offset
-            else:
-                def powerlaw(theta, A, beta):
-                    return A*(theta**(-beta))
-            #Fit to the function
-            best_vals, covariance = opt.curve_fit(powerlaw, thetas, cf, sigma=cf_err, absolute_sigma=True)
-            if allow_offset:
-                A, beta, offset = best_vals 
-            else:
-                A, beta = best_vals 
-        elif (fixed_A is None):
-            #This case means we have a fixed beta but not A
-            #Define the function
-            if allow_offset:
-                def powerlaw(theta, A, offset):
-                    return A*(theta**(-fixed_beta)) + offset
-            else:
-                def powerlaw(theta, A):
-                    return A*(theta**(-fixed_beta))
-            #Fit to the function
-            beta = fixed_beta
-            best_vals, covariance = opt.curve_fit(powerlaw, thetas, cf, sigma=cf_err, absolute_sigma=True)
-            A = best_vals[0]
-            if allow_offset:
-                offset=best_vals[1]
-            
-        elif (fixed_beta is None):
-            #We have a fixed A but not beta
-            #Define the function
-            if allow_offset:
-                def powerlaw(theta, beta, offset):
-                    return fixed_A*(theta**(-beta)) + offset
-            else:
-                def powerlaw(theta, beta):
-                    return fixed_A*(theta**(-beta))
-            #Fit to the function
-            A=fixed_A
-            best_vals, covariance = opt.curve_fit(powerlaw, thetas, cf, sigma=cf_err, absolute_sigma=True)
-            beta = best_vals[0]
-            if allow_offset:
-                offset=best_vals[1]
-            
-        else:
-            #Both are fixed- this is not fittable (yes, I made that a word)
-            print "fit_power_law says:  You have called me with both parameters fixed.  There's nothing to fit"
-            raise ValueError("No free parameters")
-
-        #Return the fit values
-        returning=[A, beta]
-        if allow_offset:
-            returning.append(offset)
-        if return_covariance:
-            returning.append(covariance)
-            
-        return returning
-            
         
     #------------------------------------------------------------------------------------------
 

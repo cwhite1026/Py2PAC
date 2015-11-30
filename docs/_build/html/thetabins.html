@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ThetaBins class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="index.html"/>
+        <link rel="next" title="Gp class" href="gpclass.html"/>
+        <link rel="prev" title="CorrelationFunction class" href="corrfunction.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">ThetaBins class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpclass.html">Gp class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>ThetaBins class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/thetabins.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="thetabins-class">
+<h1>ThetaBins class<a class="headerlink" href="#thetabins-class" title="Permalink to this headline">¶</a></h1>
+<p>A class that holds theta bin information.  Very basic.</p>
+<span class="target" id="module-ThetaBins_class"></span><dl class="class">
+<dt id="ThetaBins_class.ThetaBins">
+<em class="property">class </em><code class="descclassname">ThetaBins_class.</code><code class="descname">ThetaBins</code><span class="sig-paren">(</span><em>min_theta</em>, <em>max_theta</em>, <em>nbins</em>, <em>unit='arcseconds'</em>, <em>logbins=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ThetaBins_class.html#ThetaBins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ThetaBins_class.ThetaBins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This is just a little guy to keep the info about theta
+binning together and guarantee consistency.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>min_theta</strong> : float</p>
+<blockquote>
+<div><p>The minimum of the theta bin edges</p>
+</div></blockquote>
+<p><strong>max_theta</strong> : float</p>
+<blockquote>
+<div><p>The maximum of the theta bin edges</p>
+</div></blockquote>
+<p><strong>nbins</strong> : float</p>
+<blockquote>
+<div><p>The number of theta bins</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit that min and max theta are in.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;;
+&#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+<p><strong>logbins</strong> : boolean (optional)</p>
+<blockquote class="last">
+<div><p>If logbins == True, the bins are evenly spaced in log space.
+If logbins == False, the bins are evenly spaced in linear
+space.  Default is True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="classmethod">
+<dt id="ThetaBins_class.ThetaBins.from_centers">
+<em class="property">classmethod </em><code class="descname">from_centers</code><span class="sig-paren">(</span><em>centers</em>, <em>unit='d'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ThetaBins_class.html#ThetaBins.from_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ThetaBins_class.ThetaBins.from_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class method that constructs a ThetaBins object with all the
+relevant parameters from the centers of bins.</p>
+<p><strong>Syntax</strong></p>
+<p>new_bins = ThetaBins_class.ThetaBins.from_centers(centers, unit=&lt;unit&gt;)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>centers</strong> : array-like</p>
+<blockquote>
+<div><p>The centers of the bins that you want to reconstruct in
+the given unit</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>A string saying what units the centers are in.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;;
+&#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;degrees&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_bins</strong> : ThetaBins instance</p>
+<blockquote class="last">
+<div><p>A ThetaBins instance that matches the given centers
+and contains all the auxiliary information as well.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="ThetaBins_class.ThetaBins.from_edges">
+<em class="property">classmethod </em><code class="descname">from_edges</code><span class="sig-paren">(</span><em>edges</em>, <em>unit='d'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ThetaBins_class.html#ThetaBins.from_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ThetaBins_class.ThetaBins.from_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class method that constructs a ThetaBins object with all the
+relevant parameters from the edges of bins.</p>
+<p><strong>Syntax</strong></p>
+<p>new_bins = ThetaBins_class.ThetaBins.from_edges(edges, unit=&lt;unit&gt;)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>edges</strong> : array-like</p>
+<blockquote>
+<div><p>The edges of the bins that you want to reconstruct in
+the given unit</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>A string saying what units the centers are in.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;;
+&#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;degrees&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_bins</strong> : ThetaBins instance</p>
+<blockquote class="last">
+<div><p>A ThetaBins instance that matches the given edges
+and contains all the auxiliary information as well.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ThetaBins_class.ThetaBins.get_bins">
+<code class="descname">get_bins</code><span class="sig-paren">(</span><em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ThetaBins_class.html#ThetaBins.get_bins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ThetaBins_class.ThetaBins.get_bins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the centers and edges of the bins in the requested unit</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit that the thetas will be returned in.
+Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centers</strong> : numpy array</p>
+<blockquote>
+<div><p>The locations of the centers of the bins in the requested unit</p>
+</div></blockquote>
+<p><strong>edges</strong> : numpy array</p>
+<blockquote class="last">
+<div><p>The locations of the edges of the bins in the requested unit</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ThetaBins_class.ThetaBins.get_logbins">
+<code class="descname">get_logbins</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ThetaBins_class.html#ThetaBins.get_logbins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ThetaBins_class.ThetaBins.get_logbins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether or not the bins are logarithmic or linear</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>logbins</strong> : boolean</p>
+<blockquote class="last">
+<div><p>If logbins == True, the bins are evenly spaced in log space.
+If logbins == False, the bins are evenly spaced in linear</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ThetaBins_class.ThetaBins.set_logbins">
+<code class="descname">set_logbins</code><span class="sig-paren">(</span><em>logbins</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ThetaBins_class.html#ThetaBins.set_logbins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ThetaBins_class.ThetaBins.set_logbins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to change whether the bins are even in log space or linear
+space.  Recalculates the bins when logbins is changed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>logbins</strong> : boolean</p>
+<blockquote class="last">
+<div><p>If logbins == True, the bins are evenly spaced in log space.
+If logbins == False, the bins are evenly spaced in linear</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ThetaBins_class.ThetaBins.set_new_bins">
+<code class="descname">set_new_bins</code><span class="sig-paren">(</span><em>min_theta</em>, <em>max_theta</em>, <em>nbins</em>, <em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ThetaBins_class.html#ThetaBins.set_new_bins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ThetaBins_class.ThetaBins.set_new_bins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redo the range and number of bins.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>min_theta</strong> : float</p>
+<blockquote>
+<div><p>The minimum of the theta bin edges</p>
+</div></blockquote>
+<p><strong>max_theta</strong> : float</p>
+<blockquote>
+<div><p>The maximum of the theta bin edges</p>
+</div></blockquote>
+<p><strong>nbins</strong> : float</p>
+<blockquote>
+<div><p>The number of theta bins</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote class="last">
+<div><p>The unit that min and max theta are in.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gpclass.html" class="btn btn-neutral float-right" title="Gp class" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="corrfunction.html" class="btn btn-neutral" title="CorrelationFunction class" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

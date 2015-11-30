@@ -1,0 +1,1015 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>AngularCatalog_class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpclass.html">Gp class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thetabins.html">ThetaBins class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>AngularCatalog_class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for AngularCatalog_class</h1><div class="highlight"><pre>
+<span class="c">#-------------------------------------------------------------------#</span>
+<span class="c"># This is the file that contains the main class that Py2PAC is      #</span>
+<span class="c"># built around, the AngularCatalog, which holds RAs and Decs and    #</span>
+<span class="c"># does the actual calculations of correlation functions.            #</span>
+<span class="c">#-------------------------------------------------------------------#</span>
+
+<span class="c"># External code</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="kn">as</span> <span class="nn">ma</span>
+<span class="kn">import</span> <span class="nn">numpy.random</span> <span class="kn">as</span> <span class="nn">rand</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">optimize</span> <span class="k">as</span> <span class="n">opt</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">BallTree</span>
+
+<span class="c">#Py2PAC code</span>
+<span class="kn">import</span> <span class="nn">correlations</span> <span class="kn">as</span> <span class="nn">corr</span>
+<span class="kn">import</span> <span class="nn">ImageMask_class</span> <span class="kn">as</span> <span class="nn">imclass</span>
+<span class="kn">import</span> <span class="nn">miscellaneous</span> <span class="kn">as</span> <span class="nn">misc</span>
+<span class="kn">import</span> <span class="nn">ThetaBins_class</span> <span class="kn">as</span> <span class="nn">binclass</span>
+<span class="kn">import</span> <span class="nn">CorrelationFunction_class</span> <span class="kn">as</span> <span class="nn">cfclass</span>
+<span class="kn">import</span> <span class="nn">Gp_class</span> <span class="kn">as</span> <span class="nn">gpclass</span>
+
+<span class="c">#==========================================================================</span>
+<span class="c">#==========================================================================</span>
+<span class="c">#==========================================================================</span>
+<div class="viewcode-block" id="AngularCatalog"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog">[docs]</a><span class="k">class</span> <span class="nc">AngularCatalog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is the workhorse of Py2PAC.  It manages the actual catalogs</span>
+<span class="sd">    of objects, it creates various objects to hold information, and it</span>
+<span class="sd">    performs the correlation function calculations on the catalogs.</span>
+<span class="sd">    AngularCatalogs are single-bin objects, so if you want to sub-divide</span>
+<span class="sd">    your data set, do so before you pull it into AngularCatalogs.  Future</span>
+<span class="sd">    releases of Py2PAC will include a MultiCatalog that manages slicing a</span>
+<span class="sd">    catalog into bins.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ra : array-like</span>
+<span class="sd">        A list of RAs for your objects in degrees</span>
+<span class="sd">        </span>
+<span class="sd">    dec : array-like</span>
+<span class="sd">        A list of declinations for your objects in degrees</span>
+
+<span class="sd">    generate_randoms : bool (optional)</span>
+<span class="sd">        If True, ``__init__`` will call the mask&#39;s random generation to</span>
+<span class="sd">        produce a random sample of size ``len(ra) * default_oversample``.</span>
+<span class="sd">        If False, no randoms will be generated.  Default is False.</span>
+
+<span class="sd">    default_oversample : float (optional)</span>
+<span class="sd">        The default number of randoms to make in units of the number of</span>
+<span class="sd">        data points.  If ``default_oversample==1``, then by default the</span>
+<span class="sd">        object will generate the same number of randoms as you have data</span>
+<span class="sd">        points.  If ``default_oversample==1``, then by default the</span>
+<span class="sd">        object will generate twice as many randoms as you have data points,</span>
+<span class="sd">        etc.  Default value is 1.</span>
+
+<span class="sd">    properties : dictionary (optional)</span>
+<span class="sd">        Any additional properties that you want to carry around with the</span>
+<span class="sd">        angular positions.  This isn&#39;t used at all by AngularCatalog, but</span>
+<span class="sd">        makes it easier to access things.</span>
+
+<span class="sd">    weight_file : string (optional)</span>
+<span class="sd">        A path from / to a FITS weight file to be used to generate the</span>
+<span class="sd">        ImageMask.</span>
+
+<span class="sd">    image_mask : ImageMask instance (optional)</span>
+<span class="sd">        An instance of an ImageMask object.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cat : AngularCatalog instance</span>
+<span class="sd">        The AngularCatalog instance with all the properties that you gave</span>
+<span class="sd">        it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">#------------------#</span>
+    <span class="c">#- Initialization -#</span>
+    <span class="c">#------------------#Your data and masked data will be the same</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">generate_randoms</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">default_oversample</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+                 <span class="n">properties</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight_file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">image_mask</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The init function for the AngularCatalog class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Make sure we have Numpy arrays</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+
+        <span class="c">#Check to make sure we have sensible values for RA and Dec</span>
+        <span class="k">if</span> <span class="n">ra</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;RA list must be a 1D array&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dec</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Dec list must be a 1D array&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dec</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">ra</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;RA and Dec arrays must be the same length&#39;</span><span class="p">)</span>
+
+        <span class="c">#Now store the RA and Dec information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span> <span class="o">=</span> <span class="n">ra</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span> <span class="o">=</span> <span class="n">dec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ra</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">ra</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ra_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dec</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">dec</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dec_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input_n_objects</span> <span class="o">=</span> <span class="n">ra</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="o">=</span><span class="bp">None</span>
+
+        <span class="c">#Store the info from keywords</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span> <span class="o">=</span> <span class="n">image_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_file_name</span> <span class="o">=</span> <span class="n">weight_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_properties</span> <span class="o">=</span> <span class="n">properties</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_random_oversample</span> <span class="o">=</span> <span class="n">default_oversample</span>
+
+        <span class="c">#Store some defaults/holders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="o">=</span><span class="p">{}</span>
+
+        <span class="c">#Make blank things so I can ask &quot;is None&quot; rather than &quot;exists&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_tree</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_random_tree</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_completeness</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use_random</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span><span class="o">=</span><span class="bp">None</span>
+
+        <span class="c">#Set up the mask and generate the randoms if asked</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_mask</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">generate_randoms</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">()</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+    <span class="c">#--------------------------------------------#</span>
+    <span class="c">#- Class method for making a random catalog -#</span>
+    <span class="c">#--------------------------------------------#</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AngularCatalog.random_catalog"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.random_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">random_catalog</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n_randoms</span><span class="p">,</span> <span class="n">image_mask</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">ra_range</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">dec_range</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an AngularCatalog populated with RAs and Decs placed</span>
+<span class="sd">        randomly within the mask.  This can be passed either an image</span>
+<span class="sd">        mask or an RA and Dec range</span>
+
+<span class="sd">        **Syntax**</span>
+
+<span class="sd">        * cat = ac_class.AngularCatalog.random_catalog(n_randoms, image_mask=ImageMask_object)</span>
+<span class="sd">        OR</span>
+<span class="sd">        * cat = ac_class.AngularCatalog.random_catalog(n_randoms, ra_range=[min, max], dec_range=[min, max])</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_randoms : scalar</span>
+<span class="sd">            The number of randoms that you want in you catalog</span>
+<span class="sd">            </span>
+<span class="sd">        image_mask : ImageMask object (optional)</span>
+<span class="sd">            An ImageMask object with the outline that you want for your</span>
+<span class="sd">            randoms.  This is one option.</span>
+<span class="sd">            </span>
+<span class="sd">        ra_range : two-element array-like (optional)</span>
+<span class="sd">            The minimum and maximum RA you would like your randoms to have.</span>
+<span class="sd">            This is an alternative to the image_mask option.  This must be</span>
+<span class="sd">            combined with the dec_range argument as well.</span>
+<span class="sd">            </span>
+<span class="sd">        dec_range : two-element array-like (optional)</span>
+<span class="sd">            The minimum and maximum Dec you would like your randoms to have.</span>
+<span class="sd">            This is an alternative to the image_mask option.  This must be</span>
+<span class="sd">            combined with the ra_range argument.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cat : AngularCatalog object</span>
+<span class="sd">            An AngularCatalog instance with n_randoms distributed over either</span>
+<span class="sd">            the image_mask or over the RA and Dec range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Make an image mask from the RA and Dec ranges if we don&#39;t have an</span>
+        <span class="c">#image mask already</span>
+        <span class="n">need_image_mask</span> <span class="o">=</span> <span class="n">image_mask</span> <span class="ow">is</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">need_image_mask</span><span class="p">:</span>
+            <span class="n">image_mask</span> <span class="o">=</span> <span class="n">imclass</span><span class="o">.</span><span class="n">ImageMask</span><span class="p">(</span><span class="n">forced_ra_range</span><span class="o">=</span><span class="n">ra_range</span><span class="p">,</span>
+                                           <span class="n">forced_dec_range</span><span class="o">=</span><span class="n">dec_range</span><span class="p">)</span>
+
+        <span class="c">#Make a dummy catalog and generate the randoms we want</span>
+        <span class="n">dummy_cat</span> <span class="o">=</span> <span class="n">cls</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">generate_randoms</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                        <span class="n">image_mask</span><span class="o">=</span><span class="n">image_mask</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">dummy_cat</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                                <span class="n">make_exactly</span><span class="o">=</span><span class="n">n_randoms</span><span class="p">)</span>
+        <span class="n">rand_ras</span><span class="p">,</span> <span class="n">rand_decs</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c">#Return the angular catalog with the RAs and Decs</span>
+        <span class="k">return</span> <span class="n">AngularCatalog</span><span class="p">(</span><span class="n">rand_ras</span><span class="p">,</span> <span class="n">rand_decs</span><span class="p">,</span> <span class="n">image_mask</span><span class="o">=</span><span class="n">image_mask</span><span class="p">)</span></div>
+        
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#----------------------------#</span>
+    <span class="c">#- Set the weight file name -#</span>
+    <span class="c">#----------------------------#            </span>
+<div class="viewcode-block" id="AngularCatalog.set_mask_to_weight_file"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.set_mask_to_weight_file">[docs]</a>    <span class="k">def</span> <span class="nf">set_mask_to_weight_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the weight file name and process the file to an image mask</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">            The location of the FITS file that you want to process to</span>
+<span class="sd">            a weight mask.  The file name should be specified from /</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_file_name</span><span class="o">=</span><span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_mask</span><span class="p">(</span><span class="n">force_remake</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#-------------------------------------------#</span>
+    <span class="c">#- Make an image mask from the weight file -#</span>
+    <span class="c">#-------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.setup_mask"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.setup_mask">[docs]</a>    <span class="k">def</span> <span class="nf">setup_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_remake</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+        <span class="c">#Create an image mask (from the weight file if given one)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force_remake</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span> <span class="o">=</span> <span class="n">imclass</span><span class="o">.</span><span class="n">ImageMask</span><span class="p">(</span><span class="n">angular_catalog</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                                  <span class="n">weight_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_file_name</span><span class="p">)</span>
+        
+        <span class="c">#Ask the mask for the completenesses of each data object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_completeness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span><span class="o">.</span><span class="n">return_completenesses</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">)</span>
+
+        <span class="c">#Generate random numbers- this is basically for when we have non-binary completeness</span>
+        <span class="n">compare_to</span> <span class="o">=</span> <span class="n">rand</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="p">)</span>
+
+        <span class="c">#Use the random numbers to figure out which guys in the data to use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use</span> <span class="o">=</span> <span class="n">compare_to</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_completeness</span>
+
+        <span class="c">#Set up the data tree now that we have a mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_data_tree</span><span class="p">()</span>
+
+        <span class="c">#Record how many objects we&#39;re actually using</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">])</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#-------------#</span>
+    <span class="c">#- Move mask -#</span>
+    <span class="c">#-------------#</span>
+<div class="viewcode-block" id="AngularCatalog.move_mask"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.move_mask">[docs]</a>    <span class="k">def</span> <span class="nf">move_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta_ra</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">delta_dec</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">theta_degrees</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">preview</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+        <span class="c">#Calls the image mask&#39;s translation/rotation routine.</span>
+        <span class="k">if</span> <span class="n">preview</span><span class="p">:</span>
+            <span class="n">newmask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span><span class="o">.</span><span class="n">move_mask_on_sky</span><span class="p">(</span><span class="n">delta_ra</span><span class="o">=</span><span class="n">delta_ra</span><span class="p">,</span>
+                                                      <span class="n">delta_dec</span><span class="o">=</span><span class="n">delta_dec</span><span class="p">,</span>
+                                                      <span class="n">theta_degrees</span><span class="o">=</span><span class="n">theta_degrees</span><span class="p">,</span>
+                                                      <span class="n">preview</span><span class="o">=</span><span class="n">preview</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">newmask</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span><span class="o">.</span><span class="n">move_mask_on_sky</span><span class="p">(</span><span class="n">delta_ra</span><span class="o">=</span><span class="n">delta_ra</span><span class="p">,</span>
+                                              <span class="n">delta_dec</span><span class="o">=</span><span class="n">delta_dec</span><span class="p">,</span>
+                                              <span class="n">theta_degrees</span><span class="o">=</span><span class="n">theta_degrees</span><span class="p">,</span>
+                                              <span class="n">preview</span><span class="o">=</span><span class="n">preview</span><span class="p">)</span>
+    
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+        
+    <span class="c">#---------------------------------#</span>
+    <span class="c">#- Compute BallTree for the data -#</span>
+    <span class="c">#---------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.make_data_tree"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.make_data_tree">[docs]</a>    <span class="k">def</span> <span class="nf">make_data_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div>
+        <span class="c">#The astroML correlation function methods want a cartesian position</span>
+        <span class="c">#instead of the angular positions- this does the conversion</span>
+        
+        <span class="k">print</span> <span class="s">&quot;make_datatree says: Computing the BallTree for data.&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">ra_dec_to_xyz</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">]),</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_tree</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">leaf_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="k">return</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#------------------------------------------#</span>
+    <span class="c">#- Compute BallTree for the random sample -#</span>
+    <span class="c">#------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.make_random_tree"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.make_random_tree">[docs]</a>    <span class="k">def</span> <span class="nf">make_random_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></div>
+        <span class="c">#Make sure we have the random data made</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&quot;make_random_tree says: no random sample found.  Generating one.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">()</span>
+
+        <span class="c">#Make the tree</span>
+        <span class="k">print</span> <span class="s">&quot;make_randomtree says: Computing the BallTree for the randoms.&quot;</span>
+        <span class="n">random_data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">corr</span><span class="o">.</span><span class="n">ra_dec_to_xyz</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_random_tree</span> <span class="o">=</span> <span class="n">BallTree</span><span class="p">(</span><span class="n">random_data</span><span class="p">,</span> <span class="n">leaf_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>                
+                
+        <span class="k">return</span>          
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="AngularCatalog.set_theta_bins"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.set_theta_bins">[docs]</a>    <span class="k">def</span> <span class="nf">set_theta_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_theta</span><span class="p">,</span> <span class="n">max_theta</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span>
+                       <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">logbins</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span></div>
+        <span class="c">#Make a ThetaBins class and save it.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="o">=</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="p">(</span><span class="n">min_theta</span><span class="p">,</span> <span class="n">max_theta</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span>
+                                              <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span> <span class="n">logbins</span><span class="o">=</span><span class="n">logbins</span><span class="p">)</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#---------------------------------------------------------------------#</span>
+    <span class="c">#- Check to make sure we have all the info needed for CF calculation -#</span>
+    <span class="c">#---------------------------------------------------------------------#         </span>
+    <span class="k">def</span> <span class="nf">__check_cf_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">need_subregions</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">random_oversample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">check_trees</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="c">#Make sure that we have all the things we need to do a</span>
+        <span class="c">#correlation function properly (I got tired of the redundant</span>
+        <span class="c">#code in the different CF calculation routines)</span>
+        
+        <span class="c">#Check that we have the bins </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="p">,</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;CF calculations need separation bins.  Use &quot;</span>
+                             <span class="s">&quot;catalog.set_theta_bins(min_theta, max_theta,&quot;</span>
+                             <span class="s">&quot;nbins, unit=&#39;arcsec&#39;, logbins=True)&quot;</span><span class="p">)</span>
+        
+        <span class="c">#Change/store the random oversampling factor if it&#39;s given</span>
+        <span class="k">if</span> <span class="n">random_oversample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_random_oversample</span><span class="o">=</span><span class="n">random_oversample</span>
+
+        <span class="c">#Check the existence of a random sample</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">()</span>
+
+        <span class="c">#See if we&#39;re properly oversampled.</span>
+        <span class="n">nR</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nR</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_oversample</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">()</span>
+            
+        <span class="c">#Check to make sure we have the trees for the appropriate guys</span>
+        <span class="k">if</span> <span class="n">check_trees</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_tree</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">make_data_tree</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_tree</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">make_random_tree</span><span class="p">()</span>
+
+        <span class="c">#Check to make sure that the subdivisions have happened</span>
+        <span class="c">#if need_subregions.  If not, throw an error because it&#39;s</span>
+        <span class="c">#too specific to fill it in automatically</span>
+        <span class="k">if</span> <span class="n">need_subregions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Jackknife and block bootstrap require &quot;</span>
+                                <span class="s">&quot;that you subdivide the field.  Call the &quot;</span>
+                                <span class="s">&quot;catalog.subdivide_mask() routine first.&quot;</span><span class="p">)</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#-----------------------------------------------------#</span>
+    <span class="c">#- Calculate the correlation function without errors -#</span>
+    <span class="c">#-----------------------------------------------------# </span>
+<div class="viewcode-block" id="AngularCatalog.cf"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.cf">[docs]</a>    <span class="k">def</span> <span class="nf">cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="s">&#39;landy-szalay&#39;</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+          <span class="n">random_oversample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">save_steps_file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;cf&#39;</span><span class="p">):</span></div>
+        <span class="c">#This uses the info we have plus the astroML correlation package</span>
+        <span class="c">#   to compute the angular correlation function.</span>
+        <span class="c">#The idea is that this function will figure out what information</span>
+        <span class="c">#   is available and call the appropriate (most efficient) function</span>
+        <span class="c">#   with all the relevant information.</span>
+        <span class="c">#This function will store the values it calculates for missing info</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">clobber</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;CorrelationFunction.cf says: There&#39;s already&quot;</span>
+                             <span class="s">&quot; a CF by that name.  Please choose another or &quot;</span>
+                             <span class="s">&quot;overwrite by calling with clobber=True&quot;</span><span class="p">)</span>
+
+        <span class="c">#Make sure that we have everything we need and fix anything missing that&#39;s fixable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_cf_setup</span><span class="p">(</span><span class="n">random_oversample</span><span class="o">=</span><span class="n">random_oversample</span><span class="p">,</span>
+                              <span class="n">need_subregions</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">check_trees</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="c">#Make a new CorrelationFunction instance and set the basic info</span>
+        <span class="c">#First make a dictionary of the arguments to pass because it&#39;s ugly</span>
+        <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;name&#39;</span>            <span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+             <span class="s">&#39;cf_type&#39;</span>          <span class="p">:</span> <span class="s">&#39;no_error&#39;</span><span class="p">,</span>
+             <span class="s">&#39;ngals&#39;</span>            <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="p">,</span>
+             <span class="s">&#39;theta_bin_object&#39;</span> <span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="p">),</span>
+             <span class="s">&#39;estimator&#39;</span>        <span class="p">:</span> <span class="n">estimator</span>
+             <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfclass</span><span class="o">.</span><span class="n">CorrelationFunction</span><span class="p">(</span><span class="o">**</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get_thetas</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;degrees&#39;</span><span class="p">)</span>
+        <span class="n">nbins</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span>
+
+        <span class="c">#Do the calculation</span>
+        <span class="n">cf</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span>
+        <span class="n">DD</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;AngularCatalog.cf says: doing a CF calculation without error estimation&quot;</span>
+        <span class="n">iterations</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_iter</span><span class="p">):</span>
+            <span class="n">this_cf</span><span class="p">,</span> <span class="n">this_dd</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">two_point_angular</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">],</span> 
+                                                     <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">],</span> 
+                                                     <span class="n">edges</span><span class="p">,</span>
+                                                     <span class="n">BT_D</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_tree</span><span class="p">,</span> 
+                                                     <span class="n">BT_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_tree</span><span class="p">,</span>
+                                                     <span class="n">method</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> 
+                                                     <span class="n">ra_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">,</span>
+                                                     <span class="n">dec_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">,</span>
+                                                     <span class="n">return_DD</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">iterations</span><span class="p">[</span><span class="n">it</span><span class="p">]</span><span class="o">=</span><span class="n">this_cf</span>
+            <span class="n">cf</span> <span class="o">+=</span> <span class="n">this_cf</span>
+            <span class="n">DD</span> <span class="o">=</span> <span class="n">this_dd</span><span class="o">/</span><span class="mf">2.</span>
+            <span class="k">if</span> <span class="n">save_steps_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_cf</span><span class="p">(</span><span class="n">cf</span><span class="o">/</span><span class="p">(</span><span class="n">it</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbins</span><span class="p">),</span> <span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_DD</span><span class="p">(</span><span class="n">DD</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_cf</span><span class="p">(</span><span class="n">save_steps_file</span><span class="p">,</span> <span class="n">cf_keys</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">()</span>
+
+        <span class="c">#Divide out the number of iterations</span>
+        <span class="n">cf</span><span class="o">/=</span><span class="n">n_iter</span>
+
+        <span class="c">#Make sure we&#39;ve stored everything properly even if we&#39;re not saving</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_cf</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbins</span><span class="p">),</span> <span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">)</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#----------------------------------------------------#</span>
+    <span class="c">#- Find the CF and error by single-galaxy bootstrap -#</span>
+    <span class="c">#----------------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.cf_bootstrap"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.cf_bootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">cf_bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_boots</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bootstrap_oversample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                     <span class="n">random_oversample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="s">&#39;landy-szalay&#39;</span><span class="p">,</span>
+                     <span class="n">save_steps_file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;galaxy_bootstrap&#39;</span><span class="p">,</span>
+                     <span class="n">clobber</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+        <span class="c">#Calculate the  correlation function with single-galaxy bootstrapping</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">clobber</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;CorrelationFunction.cf_bootstrap says: &quot;</span>
+                             <span class="s">&quot;There&#39;s already a CF by that name.  Please &quot;</span>
+                             <span class="s">&quot;choose another or overwrite by calling with &quot;</span>
+                             <span class="s">&quot;clobber=True&quot;</span><span class="p">)</span>
+        
+        <span class="c">#Check that everything is set up</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_cf_setup</span><span class="p">(</span><span class="n">need_subregions</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">check_trees</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                              <span class="n">random_oversample</span><span class="o">=</span><span class="n">random_oversample</span><span class="p">)</span>
+
+        <span class="c">#Make a new CorrelationFunction instance and set the basic info</span>
+        <span class="c">#First make a dictionary of the arguments to pass because it&#39;s ugly</span>
+        <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;name&#39;</span>            <span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+             <span class="s">&#39;cf_type&#39;</span>          <span class="p">:</span> <span class="s">&#39;single_galaxy_bootstrap&#39;</span><span class="p">,</span>
+             <span class="s">&#39;ngals&#39;</span>            <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="p">,</span>
+             <span class="s">&#39;theta_bin_object&#39;</span> <span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="p">),</span>
+             <span class="s">&#39;estimator&#39;</span>        <span class="p">:</span> <span class="n">estimator</span>
+             <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfclass</span><span class="o">.</span><span class="n">CorrelationFunction</span><span class="p">(</span><span class="o">**</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get_thetas</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;degrees&#39;</span><span class="p">)</span>
+        <span class="n">nbins</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span>
+
+        <span class="c">#Make an array so it&#39;s easy to average over the boots</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_boots</span><span class="p">,</span> <span class="n">nbins</span><span class="p">))</span>
+        <span class="c">#This RR will keep track of the RR counts so you don&#39;t have to</span>
+        <span class="c">#calculate them every time.</span>
+        <span class="n">rr</span><span class="o">=</span><span class="bp">None</span>
+        <span class="c">#A holder for the boots that will be passed to the</span>
+        <span class="c">#CorrelationFunction as the iterations</span>
+        <span class="n">bootstrap_boots</span><span class="o">=</span><span class="p">{}</span>
+        
+        <span class="k">print</span> <span class="p">(</span><span class="s">&quot;AngularCatalog.cf_bootstrap says: doing a bootstrap &quot;</span>
+               <span class="s">&quot;CF calculation&quot;</span><span class="p">)</span>
+
+        <span class="c">#Loop through the boots</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_boots</span><span class="p">):</span>
+            <span class="c">#Give a progress report</span>
+            <span class="k">print</span> <span class="s">&quot;calculating boot&quot;</span><span class="p">,</span> <span class="n">i</span>
+            
+            <span class="c">#Choose the right number of galaxies *with replacement*</span>
+            <span class="n">ind</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="p">,</span>
+                                  <span class="n">bootstrap_oversample</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="p">)</span>
+            <span class="n">ra_b</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">dc_b</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
+            
+            <span class="c">#Calculate this boot</span>
+            <span class="n">bootstrap_boots</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rr</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">two_point_angular</span><span class="p">(</span><span class="n">ra_b</span><span class="p">,</span> <span class="n">dec_b</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> 
+                                                            <span class="n">BT_D</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_tree</span><span class="p">,</span> 
+                                                            <span class="n">BT_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_tree</span><span class="p">,</span>
+                                                            <span class="n">method</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> 
+                                                            <span class="n">ra_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">,</span> 
+                                                            <span class="n">dec_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">,</span> 
+                                                            <span class="n">RR</span><span class="o">=</span><span class="n">rr</span><span class="p">,</span> <span class="n">return_RR</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="c">#Store what we have</span>
+            <span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">bootstrap_boots</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">save_steps_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="n">bootstrap_cf</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">bootstrap_cf_err</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_cfs</span><span class="p">(</span><span class="n">save_steps_file</span><span class="p">,</span> <span class="n">cf_keys</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+                
+        <span class="c">#Now we&#39;re done- do the final storage.</span>
+        <span class="n">bootstrap_cf</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">bootstrap_cf_err</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_cf</span><span class="p">(</span><span class="n">bootstrap_cf</span><span class="p">,</span> <span class="n">bootstrap_cf_err</span><span class="p">,</span>
+                               <span class="n">iterations</span><span class="o">=</span><span class="n">bootstrap_boots</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_counts</span><span class="p">(</span><span class="n">RR</span><span class="o">=</span><span class="n">rr</span><span class="p">)</span>
+        
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#----------------------------------------#</span>
+    <span class="c">#- Find the CF and error by jackknifing -#</span>
+    <span class="c">#----------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.cf_jackknife"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.cf_jackknife">[docs]</a>    <span class="k">def</span> <span class="nf">cf_jackknife</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore_regions</span><span class="o">=</span><span class="p">[],</span> <span class="n">estimator</span><span class="o">=</span><span class="s">&#39;landy-szalay&#39;</span><span class="p">,</span>
+                     <span class="n">random_oversample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">save_steps_file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">name</span><span class="o">=</span><span class="s">&#39;jackknife&#39;</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+        <span class="c">#This takes a divided mask and performs the correlation</span>
+        <span class="c">#function calculation on the field with each sub-region</span>
+        <span class="c">#removed in turn.</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">clobber</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;CorrelationFunction.cf_jackknife says: &quot;</span>
+                             <span class="s">&quot;There&#39;s already a CF by that name.  Please &quot;</span>
+                             <span class="s">&quot;choose another or overwrite by calling with &quot;</span>
+                             <span class="s">&quot;clobber=True&quot;</span><span class="p">)</span>
+
+        <span class="c">#Check to make sure we have everything we need</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_cf_setup</span><span class="p">(</span><span class="n">need_subregions</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">check_trees</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                              <span class="n">random_oversample</span><span class="o">=</span><span class="n">random_oversample</span><span class="p">)</span>
+
+        <span class="c">#Make a new CorrelationFunction instance and set the basic info</span>
+        <span class="c">#First make a dictionary of the arguments to pass because it&#39;s ugly</span>
+        <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;name&#39;</span>            <span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+             <span class="s">&#39;cf_type&#39;</span>          <span class="p">:</span> <span class="s">&#39;jackknife&#39;</span><span class="p">,</span>
+             <span class="s">&#39;ngals&#39;</span>            <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="p">,</span>
+             <span class="s">&#39;theta_bin_object&#39;</span> <span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="p">),</span>
+             <span class="s">&#39;estimator&#39;</span>        <span class="p">:</span> <span class="n">estimator</span>
+             <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfclass</span><span class="o">.</span><span class="n">CorrelationFunction</span><span class="p">(</span><span class="o">**</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get_thetas</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;degrees&#39;</span><span class="p">)</span>
+        
+        <span class="c">#pull out the unique subregion numbers and figure out which to use</span>
+        <span class="n">regions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span><span class="p">)))</span>
+        <span class="n">use_regions</span><span class="o">=</span><span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regions</span> <span class="k">if</span> <span class="p">(</span><span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_regions</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">r</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">use_regions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">use_regions</span><span class="p">)</span>
+        <span class="n">n_jacks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">use_regions</span><span class="p">)</span>
+
+        <span class="c">#Figure out where the randoms are</span>
+        <span class="n">random_subregions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span><span class="o">.</span><span class="n">return_subregions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">)</span>
+        
+        <span class="c">#Now loop through the regions that you should be using </span>
+        <span class="c">#and calculate the correlation function leaving out each</span>
+        <span class="n">jackknife_jacks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c">#Make a mask that takes out all the galaxies that aren&#39;t in use_regions</span>
+        <span class="n">valid_subregion</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_not_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>
+        <span class="n">random_valid_subregion</span><span class="o">=</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_not_equal</span><span class="p">(</span><span class="n">random_subregions</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">for</span> <span class="n">bad_reg</span> <span class="ow">in</span> <span class="n">ignore_regions</span><span class="p">:</span>
+            <span class="n">this_mask</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_not_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span><span class="p">,</span> <span class="n">bad_reg</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>
+            <span class="n">valid_subregion</span> <span class="o">=</span> <span class="n">valid_subregion</span> <span class="o">&amp;</span> <span class="n">this_mask</span>
+            <span class="n">this_mask</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_not_equal</span><span class="p">(</span><span class="n">random_subregions</span><span class="p">,</span> <span class="n">bad_reg</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>
+            <span class="n">random_valid_subregion</span> <span class="o">=</span> <span class="n">random_valid_subregion</span> <span class="o">&amp;</span> <span class="n">this_mask</span>        
+
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_jacks</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_thetas</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">use_regions</span><span class="p">):</span>
+            <span class="c">#Make the mask for the data</span>
+            <span class="n">not_region_r</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_not_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>  
+            <span class="n">this_jackknife</span> <span class="o">=</span> <span class="n">valid_subregion</span> <span class="o">&amp;</span> <span class="n">not_region_r</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use</span>  
+            
+            <span class="c">#Make the mask for the randoms</span>
+            <span class="n">random_not_region_r</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_not_equal</span><span class="p">(</span><span class="n">random_subregions</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>
+            <span class="n">random_this_jackknife</span> <span class="o">=</span> <span class="n">random_not_region_r</span> <span class="o">&amp;</span> <span class="n">random_valid_subregion</span>
+
+            <span class="c">#Do the calculation for this jackknife and store it</span>
+            <span class="k">print</span> <span class="s">&quot;calculating jackknife&quot;</span><span class="p">,</span> <span class="n">i</span>
+            <span class="n">jackknife_jacks</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">two_point_angular</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="n">this_jackknife</span><span class="p">],</span> 
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">[</span><span class="n">this_jackknife</span><span class="p">],</span> 
+                                                        <span class="n">edges</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> 
+                                                        <span class="n">ra_R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">[</span><span class="n">random_this_jackknife</span><span class="p">],</span>
+                                                        <span class="n">dec_R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">[</span><span class="n">random_this_jackknife</span><span class="p">])</span>
+            <span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">jackknife_jacks</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">save_steps_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+                    <span class="n">jackknife_cf</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">jackknife_cf_err</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_cf</span><span class="p">(</span><span class="n">jackknife_cf</span><span class="p">,</span> <span class="n">jackknife_cf_err</span><span class="p">,</span>
+                                           <span class="n">iterations</span><span class="o">=</span><span class="n">bootstrap_boots</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">save_cfs</span><span class="p">(</span><span class="n">save_steps_file</span><span class="p">,</span> <span class="n">cf_keys</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+            
+        <span class="c">#Now that we have all of the jackknifes (jackknives?), calculate the mean</span>
+        <span class="c"># and variance.</span>
+        <span class="n">jackknife_cf</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">jackknife_cf_err</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_cf</span><span class="p">(</span><span class="n">jackknife_cf</span><span class="p">,</span> <span class="n">jackknife_cf_err</span><span class="p">,</span>
+                               <span class="n">iterations</span><span class="o">=</span><span class="n">bootstrap_boots</span><span class="p">)</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#--------------------------------------------#</span>
+    <span class="c">#- Find the CF and error by block bootstrap -#</span>
+    <span class="c">#--------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.cf_block_bootstrap"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.cf_block_bootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">cf_block_bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_boots</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ignore_regions</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">estimator</span><span class="o">=</span><span class="s">&#39;landy-szalay&#39;</span><span class="p">,</span> <span class="n">random_oversample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">bootstrap_oversample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">save_steps_file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">name</span><span class="o">=</span><span class="s">&#39;block_bootstrap&#39;</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+        <span class="c">#Use the subdivided mask to bootstrap on blocks rather than</span>
+        <span class="c">#single galaxies.</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">clobber</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;CorrelationFunction.cf_block_bootstrap says: &quot;</span>
+                             <span class="s">&quot;There&#39;s already a CF by that name.  Please &quot;</span>
+                             <span class="s">&quot;choose another or overwrite by calling with &quot;</span>
+                             <span class="s">&quot;clobber=True&quot;</span><span class="p">)</span>
+
+        <span class="c">#Check to make sure I have everything that I need</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_cf_setup</span><span class="p">(</span><span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">need_subregions</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                              <span class="n">random_oversample</span><span class="o">=</span><span class="n">random_oversample</span><span class="p">,</span>
+                              <span class="n">check_trees</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="c">#Make a new CorrelationFunction instance and set the basic info</span>
+        <span class="c">#First make a dictionary of the arguments to pass because it&#39;s ugly</span>
+        <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;name&#39;</span>            <span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+             <span class="s">&#39;cf_type&#39;</span>          <span class="p">:</span> <span class="s">&#39;jackknife&#39;</span><span class="p">,</span>
+             <span class="s">&#39;ngals&#39;</span>            <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_objects</span><span class="p">,</span>
+             <span class="s">&#39;theta_bin_object&#39;</span> <span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="p">),</span>
+             <span class="s">&#39;estimator&#39;</span>        <span class="p">:</span> <span class="n">estimator</span>
+             <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfclass</span><span class="o">.</span><span class="n">CorrelationFunction</span><span class="p">(</span><span class="o">**</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get_thetas</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;degrees&#39;</span><span class="p">)</span>
+        <span class="n">nbins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span>
+        
+        <span class="k">print</span> <span class="s">&quot;block boots done with setup&quot;</span>
+
+        <span class="c">#Figure out which subregions we should be using</span>
+        <span class="n">regions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span><span class="p">)))</span>
+        <span class="n">use_regions</span><span class="o">=</span><span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regions</span> <span class="k">if</span> <span class="p">(</span><span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_regions</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">r</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">use_regions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">use_regions</span><span class="p">)</span>
+
+        <span class="c">#Figure out where the randoms are</span>
+        <span class="n">random_subregions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span><span class="o">.</span><span class="n">return_subregions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">)</span>
+
+        <span class="c">#Make a dictionary of arrays containing the indices of the members of each sub-region we need</span>
+        <span class="n">indices</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">random_indices</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">use_regions</span><span class="p">:</span>
+            <span class="n">indices</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_number</span> <span class="o">==</span> <span class="n">r</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">random_indices</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">random_subregions</span> <span class="o">==</span> <span class="n">r</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c">#Loop through the bootstraps</span>
+        <span class="n">block_bootstrap_boots</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">n_choose</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">use_regions</span><span class="p">)</span><span class="o">*</span><span class="n">bootstrap_oversample</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_boots</span><span class="p">,</span> <span class="n">nbins</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&quot;block boots looping through boots&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_boots</span><span class="p">):</span>
+            <span class="n">this_boot</span><span class="o">=</span><span class="n">rand</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">use_regions</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_choose</span><span class="p">)</span>
+            <span class="n">this_boot_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">this_boot_random_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">this_boot</span><span class="p">:</span>
+                <span class="n">this_boot_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">this_boot_indices</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="n">region</span><span class="p">]))</span>
+                <span class="n">this_boot_random_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">this_boot_random_indices</span><span class="p">,</span>
+                                                         <span class="n">random_indices</span><span class="p">[</span><span class="n">region</span><span class="p">]))</span>
+
+            <span class="c"># this_boot_indices=np.array(</span>
+            <span class="k">print</span> <span class="s">&quot;calculating boot&quot;</span><span class="p">,</span> <span class="n">i</span>
+            <span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">two_point_angular</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="n">this_boot_indices</span><span class="p">],</span> 
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">[</span><span class="n">this_boot_indices</span><span class="p">],</span> 
+                                             <span class="n">edges</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> 
+                                             <span class="n">ra_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">[</span><span class="n">this_boot_random_indices</span><span class="p">],</span>
+                                             <span class="n">dec_R</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">[</span><span class="n">this_boot_random_indices</span><span class="p">])</span>
+            <span class="n">block_bootstrap_boots</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">cf</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">cf_err</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_cf</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">cf_err</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">bootstrap_boots</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">save_steps_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_cfs</span><span class="p">(</span><span class="n">save_steps_file</span><span class="p">,</span> <span class="n">cfkeys</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#----------------------------------------------------------------#</span>
+    <span class="c">#- Generate the random-random counts required to compute the IC -#</span>
+    <span class="c">#----------------------------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.generate_rr"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.generate_rr">[docs]</a>    <span class="k">def</span> <span class="nf">generate_rr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_nbins</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">logbins</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">min_sep</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> 
+                    <span class="n">force_n_randoms</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">save_to</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">n_chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span></div>
+        <span class="c">#Do random-random counts over the entire field.  If set_nbins is declared,</span>
+        <span class="c">#generate_rr will not go looking for the correlation functions so that the</span>
+        <span class="c">#RR counts for the IC calculation and the CF calculation can be done in parallel.</span>
+ 
+        <span class="c">#Figure out how many randoms we need.  This was calculated by playing with</span>
+        <span class="c">#the number of randoms in the GOODS-S field and seeing when the RR counts converged</span>
+        <span class="c">#to the &quot;way too many&quot; curve.  27860 per 1.43e-5 steradians was what I settled on.</span>
+        <span class="c">#If there&#39;s a forced number, it will ignore my estimate.</span>
+        <span class="c">#  Amendment 4/15- this minimum number seems to be somewhat too small for fields that </span>
+        <span class="c">#                  aren&#39;t as smooth as GOODS-S, so I&#39;m multiplying it by 5.  This looks ok.</span>
+        <span class="c">#  Amendment 8/15- added the capability to do this in several chunks.</span>
+        
+        <span class="k">if</span> <span class="n">force_n_randoms</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">surface_density_required</span> <span class="o">=</span> <span class="mf">27860.</span><span class="o">*</span><span class="mf">5.</span><span class="o">/</span><span class="mf">1.43e-5</span>
+            <span class="n">area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_mask</span><span class="o">.</span><span class="n">masked_area_solid_angle</span><span class="p">()</span>
+            <span class="n">number_needed</span> <span class="o">=</span> <span class="n">surface_density_required</span> <span class="o">*</span> <span class="n">area</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">number_needed</span><span class="o">=</span><span class="n">force_n_randoms</span>
+
+        <span class="c">#If we&#39;re doing more than one chunk, divide the number we need into n_chunks chunks</span>
+        <span class="k">if</span> <span class="n">n_chunks</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">number_needed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">number_needed</span><span class="p">)</span><span class="o">/</span><span class="n">n_chunks</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">total_number</span> <span class="o">=</span> <span class="n">number_needed</span> <span class="o">*</span> <span class="n">n_chunks</span>
+        <span class="k">print</span> <span class="s">&quot;total number: &quot;</span><span class="p">,</span>  <span class="n">total_number</span>
+        <span class="k">print</span> <span class="s">&quot;number per iteration: &quot;</span><span class="p">,</span> <span class="n">number_needed</span>
+        <span class="k">print</span> <span class="s">&quot;number of chunks: &quot;</span><span class="p">,</span> <span class="n">n_chunks</span>
+
+        <span class="c">#Range of separations to make bins over</span>
+        <span class="n">min_ra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">min_dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">max_ra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">max_dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">max_sep</span><span class="o">=</span><span class="n">misc</span><span class="o">.</span><span class="n">ang_sep</span><span class="p">(</span><span class="n">min_ra</span><span class="p">,</span> <span class="n">min_dec</span><span class="p">,</span> <span class="n">max_ra</span><span class="p">,</span> <span class="n">max_dec</span><span class="p">,</span>
+                           <span class="n">radians_in</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">radians_out</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="c">#Choose how many bins</span>
+        <span class="k">if</span> <span class="n">set_nbins</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c">#Get our theta bin info from the CF if we can.  Error if we can&#39;t</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;AngularCatalog.generate_rr says: I need&quot;</span>
+                                <span class="s">&quot; either a set number of bins (set_nbins=N)&quot;</span>
+                                <span class="s">&quot; or thetas from a CF to extrapolate. &quot;</span>
+                                <span class="s">&quot; You have given me neither.&quot;</span><span class="p">)</span>
+            <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">get_thetas</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;degrees&#39;</span><span class="p">)</span>
+            <span class="n">nbins</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">max_sep</span><span class="o">/</span><span class="n">edges</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nbins</span><span class="o">=</span><span class="n">set_nbins</span>
+
+        <span class="c">#Make the bins</span>
+        <span class="n">rr_theta_bins</span> <span class="o">=</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="p">(</span><span class="n">min_sep</span><span class="p">,</span> <span class="n">max_sep</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span>
+                                           <span class="n">unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="n">logbins</span><span class="o">=</span><span class="n">logbins</span><span class="p">)</span>
+        <span class="n">use_centers</span><span class="p">,</span> <span class="n">use_theta_bins</span> <span class="o">=</span> <span class="n">rr_theta_bins</span><span class="o">.</span><span class="n">get_thetas</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;degrees&#39;</span><span class="p">)</span>
+
+        <span class="c">#Do the loop</span>
+        <span class="n">G_p</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span>
+        <span class="n">rr_counts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbins</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n_i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&quot;doing chunk #&quot;</span><span class="p">,</span> <span class="n">n_i</span>
+            <span class="c">#Remake the random sample so we&#39;re sure we have the right oversample factor            </span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">(</span><span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">make_exactly</span><span class="o">=</span><span class="n">number_needed</span><span class="p">)</span>
+        
+            <span class="c">#Code snippet shamelessly copied from astroML.correlations</span>
+            <span class="n">xyz_data</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">ra_dec_to_xyz</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_random</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">_dec_random</span><span class="p">)</span>
+            <span class="n">data_R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xyz_data</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;F&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">bins</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">angular_dist_to_euclidean_dist</span><span class="p">(</span><span class="n">use_theta_bins</span><span class="p">)</span>
+            <span class="n">Nbins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">counts_RR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nbins</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nbins</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">counts_RR</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_random_tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">data_R</span><span class="p">,</span> <span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                                                            <span class="n">count_only</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+            <span class="n">rr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">counts_RR</span><span class="p">)</span>
+            <span class="c">#Landy and Szalay define G_p(theta) as &lt;N_p(theta)&gt;/(n(n-1)/2)</span>
+            <span class="n">G_p</span> <span class="o">+=</span> <span class="n">rr</span><span class="o">/</span><span class="p">(</span><span class="n">number_needed</span><span class="o">*</span><span class="p">(</span><span class="n">number_needed</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> 
+            <span class="n">rr_counts</span> <span class="o">+=</span> <span class="n">rr</span>
+
+        <span class="k">print</span> <span class="s">&quot;Dividing out the theta bin sizes and number of chunks&quot;</span>
+        
+        <span class="c">#I divide out the bin width because just using the method</span>
+        <span class="c">#that L&amp;S detail gives you a {G_p,i} with the property that</span>
+        <span class="c">#Sum[G_p,i]=1.  This is not equivalent to Integral[G_p d(theta)]=1,</span>
+        <span class="c">#which is what they assume everywhere else.</span>
+        <span class="c">#Dividing out the bin width gives you that and lets you pretend</span>
+        <span class="c">#G_p is a continuous but chunky-looking function.</span>
+        <span class="n">G_p</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">use_theta_bins</span><span class="p">)</span>                    
+        <span class="n">G_p</span> <span class="o">/=</span> <span class="n">n_chunks</span>                                   
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rr_ngals</span><span class="o">=</span><span class="p">[</span><span class="n">total_number</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="n">gpclass</span><span class="o">.</span><span class="n">Gp</span><span class="p">(</span><span class="n">min_sep</span><span class="p">,</span> <span class="n">max_sep</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">G_p</span><span class="p">,</span> <span class="n">total_number</span><span class="p">,</span>
+                              <span class="n">n_chunks</span><span class="p">,</span> <span class="n">logbins</span><span class="o">=</span><span class="n">logbins</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">,</span>
+                              <span class="n">RR</span><span class="o">=</span><span class="n">rr_counts</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_gp</span><span class="p">(</span><span class="n">save_to</span><span class="p">)</span>
+        
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#-------------------------------------#</span>
+    <span class="c">#- Read in previously calculated CFs -#</span>
+    <span class="c">#-------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.load_cf"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.load_cf">[docs]</a>    <span class="k">def</span> <span class="nf">load_cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filen</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span></div>
+        <span class="c">#Load in a CF from a file or set of files</span>
+
+        <span class="c">#First, what files start with filen?</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">files_starting_with</span><span class="p">(</span><span class="n">filen</span><span class="p">)</span>
+        <span class="n">nfiles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span>
+
+        <span class="c">#Generate the names</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">name_prefix</span> <span class="o">+</span> <span class="n">n</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="n">filen</span><span class="p">)</span>
+        
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#--------------------------------------------#</span>
+    <span class="c">#- Save the correlation functions to a file -#</span>
+    <span class="c">#--------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.save_cf"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.save_cf">[docs]</a>    <span class="k">def</span> <span class="nf">save_cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_base</span><span class="p">,</span> <span class="n">cf_keys</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></div>
+        <span class="c">#Takes all the CF information we have and saves to a file</span>
+        <span class="c">#per CF</span>
+
+        <span class="c">#If they didn&#39;t say which ones specifically, save all</span>
+        <span class="k">if</span> <span class="n">cf_keys</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">cf_keys</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cf_keys</span><span class="p">:</span>
+            <span class="n">filen</span> <span class="o">=</span> <span class="n">file_base</span> <span class="o">+</span> <span class="n">k</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cfs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filen</span><span class="p">)</span>
+        
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#-----------------------------------------------------------------#</span>
+    <span class="c">#- Read in previously calculated random-random counts for the IC -#</span>
+    <span class="c">#-----------------------------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.load_gp"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.load_gp">[docs]</a>    <span class="k">def</span> <span class="nf">load_gp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+        <span class="c">#Take the ASCII files with the normed random-random counts calculated and read it in</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">overwrite_existing</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="n">gpclass</span><span class="o">.</span><span class="n">Gp</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&quot;angular_catalog.load_rr says: You&#39;ve asked me not &quot;</span>
+                   <span class="s">&quot;to overwrite the existing RR counts and there&#39;s &quot;</span>
+                   <span class="s">&quot;already Gp information .&quot;</span><span class="p">)</span>
+
+    <span class="c">#------------------------------------------------------------------------------------------</span>
+
+    <span class="c">#--------------------------------------------#</span>
+    <span class="c">#- Save the random-random counts for the IC -#</span>
+    <span class="c">#--------------------------------------------#</span>
+<div class="viewcode-block" id="AngularCatalog.save_gp"><a class="viewcode-back" href="../angularclass.html#AngularCatalog_class.AngularCatalog.save_gp">[docs]</a>    <span class="k">def</span> <span class="nf">save_gp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span></div>
+        <span class="c">#If we have done the random-random counts for the integral</span>
+        <span class="c">#constraint, save to a file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

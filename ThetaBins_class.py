@@ -12,19 +12,23 @@ class ThetaBins(object):
     Parameters
     ----------
     min_theta : float
-              The minimum of the theta bin edges
+        The minimum of the theta bin edges
+              
     max_theta : float
-              The maximum of the theta bin edges
+        The maximum of the theta bin edges
+              
     nbins : float
-          The number of theta bins
+        The number of theta bins
+          
     unit : string (optional)
-         The unit that min and max theta are in.  The options
-         are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-         'r', 'rad', 'radians'.  Default is 'arcseconds'
+        The unit that min and max theta are in.  The options
+        are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
+        'r', 'rad', 'radians'.  Default is 'arcseconds'
+         
     logbins : boolean (optional)
-            If logbins == True, the bins are evenly spaced in log space.
-            If logbins == False, the bins are evenly spaced in linear
-            space.  Default is True.
+        If logbins == True, the bins are evenly spaced in log space.
+        If logbins == False, the bins are evenly spaced in linear
+        space.  Default is True.
     """
 
     #======================================================================
@@ -57,25 +61,26 @@ class ThetaBins(object):
         Class method that constructs a ThetaBins object with all the
         relevant parameters from the centers of bins.
 
-        Syntax
-        ------
+        **Syntax**
+
         new_bins = ThetaBins_class.ThetaBins.from_centers(centers, unit=<unit>)
 
         Parameters
         ----------
         centers : array-like
-                The centers of the bins that you want to reconstruct in
-                the given unit
+            The centers of the bins that you want to reconstruct in
+            the given unit
+                
         unit : string (optional)
-             A string saying what units the centers are in.  The options
-             are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-             'r', 'rad', 'radians'.  Default is 'degrees'
+            A string saying what units the centers are in.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
+            'r', 'rad', 'radians'.  Default is 'degrees'
 
         Returns
         -------
         new_bins : ThetaBins instance
-                 A ThetaBins instance that matches the given centers
-                 and contains all the auxiliary information as well.
+            A ThetaBins instance that matches the given centers
+            and contains all the auxiliary information as well.
         """
         
         #Look at the centers of the theta bins to get the bin edges
@@ -115,25 +120,25 @@ class ThetaBins(object):
         Class method that constructs a ThetaBins object with all the
         relevant parameters from the edges of bins.
 
-        Syntax
-        ------
+        **Syntax**
+
         new_bins = ThetaBins_class.ThetaBins.from_edges(edges, unit=<unit>)
 
         Parameters
         ----------
         edges : array-like
-              The edges of the bins that you want to reconstruct in
-              the given unit
+            The edges of the bins that you want to reconstruct in
+            the given unit
         unit : string (optional)
-             A string saying what units the centers are in.  The options
-             are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-             'r', 'rad', 'radians'.  Default is 'degrees'
+            A string saying what units the centers are in.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
+            'r', 'rad', 'radians'.  Default is 'degrees'
 
         Returns
         -------
         new_bins : ThetaBins instance
-                 A ThetaBins instance that matches the given edges
-                 and contains all the auxiliary information as well.
+            A ThetaBins instance that matches the given edges
+            and contains all the auxiliary information as well.
         """
         
         #Look at the centers of the theta bins to get the bin edges
@@ -170,10 +175,13 @@ class ThetaBins(object):
         ----------
         min_theta : float
                  The minimum of the theta bin edges
+                 
         max_theta : float
                  The maximum of the theta bin edges
+                 
         nbins : float
               The number of theta bins
+              
         unit : string (optional)
              The unit that min and max theta are in.  Default is 'arcseconds'
         """
@@ -220,8 +228,8 @@ class ThetaBins(object):
         Parameters
         ----------
         logbins : boolean
-                If logbins == True, the bins are evenly spaced in log space.
-                If logbins == False, the bins are evenly spaced in linear
+            If logbins == True, the bins are evenly spaced in log space.
+            If logbins == False, the bins are evenly spaced in linear
         """
         #If it's actually changing, record and rerun the bins
         if self._logbins != logbins:
@@ -238,8 +246,8 @@ class ThetaBins(object):
         Returns
         -------
         logbins : boolean
-                If logbins == True, the bins are evenly spaced in log space.
-                If logbins == False, the bins are evenly spaced in linear
+            If logbins == True, the bins are evenly spaced in log space.
+            If logbins == False, the bins are evenly spaced in linear
         """
         #Return whether or not we have the log bins
         return self._logbins
@@ -254,10 +262,13 @@ class ThetaBins(object):
         ----------
         min_theta : float
                  The minimum of the theta bin edges
+                 
         max_theta : float
                  The maximum of the theta bin edges
+                 
         nbins : float
               The number of theta bins
+              
         unit : string (optional)
              The unit that min and max theta are in.  Default is 'arcseconds'
         """
@@ -296,10 +307,10 @@ class ThetaBins(object):
         Returns
         -------
         centers : numpy array
-                The locations of the centers of the bins in the requested
-                unit
+            The locations of the centers of the bins in the requested unit
+            
         edges : numpy array
-              The locations of the edges of the bins in the requested unit
+            The locations of the edges of the bins in the requested unit
         """
         
         #Convert to whatever unit requested and return

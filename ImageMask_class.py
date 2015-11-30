@@ -25,17 +25,23 @@ class ImageMask:
     access directly.  There are more user-friendly class methods that allow
     mask definition from various sources.
     
-    Class methods: ImageMask.from_FITS_weight_file, ImageMask.from_array,
-                   ImageMask.from_ranges
+    Class methods are ImageMask.from_FITS_weight_file, ImageMask.from_array, ImageMask.from_ranges
 
     Parameters
     ----------
-    mask: 2D array
+    mask : 2D array
         This is an array describing completeness as a function of position
         on the sky
-    wcs_instance: astropy.wcs.WCS instance
+        
+    wcs_instance : astropy.wcs.WCS instance
         Encodes the information about how large the field is and where it
         is on the sky.
+
+    wcs_moveable : bool
+        True if the WCS instance can be moved on the sky.  False if it
+        can't.  The WCS instances that are created froms scratch by the
+        class methods from_ranges and from_array cannot be moved.  This is
+        a bug that will be fixed later.  Default is True
     """
     
     #----------------------------------------------------------------------
@@ -86,19 +92,20 @@ class ImageMask:
         FITS format.  If the FITS file is large, this routine can take
         some time.
 
-        Syntax
-        ------
+        **Syntax**
+        
         immask = ImageMask.from_FITS_weight_file(weight_file)
 
         Parameters
         ----------
-        weight_file: string
+        
+        weight_file : string
             The file name including the path from / that contains the
             FITS file to mask with
 
         Returns
         -------
-        new_mask: ImageMask instance
+        new_mask : ImageMask instance
             An image mask that corresponds to the FITS file specified
         """
         
@@ -142,21 +149,24 @@ class ImageMask:
 
         Parameters
         ----------
-        mask: 2D array
+        mask : 2D array
             An array of completenesses as a function of position on the
             sky.  0 means that nothing in that pixel will be used for CFs.
             1 means that everything will be.  Numbers between are
             partially complete.
-        ra_range: array-like, length 2
+            
+        ra_range : array-like, length 2
             The RAs of the left and right sides of the mask.  (In degrees.)
-        dec_range: array-like, length 2
+            
+        dec_range : array-like, length 2
             The Decs of the top and bottom of the mask.  (In degrees.)
 
         Returns
         -------
-        new_mask: ImageMask instance
+        new_mask : ImageMask instance
             An image mask that has the mask provided and the corresponding
             WCS instance.
+            
         """
 
         #Check some basic stuff
@@ -208,14 +218,15 @@ class ImageMask:
 
         Parameters
         ----------
-        ra_range: array-like, length 2
+        ra_range : array-like, length 2
             The min and max RAs to be covered.  (In degrees.)
-        dec_range: array-like, length 2
+            
+        dec_range : array-like, length 2
             The min and max Decs to be covered.  (In degrees.)
 
         Returns
         -------
-        new_mask: ImageMask instance
+        new_mask : ImageMask instance
             An image mask that is a rectangle that spans the RA and Dec
             ranges specified
         """
@@ -243,17 +254,19 @@ class ImageMask:
 
         Parameters
         ----------
-        rng: array-like, length 2
+        rng : array-like, length 2
             The range over which you want your bins
-        n_pix: scalar
+            
+        n_pix : scalar
             The number of bins (pixels) that you want to divide the range
             into
 
         Returns
         -------
-        bin_size: scalar
+        bin_size : scalar
             The size of the bin/pixel in whatever units rng was in
-        bin_edges: np.ndarray
+            
+        bin_edges : np.ndarray
             An array of n_pix+1 values with where the edges of the bins are
         """
         
@@ -335,21 +348,24 @@ class ImageMask:
 
         Parameters
         ----------
-        number_to_make: scalar
+        number_to_make : scalar
             The number of random objects to place in the RA and Dec range
-        ra_range: array-like
+            
+        ra_range : array-like
             Randoms will be placed between ra_range[0] and ra_range[1].
             Units are degrees.
-        dec_range: array-like
+            
+        dec_range : array-like
             Randoms will be placed between dec_range[0] and dec_range[1].
             Units are degrees.
 
         Returns
         -------
-        ra: numpy ndarray
+        ra : numpy ndarray
             RA coords of the randomly placed objects.  Array shape is
             (number_to_make,)
-        dec: numpy ndarray
+            
+        dec : numpy ndarray
             Dec coords of the randomly placed objects.  Array shape is
             (number_to_make,)
         """
@@ -392,16 +408,17 @@ class ImageMask:
 
         Parameters
         ----------
-        number_to_make: scalar
+        number_to_make : scalar
             Number of randomly placed objects within the mask area
             returned.
 
         Returns
         -------
-        ra: numpy ndarray
+        ra : numpy ndarray
             The RAs of the randomly placed objects within the mask.  Unit
             is degrees.  The array shape is (number_to_make,)
-        dec: numpy ndarray
+            
+        dec : numpy ndarray
             The Decs of the randomly placed objects within the mask.  Unit
             is degrees.  The array shape is (number_to_make,)
         """
@@ -503,16 +520,18 @@ class ImageMask:
 
         Parameters
         ----------
-        ra: array-like
+        ra : array-like
             A list of RA coordinates to transform.  (In degrees.)
-        dec: array-like
+            
+        dec : array-like
             A list of Dec coordinates to transform.  (In degrees.)
 
         Returns
         -------
-        x: 1D np.ndarray
+        x : 1D np.ndarray
             X positions of the input coordinates
-        y: 1D np.ndarray
+            
+        y : 1D np.ndarray
             Y positions of the input coordinates
         """
         pairs=np.transpose([ra, dec])
@@ -531,16 +550,18 @@ class ImageMask:
 
         Parameters
         ----------
-        x: array-like
+        x : array-like
             X positions of the input coordinates
-        y: array-like
+            
+        y : array-like
             Y positions of the input coordinates
 
         Returns
         -------
-        ra: np.ndarray
+        ra : np.ndarray
             RAs of the input coordinates in degrees
-        dec: array-like
+            
+        dec : array-like
             Decs of the input coordinates in degrees
         """
         pairs=np.transpose([y, x])
@@ -571,13 +592,15 @@ class ImageMask:
 
         Parameters
         ----------
-        n_shortside: integer (optional)
+        n_shortside : integer (optional)
             The number of cells along the short side of the rectangle.
             Default is 3.
-        n_longside: integer (optional)
+            
+        n_longside : integer (optional)
             The number of cells along the long side of the rectangle.
             Default is 4.
-        preview: bool (optional)
+            
+        preview : bool (optional)
             Should the mask show you what this set of parameters looks like
             but not store the results?  If preview == True, either a plot
             will be shown on your screen (no value given for save_plot) or
@@ -585,23 +608,27 @@ class ImageMask:
             will not keep the division information.  If preview == False,
             which is the default, the values will be stored and a plot will
             only be made if save_plot is specified.
-        rotation_angle: scalar (optional)
+            
+        rotation_angle : scalar (optional)
             Fixes the rotation angle that the mask's bounding box will be
             defined at with respect to the XY coordinate system of the
             mask.  By default, the routine will choose the integer angle in
             degrees which minimizes the area of the bounding box.
-        padding: 4 element array-like (optional)
+            
+        padding : 4 element array-like (optional)
             How many pixels extra to allow in the rotated coordinates of
             the bounding box.  The order is [bottom, top, left, right].
             Positive padding corresponds to moving the edges outwards and
             leaving extra room.  Negative padding will move the bounding
             box inward and cut off part of the mask.
-        only_show: integer (optional)
+            
+        only_show : integer (optional)
             If you only want to see the random points that fall into one of
             the cells in the subdivided mask, you set only_show to that
             cell number.  This will only matter if you have preview=True
             or have specified save_plot.
-        save_plot: string (optional)
+            
+        save_plot : string (optional)
             Name with path from '/' of the file where you would like the
             plot of the subdivided mask saved.  If only_show is set to an
             integer that corresponds to a cell number, only the points in
@@ -789,12 +816,14 @@ class ImageMask:
 
         Parameters
         ----------
-        theta: scalar
+        theta : scalar
             The angle in *radians* of the bounding box rotation
-        xedges: array-like
+            
+        xedges : array-like
             The x coordinates in the rotated coordinate system of the cell
             boundaries
-        yedges: array-like
+            
+        yedges : array-like
             The y coordinates in the rotated coordinate system of the cell
             boundaries
         """
@@ -818,13 +847,16 @@ class ImageMask:
 
         Parameters
         ----------
-        delta_ra: scalar (optional)
+        delta_ra : scalar (optional)
             Amount to change the central RA.  Defaults to 0
-        delta_dec: scalar (optional)
+            
+        delta_dec : scalar (optional)
             Amount to change the central Dec.  Defaults to 0
-        theta_degrees: scalar (optional)
+            
+        theta_degrees : scalar (optional)
             Amount to rotate the WCS instance in degrees.  Defaults to 0
-        preview: boolean (optional)
+            
+        preview : boolean (optional)
             Default it False.  If True, returns an ImageMask instance with
             the same mask as the ImageMask that generated it but with the
             WCS instance altered.  The calling instance won't be changed.
@@ -833,7 +865,7 @@ class ImageMask:
 
         Returns
         -------
-        altered_mask: ImageMask instance
+        altered_mask : ImageMask instance
             This is only returned if preview==False.  It is a copy of the
             calling ImageMask instance with a changed WCS instance.
         """
@@ -893,8 +925,8 @@ class ImageMask:
         part where data is allowed.  This is a pretty dumb way of doing
         it, so it should only be taken as an approximation.
 
-        Method
-        ------
+        **Method**
+
         The WCS instance is queried to get the RA and Dec coordinates of
         the image.  Those are converted to X and Y coordinates- note that
         this involves some distortion.  If the number of coordinates at the
@@ -910,7 +942,7 @@ class ImageMask:
 
         Returns
         -------
-        solid_angle: scalar
+        solid_angle : scalar
             The solid angle in steradians covered by the nonzero elements
             of the mask array.
         """
@@ -975,16 +1007,17 @@ class ImageMask:
 
         Parameters
         ----------
-        ra_list: 1D array-like
+        ra_list : 1D array-like
             A list of the RAs in degrees for the objects to query for
             completeness.
-        dec_list: 1D array-like
+            
+        dec_list : 1D array-like
             A list of the Decs in degrees for the objects to query for
             completeness.
 
         Returns
         -------
-        completeness: 1D numpy array
+        completeness : 1D numpy array
             A list of completenesses for the objects in the input lists.
             Completenesses are between 0 and 1 (inclusive).  To see if the
             object should be used, draw a random uniform number on [0,1]
@@ -1046,27 +1079,31 @@ class ImageMask:
 
         Parameters
         ----------
-        ra: array-like
+        ra : array-like
             A list of RAs to get subregion numbers for (in degrees)
-        dec: array-like
+            
+        dec : array-like
             A list of Decs to get subregion numbers for (in degrees)
-        theta: scalar (optional)
+            
+        theta : scalar (optional)
             Rotation angle that the mask's bounding box will be defined at
             with respect to the XY coordinate system of the mask.  If not
             given, the routine will look for a stored theta.  Units are
             degrees
-        rot_xedges: array-like (optional)
+            
+        rot_xedges : array-like (optional)
             The x coordinates of the cell boundaries in the rotated
             coordinate system.  If not given, the routine will look for a
             stored theta.
-        rot_yedges: array-like (optional)
+            
+        rot_yedges : array-like (optional)
             The x coordinates of the cell boundaries in the rotated
             coordinate system.  If not given, the routine will look for a
             stored theta.
 
         Returns
         -------
-        subregions: numpy ndarray
+        subregions : numpy ndarray
             The subregion number for each of the points input.  The array
             shape is (len(ra),).  The subregion -1 is outside the bounding
             box (this only happens if you've set negative padding somewhere

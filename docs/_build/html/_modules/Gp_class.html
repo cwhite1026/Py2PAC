@@ -1,0 +1,792 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Gp_class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpclass.html">Gp class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thetabins.html">ThetaBins class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>Gp_class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for Gp_class</h1><div class="highlight"><pre>
+<span class="c">#External code</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">scipy.integrate</span> <span class="kn">as</span> <span class="nn">intg</span>
+
+<span class="c">#Py2PAC code</span>
+<span class="kn">import</span> <span class="nn">miscellaneous</span> <span class="kn">as</span> <span class="nn">misc</span>
+<span class="kn">import</span> <span class="nn">ThetaBins_class</span> <span class="kn">as</span> <span class="nn">binclass</span>
+
+<div class="viewcode-block" id="Gp"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp">[docs]</a><span class="k">class</span> <span class="nc">Gp</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This object keeps all the info about the G_p function together.</span>
+<span class="sd">    Also provides functions to calculate the integral constraint and</span>
+<span class="sd">    rebinning G_p.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    min_theta : float</span>
+<span class="sd">        The minimum of the theta bin edges for constructing the theta bins.</span>
+<span class="sd">    max_theta : float</span>
+<span class="sd">        The maximum of the theta bin edges for constructing the theta bins</span>
+<span class="sd">    nbins : float</span>
+<span class="sd">        The number of theta bins</span>
+<span class="sd">    Gp : array of length nbins</span>
+<span class="sd">        The Gp function from Landy and Szalay 1993, with the modification</span>
+<span class="sd">        that the bin width is divided out of how they tell you to calculate</span>
+<span class="sd">        it from randoms.  The given formula has the property that</span>
+<span class="sd">        Sum[G_p,i]=1.  This is not equivalent to Integral[G_p d(theta)]=1,</span>
+<span class="sd">        which is what they assume everywhere else.  Dividing out the bin</span>
+<span class="sd">        width gives you that and lets you pretend G_p is a continuous but</span>
+<span class="sd">        chunky-looking function.</span>
+<span class="sd">    n_randoms : scalar</span>
+<span class="sd">        The total number of randoms used to calculate G_p</span>
+<span class="sd">    n_chunks : scalar</span>
+<span class="sd">        The number of pieces into which n_randoms was broken into in</span>
+<span class="sd">        order to keep the integration time down.  If n_chunks &gt; 1,</span>
+<span class="sd">        G_p was calculated n_chunks time for n_randoms/n_chunks randoms</span>
+<span class="sd">        in each and then averaged.</span>
+<span class="sd">    logbins : True | False (optional)</span>
+<span class="sd">        Sets theta bins to be even in log space if True and and linear</span>
+<span class="sd">        space if False.  Default is True.</span>
+<span class="sd">    unit : string (optional)</span>
+<span class="sd">        Tells the theta bin object what unit min_theta and max_theta are in.</span>
+<span class="sd">        The options are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;;</span>
+<span class="sd">        &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+<span class="sd">    RR : array of length nbins (optional)</span>
+<span class="sd">        The non-normalized RR counts that the G_p came from.  This does not</span>
+<span class="sd">        have the bin width divided out because it doesn&#39;t need to be</span>
+<span class="sd">        integrated anywhere.  Default is None.</span>
+<span class="sd">    creation_string : string (optional)</span>
+<span class="sd">        A time stamp of when the G_p function was actually calculated.</span>
+<span class="sd">        Default is None, at which point it&#39;s generated to be the time</span>
+<span class="sd">        and date when the object is created.    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">#======================================================================</span>
+    
+    <span class="c">#------------------#</span>
+    <span class="c">#- Initialization -#</span>
+    <span class="c">#------------------#</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_theta</span><span class="p">,</span> <span class="n">max_theta</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">Gp</span><span class="p">,</span> <span class="n">n_randoms</span><span class="p">,</span>
+                 <span class="n">n_chunks</span><span class="p">,</span> <span class="n">logbins</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;arcsec&#39;</span><span class="p">,</span> <span class="n">RR</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">creation_string</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the ThetaBins object, stores the values given, and</span>
+<span class="sd">        creates the timestamp if creation_string isn&#39;t defined.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#Make the ThetaBins object and store things</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="o">=</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="p">(</span><span class="n">min_theta</span><span class="p">,</span> <span class="n">max_theta</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span>
+                                              <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span> <span class="n">logbins</span><span class="o">=</span><span class="n">logbins</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Gp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_randoms</span> <span class="o">=</span> <span class="n">n_randoms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_RR</span> <span class="o">=</span> <span class="n">RR</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_chunks</span> <span class="o">=</span> <span class="n">n_chunks</span>
+        <span class="k">if</span> <span class="n">creation_string</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span> <span class="o">=</span> <span class="s">&#39;Created &#39;</span> <span class="o">+</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%c</span><span class="s">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span> <span class="o">=</span> <span class="n">creation_string</span>
+
+    <span class="c">#======================================================================</span>
+
+    <span class="c">#--------------------#</span>
+    <span class="c">#- Make from a file -#</span>
+    <span class="c">#--------------------#</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Gp.from_file"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.from_file">[docs]</a>    <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        An alternative way to create a Gp object.  You give it a file name</span>
+<span class="sd">        and it reads the file and then creates the Gp object</span>
+
+<span class="sd">        Syntax</span>
+<span class="sd">        ------</span>
+<span class="sd">        new_gp = Gp_class.Gp.from_file(&#39;/file/name/from/root.npz&#39;)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">            The name of the saved Gp object.  This should be the path</span>
+<span class="sd">            from /</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_gp : Gp class instance</span>
+<span class="sd">            A Gp instance that matches the saved Gp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Pull in the file and get the keys it has</span>
+        <span class="n">saved</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">saved</span><span class="o">.</span><span class="n">files</span>
+
+        <span class="c">#Put things in their correct locations</span>
+        <span class="c">#There are some things we shouldn&#39;t be able to save without</span>
+        <span class="n">time_created</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;created&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Gp</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;Gp&#39;</span><span class="p">]</span>
+        <span class="n">n_randoms</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;n_randoms&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n_chunks</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;n_chunks&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c">#Pull the theta info and set up the ThetaBins object</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;theta_bins&#39;</span><span class="p">]</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;theta_unit&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nbins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">logbins</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;log_bins&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c">#There are some that don&#39;t have to be included</span>
+        <span class="k">if</span> <span class="s">&#39;RR&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">RR</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;RR&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">RR</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c">#Create the Gp object</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">Gp</span><span class="p">,</span> <span class="n">n_randoms</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span>
+                   <span class="n">logbins</span> <span class="o">=</span> <span class="n">logbins</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span><span class="p">,</span> <span class="n">RR</span> <span class="o">=</span> <span class="n">RR</span><span class="p">,</span>
+                   <span class="n">creation_string</span> <span class="o">=</span> <span class="n">time_created</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">temp</span></div>
+    
+    <span class="c">#======================================================================</span>
+
+    <span class="c">#----------------#</span>
+    <span class="c">#- I/O routines -#</span>
+    <span class="c">#----------------#</span>
+
+<div class="viewcode-block" id="Gp.get_thetas"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.get_thetas">[docs]</a>    <span class="k">def</span> <span class="nf">get_thetas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pulls the theta centers and edges from the ThetaBins object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : string (optional)</span>
+<span class="sd">            The unit that you want the thetas to be in when they&#39;re</span>
+<span class="sd">            returned.  The options are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;;</span>
+<span class="sd">            &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.</span>
+<span class="sd">            Default is &#39;arcseconds&#39;</span>
+<span class="sd">             </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        centers : array</span>
+<span class="sd">            A list of the bin centers in the unit requested</span>
+<span class="sd">        edges : array</span>
+<span class="sd">            A list of the bin edges in the unit requested</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Return the theta binning in the unit requested</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_bins</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Gp.get_points"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.get_points">[docs]</a>    <span class="k">def</span> <span class="nf">get_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the bin centers and the values of G_p in each bin.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : string (optional)</span>
+<span class="sd">            The unit that you want the thetas to be in when they&#39;re</span>
+<span class="sd">            returned.  The options are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;;</span>
+<span class="sd">            &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.</span>
+<span class="sd">            Default is &#39;arcseconds&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        centers : array</span>
+<span class="sd">            A list of the bin centers in the unit requested</span>
+<span class="sd">        Gp : array</span>
+<span class="sd">            The values of G_p in each bin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Return the centers of the bins and the Gp</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_bins</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span></div>
+    
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Gp.get_gp"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.get_gp">[docs]</a>    <span class="k">def</span> <span class="nf">get_gp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the Gps</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gp : array</span>
+<span class="sd">            The values of G_p in each bin</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Return the Gp</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Gp.stats"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.stats">[docs]</a>    <span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_only</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shows and/or returns some information about when and how the G_p</span>
+<span class="sd">        was calculated</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        print_only : True | False (optional)</span>
+<span class="sd">            If True, no information is returned.  If False, returns</span>
+<span class="sd">            N_randoms, N_chunks, and time_created.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        N_randoms : integer</span>
+<span class="sd">            The total number of randoms used to calculate G_p.  Only</span>
+<span class="sd">            returned if print_only == False</span>
+<span class="sd">        N_chunks : integer</span>
+<span class="sd">            The number of chunks into which N_randoms was broken.  G_p</span>
+<span class="sd">            was calulated in N_chunks instances of N_randoms/N_chunks</span>
+<span class="sd">            random points and then averaged.  Only returned if</span>
+<span class="sd">            print_only == False</span>
+<span class="sd">        time_created : string</span>
+<span class="sd">            The date and time that the G_p was initially calculated.</span>
+<span class="sd">            Only returned if print_only == False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Return info about how the Gp was calculated</span>
+        <span class="k">print</span> <span class="s">&quot;N_randoms =&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_randoms</span>
+        <span class="k">print</span> <span class="s">&quot;N_chunks =&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_chunks</span>
+        <span class="k">print</span> <span class="s">&quot;Created&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">print_only</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_randoms</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_chunks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span></div>
+    
+    <span class="c">#======================================================================</span>
+    
+    <span class="c">#----------------#</span>
+    <span class="c">#- Save to file -#</span>
+    <span class="c">#----------------#</span>
+
+<div class="viewcode-block" id="Gp.save"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves the information in the object to a .npz file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">            Where to save the file.  This should be a path from /</span>
+<span class="sd">            and can either include .npz or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#Grab the dictionary form</span>
+        <span class="n">to_save</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dictionary</span><span class="p">()</span>
+        
+        <span class="c">#Make sure even the one-element things are arrays</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">to_save</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)):</span>
+                <span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+                
+        <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">to_save</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Gp.get_dictionary"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.get_dictionary">[docs]</a>    <span class="k">def</span> <span class="nf">get_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all the information that the object contains as a</span>
+<span class="sd">        dictionary</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gp_dict : python dictionary</span>
+<span class="sd">            A dictionary that contains all the information that the</span>
+<span class="sd">            Gp object contains.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Put everything into dictionary form</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_bins</span><span class="p">()</span>
+        <span class="n">logbins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_logbins</span><span class="p">()</span>
+        <span class="n">gp_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;created&#39;</span>     <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span><span class="p">,</span>
+                   <span class="s">&#39;n_randoms&#39;</span>   <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_randoms</span><span class="p">,</span>
+                   <span class="s">&#39;n_chunks&#39;</span>    <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_chunks</span><span class="p">,</span>
+                   <span class="s">&#39;theta_bins&#39;</span>  <span class="p">:</span> <span class="n">edges</span><span class="p">,</span>
+                   <span class="s">&#39;thetas&#39;</span>      <span class="p">:</span> <span class="n">centers</span><span class="p">,</span>
+                   <span class="s">&#39;log_bins&#39;</span>    <span class="p">:</span> <span class="n">logbins</span><span class="p">,</span>
+                   <span class="s">&#39;theta_unit&#39;</span>  <span class="p">:</span> <span class="s">&#39;arcseconds&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;Gp&#39;</span>          <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="p">,</span>
+                   <span class="s">&#39;RR&#39;</span>          <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RR</span>
+                   <span class="p">}</span>
+
+        <span class="c">#Inspect all the things that are in the dictionary</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">gp_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c">#Delete any that are None</span>
+            <span class="k">if</span> <span class="n">gp_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">gp_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">gp_dict</span></div>
+
+    <span class="c">#======================================================================</span>
+        
+    <span class="c">#--------------------#</span>
+    <span class="c">#- Gp manipulations -#</span>
+    <span class="c">#--------------------#</span>
+        
+<div class="viewcode-block" id="Gp.convert_A_to_degrees"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.convert_A_to_degrees">[docs]</a>    <span class="k">def</span> <span class="nf">convert_A_to_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes A for A*theta^-beta for theta in one unit and converts</span>
+<span class="sd">        it to what it should be for theta in degrees</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        A : float</span>
+<span class="sd">            The amplitude of the power law (A*theta ^-beta)</span>
+<span class="sd">        beta : float</span>
+<span class="sd">            The power in the power law (A*theta ^-beta)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deg_A : float</span>
+<span class="sd">            The amplitude for theta in degrees</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#figure out which unit we&#39;re in and set the conversion factor</span>
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">misc</span><span class="o">.</span><span class="n">arcsec_opts</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mf">3600.</span> <span class="c">#(3600 arcseconds per degree)</span>
+        <span class="k">elif</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">misc</span><span class="o">.</span><span class="n">degree_opts</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#We&#39;re already there</span>
+        <span class="k">elif</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">misc</span><span class="o">.</span><span class="n">radian_opts</span><span class="p">:</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="mf">180.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>  <span class="c">#pi radians per 180 degrees</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;Gp.convert_A_to_degrees says: you have chosen unit=&quot;</span><span class="p">,</span> <span class="n">unit</span>
+            <span class="k">print</span> <span class="s">&quot;This is not an option.&quot;</span>
+            <span class="k">print</span> <span class="s">&quot;For arcseconds, use &#39;arcseconds&#39;, &#39;arcsecond&#39;, &#39;arcsec&#39;, or &#39;a&#39;.&quot;</span>
+            <span class="k">print</span> <span class="s">&quot;For radians, use &#39;radians&#39;, &#39;radian&#39;, &#39;rad&#39;, or &#39;r&#39;.&quot;</span>
+            <span class="k">print</span> <span class="s">&quot;For degrees, use &#39;degrees&#39;, &#39;degree&#39;, &#39;deg&#39;, or &#39;d&#39;.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;You chose an invalid value of unit.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">A</span> <span class="o">*</span> <span class="n">factor</span><span class="o">**</span><span class="n">beta</span></div>
+
+    <span class="c">#----------------------------------------------------------------------        </span>
+        
+<div class="viewcode-block" id="Gp.integrate_powerlaw"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.integrate_powerlaw">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_powerlaw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span><span class="p">,</span> <span class="n">param_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">,</span>
+                           <span class="n">theta_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A funtion that integrates the power law A * theta^-beta over a</span>
+<span class="sd">        range of thetas</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        A : float</span>
+<span class="sd">            The amplitude of the power law for theta in units param_unit</span>
+<span class="sd">        beta : float</span>
+<span class="sd">            The power in the power law</span>
+<span class="sd">        lowlim : float</span>
+<span class="sd">            The lower limit of the theta range to integrate over</span>
+<span class="sd">        highlim : float</span>
+<span class="sd">            The upper limit of the theta range to integrate over</span>
+<span class="sd">        param_unit : string (optional)</span>
+<span class="sd">            The units of theta for which A was calculated.  The options</span>
+<span class="sd">            are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;,</span>
+<span class="sd">            &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;d&#39;</span>
+<span class="sd">        theta_unit : string (optional)</span>
+<span class="sd">            The units of lowlim and highlim.  The options are &#39;a&#39;,</span>
+<span class="sd">            &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;,</span>
+<span class="sd">            &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;d&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        integral : float</span>
+<span class="sd">            The integral of the power law over the specified range</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Do the integral of a power law A*theta^-beta from lowlim to highlim</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">beta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
+        
+        <span class="c">#Make sure the A is for theta in degrees</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_A_to_degrees</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">param_unit</span><span class="p">)</span>
+
+        <span class="c">#Convert the limits to degrees</span>
+        <span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">put_thetas_in_degrees</span><span class="p">([</span><span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span><span class="p">],</span>
+                                                     <span class="n">unit</span><span class="o">=</span><span class="n">theta_unit</span><span class="p">)</span>
+
+        <span class="c">#First define the function to be integrated</span>
+        <span class="k">def</span> <span class="nf">powerlaw</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">A</span> <span class="o">*</span> <span class="n">theta</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span>
+
+        <span class="c">#Do the integral</span>
+        <span class="n">pl_int</span><span class="p">,</span> <span class="n">pl_int_err</span><span class="o">=</span> <span class="n">intg</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="n">powerlaw</span><span class="p">,</span> <span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pl_int</span></div>
+    
+    <span class="c">#----------------------------------------------------------------------</span>
+    
+<div class="viewcode-block" id="Gp.integrate_gp_times_powerlaw"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.integrate_gp_times_powerlaw">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_gp_times_powerlaw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span><span class="p">,</span>
+                                    <span class="n">theta_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="n">param_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integrates G_p * A * theta^-beta over a range in thetas.  Useful</span>
+<span class="sd">        for calculating the integral constraint.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        A : float</span>
+<span class="sd">            The amplitude of the power law for theta in units param_unit</span>
+<span class="sd">        beta : float</span>
+<span class="sd">            The power in the power law</span>
+<span class="sd">        lowlim : float</span>
+<span class="sd">            The lower limit of the theta range to integrate over</span>
+<span class="sd">        highlim : float</span>
+<span class="sd">            The upper limit of the theta range to integrate over</span>
+<span class="sd">        param_unit : string (optional)</span>
+<span class="sd">            The units of theta for which A was calculated.  The options</span>
+<span class="sd">            are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;,</span>
+<span class="sd">            &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;d&#39;</span>
+<span class="sd">        theta_unit : string (optional)</span>
+<span class="sd">            The units of lowlim and highlim.  The options are &#39;a&#39;,</span>
+<span class="sd">            &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;, &#39;rad&#39;,</span>
+<span class="sd">            &#39;radians&#39;.  Default is &#39;d&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        integral : float</span>
+<span class="sd">            The integral of G_p * A * theta^-beta</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#Compute the integral of G_p * A * theta^-beta from lowlim to</span>
+        <span class="c">#highlim.  A and beta are for the unit specified </span>
+
+        <span class="c">#Pull the theta properties</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_bins</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+        
+        <span class="c">#Get basic info and convert everything for theta in degrees</span>
+        <span class="n">nbins_gp</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="p">)</span>
+        <span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">put_thetas_in_degrees</span><span class="p">([</span><span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span><span class="p">],</span>
+                                                     <span class="n">unit</span><span class="o">=</span><span class="n">theta_unit</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_A_to_degrees</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">param_unit</span><span class="p">)</span>
+
+        <span class="c">#If it&#39;s completely outside the G_p range, we assume that G_p is 0</span>
+        <span class="c">#and return 0</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">lowlim</span> <span class="o">&gt;=</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">highlim</span> <span class="o">&lt;=</span> <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="mi">0</span>
+    
+        <span class="c">#Figure out which bins are all the way inside [lowlim, highlim]</span>
+        <span class="n">above_lowlim</span> <span class="o">=</span> <span class="n">edges</span> <span class="o">&gt;=</span> <span class="n">lowlim</span>
+        <span class="n">min_edge_inside_val</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="n">above_lowlim</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">min_edge_inside_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbins_gp</span><span class="o">+</span><span class="mi">1</span><span class="p">)[</span><span class="n">above_lowlim</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    
+        <span class="n">below_highlim</span> <span class="o">=</span> <span class="n">edges</span> <span class="o">&lt;=</span> <span class="n">highlim</span>
+        <span class="n">max_edge_inside_val</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="n">below_highlim</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">max_edge_inside_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbins_gp</span><span class="o">+</span><span class="mi">1</span><span class="p">)[</span><span class="n">below_highlim</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c">#Make sure that the limits aren&#39;t above or below the limits where G_p is defined</span>
+        <span class="k">if</span> <span class="n">lowlim</span> <span class="o">&lt;</span> <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">min_edge_inside_val</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">lowlim</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">min_edge_inside_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">highlim</span> <span class="o">&gt;</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">max_edge_inside_val</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">highlim</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">max_edge_inside_index</span> <span class="o">=</span> <span class="n">nbins_gp</span>
+        
+        <span class="c">#Initialize the holder for the result</span>
+        <span class="n">result</span><span class="o">=</span><span class="mi">0</span>
+    
+        <span class="c">#Start by integrating the two partial bins if we didn&#39;t happen upon</span>
+        <span class="c">#an integration limit that corresponds exactly to an edge</span>
+        <span class="k">if</span> <span class="n">min_edge_inside_val</span> <span class="o">!=</span> <span class="n">lowlim</span><span class="p">:</span>
+            <span class="n">this_gp_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="p">[</span><span class="n">min_edge_inside_index</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">w_int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrate_powerlaw</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lowlim</span><span class="p">,</span> <span class="n">min_edge_inside_val</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">this_gp_val</span> <span class="o">*</span> <span class="n">w_int</span>
+        
+        <span class="k">if</span> <span class="n">max_edge_inside_val</span> <span class="o">!=</span> <span class="n">highlim</span><span class="p">:</span>
+            <span class="n">this_gp_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="p">[</span><span class="n">max_edge_inside_index</span><span class="p">]</span>
+            <span class="n">w_int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrate_powerlaw</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">max_edge_inside_val</span><span class="p">,</span> <span class="n">highlim</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">this_gp_val</span> <span class="o">*</span> <span class="n">w_int</span>        
+
+        <span class="c">#Now loop through the bins that are inside</span>
+        <span class="n">nbins_inside</span> <span class="o">=</span> <span class="n">max_edge_inside_index</span> <span class="o">-</span> <span class="n">min_edge_inside_index</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbins_inside</span><span class="p">):</span>
+            <span class="n">this_index</span> <span class="o">=</span> <span class="n">min_edge_inside_index</span> <span class="o">+</span> <span class="n">i</span>
+            <span class="n">this_gp_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="p">[</span><span class="n">this_index</span><span class="p">]</span>
+            <span class="n">w_int</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrate_powerlaw</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">edges</span><span class="p">[</span><span class="n">this_index</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="n">this_index</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">this_gp_val</span> <span class="o">*</span> <span class="n">w_int</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+    
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Gp.integrate_gp"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.integrate_gp">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_gp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span><span class="p">,</span> <span class="n">theta_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integrates G_p over a range in thetas</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lowlim : float</span>
+<span class="sd">            The lower limit of the theta range to integrate over</span>
+<span class="sd">        highlim : float</span>
+<span class="sd">            The upper limit of the theta range to integrate over</span>
+<span class="sd">        theta_unit : string (optional)</span>
+<span class="sd">            The units of lowlim and highlim.  The options are &#39;a&#39;,</span>
+<span class="sd">            &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;,</span>
+<span class="sd">            &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;d&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        integral : float</span>
+<span class="sd">            The integral of G_p from lowlim to highlim</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#Integrate G_p over a portion of its range by hijacking</span>
+        <span class="c">#integrate_gp_times_powerlaw</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrate_gp_times_powerlaw</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">lowlim</span><span class="p">,</span> <span class="n">highlim</span><span class="p">,</span>
+                                                <span class="n">theta_unit</span><span class="o">=</span><span class="n">theta_unit</span><span class="p">,</span>
+                                                <span class="n">param_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">)</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    
+<div class="viewcode-block" id="Gp.integrate_to_bins"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.integrate_to_bins">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_to_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_bin_edges</span><span class="p">,</span> <span class="n">theta_unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uses integrate_gp to rebin the existing G_p.  Note that the new G_p</span>
+<span class="sd">        does not have the new bin widths divided out so it follows</span>
+<span class="sd">        Sum{G_p,i} = 1, not integral(G_p(theta) d theta) = 1</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_bin_edges: array</span>
+<span class="sd">            The values of theta defining the bin edges that you want to</span>
+<span class="sd">            integrate to.  The theta values are in units theta_unit</span>
+<span class="sd">        theta_unit : string (optional)</span>
+<span class="sd">            The unit in which new_bin_edges are given.  The options are</span>
+<span class="sd">            &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;,</span>
+<span class="sd">            &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_gp : array</span>
+<span class="sd">            Gp integrated over the new bins</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Convert the thetas to degrees</span>
+        <span class="n">new_bin_edges</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">put_thetas_in_degrees</span><span class="p">(</span><span class="n">new_bin_edges</span><span class="p">,</span> <span class="n">theta_unit</span><span class="p">)</span>
+
+        <span class="c">#Integrate Gp over each bin</span>
+        <span class="n">n_new_bins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_bin_edges</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">binned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_new_bins</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_new_bins</span><span class="p">):</span>
+            <span class="n">binned</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrate_gp</span><span class="p">(</span><span class="n">new_bin_edges</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">new_bin_edges</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">binned</span></div>
+        
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+<div class="viewcode-block" id="Gp.w_Omega"><a class="viewcode-back" href="../gpclass.html#Gp_class.Gp.w_Omega">[docs]</a>    <span class="k">def</span> <span class="nf">w_Omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">param_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the constant w_Omega that appears in Landy and Szalay</span>
+<span class="sd">             w_Omega = integral[ G_p(theta) * w(theta) d(theta)]</span>
+<span class="sd">        This is just a special case of integrate_gp_times_powerlaw</span>
+<span class="sd">        over the entire range of thetas.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        A : float</span>
+<span class="sd">            The amplitude of the power law for theta in units param_unit</span>
+<span class="sd">        beta : float</span>
+<span class="sd">            The power in the power law</span>
+<span class="sd">        param_unit : string (optional)</span>
+<span class="sd">            The units of theta for which A was calculated.  The options</span>
+<span class="sd">            are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;; &#39;r&#39;,</span>
+<span class="sd">            &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;d&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        w_Omega : float</span>
+<span class="sd">            The constant w_Omega from Landy and Szalay.</span>
+<span class="sd">                w_Omega = integral[ G_p(theta) * w(theta) d(theta)]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Get thetas to figure out what range to integrate over</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_thetas</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+        
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrate_gp_times_powerlaw</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                          <span class="n">theta_unit</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">,</span>
+                                          <span class="n">param_unit</span><span class="o">=</span><span class="n">param_unit</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span></div></div>
+
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,1362 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ImageMask_class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpclass.html">Gp class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thetabins.html">ThetaBins class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>ImageMask_class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ImageMask_class</h1><div class="highlight"><pre>
+<span class="c">#External code</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="kn">as</span> <span class="nn">ma</span>
+<span class="kn">import</span> <span class="nn">scipy.integrate</span> <span class="kn">as</span> <span class="nn">intg</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span> <span class="kn">as</span> <span class="nn">spatial</span>
+<span class="kn">import</span> <span class="nn">numpy.random</span> <span class="kn">as</span> <span class="nn">rand</span>
+<span class="kn">import</span> <span class="nn">astropy.wcs</span> <span class="kn">as</span> <span class="nn">wcs</span>
+<span class="kn">import</span> <span class="nn">astropy.io.fits</span> <span class="kn">as</span> <span class="nn">fits</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c">#Py2PAC code</span>
+<span class="kn">import</span> <span class="nn">miscellaneous</span> <span class="kn">as</span> <span class="nn">misc</span>
+<span class="kn">import</span> <span class="nn">image_mask_cybits</span> <span class="kn">as</span> <span class="nn">cybits</span>
+<span class="kn">import</span> <span class="nn">correlations</span> <span class="kn">as</span> <span class="nn">corr</span>
+
+
+<span class="c">#===============================================================================</span>
+<span class="c">#===============================================================================</span>
+<span class="c">#===============================================================================</span>
+
+<div class="viewcode-block" id="ImageMask"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask">[docs]</a><span class="k">class</span> <span class="nc">ImageMask</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This is a class that handles the arrangement of the observations on</span>
+<span class="sd">    the sky. The default constructor is probably not what you will want to</span>
+<span class="sd">    access directly.  There are more user-friendly class methods that allow</span>
+<span class="sd">    mask definition from various sources.</span>
+<span class="sd">    </span>
+<span class="sd">    Class methods are ImageMask.from_FITS_weight_file, ImageMask.from_array, ImageMask.from_ranges</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mask : 2D array</span>
+<span class="sd">        This is an array describing completeness as a function of position</span>
+<span class="sd">        on the sky</span>
+<span class="sd">        </span>
+<span class="sd">    wcs_instance : astropy.wcs.WCS instance</span>
+<span class="sd">        Encodes the information about how large the field is and where it</span>
+<span class="sd">        is on the sky.</span>
+
+<span class="sd">    wcs_moveable : bool</span>
+<span class="sd">        True if the WCS instance can be moved on the sky.  False if it</span>
+<span class="sd">        can&#39;t.  The WCS instances that are created froms scratch by the</span>
+<span class="sd">        class methods from_ranges and from_array cannot be moved.  This is</span>
+<span class="sd">        a bug that will be fixed later.  Default is True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#                  Routines for making ImageMasks</span>
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+    <span class="c">#------------------#</span>
+    <span class="c">#- Initialization -#</span>
+    <span class="c">#------------------#</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">wcs_instance</span><span class="p">,</span> <span class="n">wcs_moveable</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes the mask and WCS instance and stores them, along with</span>
+<span class="sd">        extracting some useful information from them</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Store what we were given</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wcs_moveable</span> <span class="o">=</span> <span class="n">wcs_moveable</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs_instance</span><span class="p">,</span> <span class="n">wcs</span><span class="o">.</span><span class="n">WCS</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wcs_instance</span> <span class="o">=</span> <span class="n">wcs_instance</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;The WCS instance you pass to ImageMask must&quot;</span>
+                            <span class="s">&quot;be an instance of astropy.wcs.WCS.  This one&quot;</span>
+                            <span class="s">&quot;was not.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nx_pixels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ny_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c">#Get the RA and Dec range that the mask covers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_footprint</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ra_bin_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">_nx_pixels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dec_bin_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">,</span>
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">_ny_pixels</span><span class="p">)</span>
+
+        <span class="c">#Set up some holders for things we might use later</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotation</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_xedges</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_yedges</span><span class="o">=</span><span class="bp">None</span>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#--------------------------------#</span>
+    <span class="c">#- Make a mask from a FITS file -#</span>
+    <span class="c">#--------------------------------#</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ImageMask.from_FITS_weight_file"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.from_FITS_weight_file">[docs]</a>    <span class="k">def</span> <span class="nf">from_FITS_weight_file</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">weight_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Class method to generate an image mask from a weight file in</span>
+<span class="sd">        FITS format.  If the FITS file is large, this routine can take</span>
+<span class="sd">        some time.</span>
+
+<span class="sd">        **Syntax**</span>
+<span class="sd">        </span>
+<span class="sd">        immask = ImageMask.from_FITS_weight_file(weight_file)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        </span>
+<span class="sd">        weight_file : string</span>
+<span class="sd">            The file name including the path from / that contains the</span>
+<span class="sd">            FITS file to mask with</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_mask : ImageMask instance</span>
+<span class="sd">            An image mask that corresponds to the FITS file specified</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Get the mask info from the fits file via a Cython routine (because</span>
+        <span class="c">#it&#39;s super slow in plain python)</span>
+        <span class="n">mask_info</span> <span class="o">=</span> <span class="n">cybits</span><span class="o">.</span><span class="n">make_mask_from_weights</span><span class="p">(</span><span class="n">weight_file</span><span class="p">)</span>
+        <span class="n">nx_pixels</span><span class="p">,</span> <span class="n">ny_pixels</span><span class="p">,</span> <span class="n">approx_frac_nonzero</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">mask_info</span>
+        
+        <span class="c">#Make a WCS instance and get useful things from it</span>
+        <span class="n">wcs_instance</span><span class="o">=</span><span class="n">wcs</span><span class="o">.</span><span class="n">WCS</span><span class="p">(</span><span class="n">weight_file</span><span class="p">)</span>
+
+        <span class="c">#Make and return the mask</span>
+        <span class="n">immask</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">wcs_instance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">immask</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#-----------------------------------------------#</span>
+    <span class="c">#- Make a mask from an array and RA/Dec ranges -#</span>
+    <span class="c">#-----------------------------------------------#</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ImageMask.from_array"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.from_array">[docs]</a>    <span class="k">def</span> <span class="nf">from_array</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">ra_range</span><span class="p">,</span> <span class="n">dec_range</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Used to create an image mask from an array and RA and Dec ranges.</span>
+<span class="sd">        The RA and Dec ranges should be the ranges covered by the entire</span>
+<span class="sd">        mask, not just the part that has galaxies on it.  The main purpose</span>
+<span class="sd">        of this class method is to create a WCS instance for you when you</span>
+<span class="sd">        don&#39;t have one already.</span>
+
+<span class="sd">        The mask orientation is important.  The [0, 0] corner corresponds</span>
+<span class="sd">        to the minimum of both RA and Dec.  The first index increasing</span>
+<span class="sd">        corresponds to increasing the declination.  The second index</span>
+<span class="sd">        increasing corresponds to increasing the RA.</span>
+
+<span class="sd">        WARNING:  This routine assumes that the region of the sky the mask</span>
+<span class="sd">        covers is small enough that things like pixel scale in RA is the</span>
+<span class="sd">        same over the whole image.  This will break for very large masks.</span>
+
+<span class="sd">        Syntax</span>
+<span class="sd">        ------</span>
+<span class="sd">        immask = ImageMask.from_array(mask_array, ra_range, dec_range)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mask : 2D array</span>
+<span class="sd">            An array of completenesses as a function of position on the</span>
+<span class="sd">            sky.  0 means that nothing in that pixel will be used for CFs.</span>
+<span class="sd">            1 means that everything will be.  Numbers between are</span>
+<span class="sd">            partially complete.</span>
+<span class="sd">            </span>
+<span class="sd">        ra_range : array-like, length 2</span>
+<span class="sd">            The RAs of the left and right sides of the mask.  (In degrees.)</span>
+<span class="sd">            </span>
+<span class="sd">        dec_range : array-like, length 2</span>
+<span class="sd">            The Decs of the top and bottom of the mask.  (In degrees.)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_mask : ImageMask instance</span>
+<span class="sd">            An image mask that has the mask provided and the corresponding</span>
+<span class="sd">            WCS instance.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Check some basic stuff</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ra_range</span><span class="p">)</span> <span class="o">!=</span><span class="mi">2</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dec_range</span><span class="p">)</span> <span class="o">!=</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;ImageMask.from_array says:  The RA and Dec&quot;</span>
+                             <span class="s">&quot;ranges must be array-like objects of length&quot;</span>
+                             <span class="s">&quot;two.&quot;</span><span class="p">)</span>
+        
+        <span class="c">#Get some basic info from the mask and make the WCS instance accordingly</span>
+        <span class="n">x_pix</span><span class="p">,</span> <span class="n">y_pix</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">center_x_pixel</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_pix</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+        <span class="n">center_y_pixel</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_pix</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+        <span class="n">center_RA</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ra_range</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+        <span class="n">center_Dec</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dec_range</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+        <span class="n">RA_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">ra_range</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Dec_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">dec_range</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">delta_Dec</span> <span class="o">=</span> <span class="n">Dec_span</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">x_pix</span><span class="p">)</span>
+        <span class="n">delta_RA</span> <span class="o">=</span> <span class="n">RA_span</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_pix</span><span class="p">)</span>
+
+        <span class="c">#Make the WCS instance and fill in the blanks</span>
+        <span class="n">wcs_inst</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">WCS</span><span class="p">(</span><span class="n">naxis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">wcs_inst</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">crpix</span> <span class="o">=</span> <span class="p">[</span><span class="n">center_y_pixel</span><span class="p">,</span> <span class="n">center_x_pixel</span><span class="p">]</span>
+        <span class="n">wcs_inst</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">cdelt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">delta_RA</span><span class="p">,</span> <span class="n">delta_Dec</span><span class="p">])</span>
+        <span class="n">wcs_inst</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">crval</span> <span class="o">=</span> <span class="p">[</span><span class="n">center_RA</span><span class="p">,</span> <span class="n">center_Dec</span><span class="p">]</span>
+        <span class="n">wcs_inst</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">ctype</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;RA---TAN&#39;</span><span class="p">,</span> <span class="s">&#39;DEC--TAN&#39;</span><span class="p">]</span>
+
+        <span class="c">#Make the image mask and return</span>
+        <span class="n">immask</span><span class="o">=</span><span class="n">cls</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">wcs_inst</span><span class="p">,</span> <span class="n">wcs_moveable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">immask</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#---------------------------#</span>
+    <span class="c">#- Make a rectangular mask -#</span>
+    <span class="c">#---------------------------#</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ImageMask.from_ranges"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.from_ranges">[docs]</a>    <span class="k">def</span> <span class="nf">from_ranges</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">ra_range</span><span class="p">,</span> <span class="n">dec_range</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Used to create an image mask from RA and Dec ranges.  This is</span>
+<span class="sd">        useful for things like mock catalogs that are rectangular (in</span>
+<span class="sd">        the spherical coordinate sense) </span>
+<span class="sd">        </span>
+<span class="sd">        WARNING:  This routine assumes that the region of the sky the mask</span>
+<span class="sd">        covers is small enough that things like pixel scale in RA is the</span>
+<span class="sd">        same over the whole image.  This will break for very large masks.</span>
+
+<span class="sd">        Syntax</span>
+<span class="sd">        ------</span>
+<span class="sd">        immask = ImageMask.from_ranges(ra_range, dec_range)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ra_range : array-like, length 2</span>
+<span class="sd">            The min and max RAs to be covered.  (In degrees.)</span>
+<span class="sd">            </span>
+<span class="sd">        dec_range : array-like, length 2</span>
+<span class="sd">            The min and max Decs to be covered.  (In degrees.)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        new_mask : ImageMask instance</span>
+<span class="sd">            An image mask that is a rectangle that spans the RA and Dec</span>
+<span class="sd">            ranges specified</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Make a really simple mask and pass the job off to from_array</span>
+        <span class="n">x_pix</span> <span class="o">=</span> <span class="n">y_pix</span> <span class="o">=</span> <span class="mi">11</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">x_pix</span><span class="p">,</span> <span class="n">x_pix</span><span class="p">))</span>
+        <span class="n">immask</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">ra_range</span><span class="p">,</span> <span class="n">dec_range</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">immask</span></div>
+
+<span class="c">#==========================================================================</span>
+<span class="c">#==========================================================================</span>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#                 Hidden routines</span>
+    <span class="c">#----------------------------------------------------------------------</span>
+            
+    <span class="c">#---------------------------#</span>
+    <span class="c">#- Edge definition routine -#</span>
+    <span class="c">#---------------------------#</span>
+    <span class="k">def</span> <span class="nf">_make_bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">n_pix</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes a range and a number of bins and returns the bin size and</span>
+<span class="sd">        the edges of the bins.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rng : array-like, length 2</span>
+<span class="sd">            The range over which you want your bins</span>
+<span class="sd">            </span>
+<span class="sd">        n_pix : scalar</span>
+<span class="sd">            The number of bins (pixels) that you want to divide the range</span>
+<span class="sd">            into</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bin_size : scalar</span>
+<span class="sd">            The size of the bin/pixel in whatever units rng was in</span>
+<span class="sd">            </span>
+<span class="sd">        bin_edges : np.ndarray</span>
+<span class="sd">            An array of n_pix+1 values with where the edges of the bins are</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">bin_size</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">rng</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">n_pix</span>
+        <span class="k">return</span> <span class="n">bin_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">rng</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rng</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_pix</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#---------------------------------------------------#</span>
+    <span class="c">#- Calculate the RA and Dec ranges the mask covers -#</span>
+    <span class="c">#---------------------------------------------------#</span>
+    <span class="k">def</span> <span class="nf">_calc_footprint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function replaces the built-in WCS instance&#39;s calc_footprint.</span>
+<span class="sd">        The problem is that if the WCS instance isn&#39;t informed of the range</span>
+<span class="sd">        of the mask properly, then it can give a range that is too small,</span>
+<span class="sd">        causing the randoms to be generated over too small an area.</span>
+
+<span class="sd">        This function just checks which rows and colums of the mask have</span>
+<span class="sd">        any non-zero elements in them and computes the RA and Dec positions</span>
+<span class="sd">        of the corners of that x-y rectangle.  The min and max of the</span>
+<span class="sd">        corner RAs and Decs are stored as the RA and Dec ranges.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">print</span> <span class="s">&quot;Calculating the footprint of the mask&quot;</span>
+        
+        <span class="c">#See which rows and columns have pixels that are nonzero</span>
+        <span class="n">column_has_any</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">row_has_any</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="c">#Figure out the ranges of xs and ys</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">row_has_any</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">column_has_any</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">x_min</span><span class="o">=</span><span class="n">xs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">-.</span><span class="mi">5</span>
+        <span class="n">x_max</span><span class="o">=</span><span class="n">xs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+.</span><span class="mi">5</span>
+        <span class="n">y_min</span><span class="o">=</span><span class="n">ys</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">-.</span><span class="mi">5</span>
+        <span class="n">y_max</span><span class="o">=</span><span class="n">ys</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+.</span><span class="mi">5</span>
+
+        <span class="c">#Convert the corners of that footprint to RA and Dec</span>
+        <span class="n">pass_xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">x_max</span><span class="p">]</span>
+        <span class="n">pass_ys</span> <span class="o">=</span> <span class="p">[</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">]</span>
+        <span class="n">ras</span><span class="p">,</span> <span class="n">decs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xy_to_ra_dec</span><span class="p">(</span><span class="n">pass_xs</span><span class="p">,</span> <span class="n">pass_ys</span><span class="p">)</span>
+
+        <span class="c">#Make sure that we don&#39;t have any slightly negative guys rolling</span>
+        <span class="c">#over into the 359s</span>
+        <span class="k">def</span> <span class="nf">correct_pair</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">arr</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">359</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">arr</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="mi">360</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">arr</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="mi">360</span>
+        <span class="n">correct_pair</span><span class="p">(</span><span class="n">ras</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">correct_pair</span><span class="p">(</span><span class="n">ras</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">correct_pair</span><span class="p">(</span><span class="n">decs</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">correct_pair</span><span class="p">(</span><span class="n">decs</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        
+        <span class="c">#Store the RA and Dec ranges</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ras</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">ras</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">decs</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">decs</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>        
+        
+        
+<span class="c">#==========================================================================</span>
+<span class="c">#==========================================================================</span>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#                 Generate randoms on the mask</span>
+    <span class="c">#----------------------------------------------------------------------</span>
+
+    <span class="c">#-----------------------------#</span>
+    <span class="c">#- Generate unmasked randoms -#</span>
+    <span class="c">#-----------------------------#</span>
+<div class="viewcode-block" id="ImageMask.unmasked_random_sample"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.unmasked_random_sample">[docs]</a>    <span class="k">def</span> <span class="nf">unmasked_random_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_to_make</span><span class="p">,</span> <span class="n">ra_range</span><span class="p">,</span> <span class="n">dec_range</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a given number of randomly placed points in a specified</span>
+<span class="sd">        RA and Dec range.  This is really just an intermediary for a call</span>
+<span class="sd">        to correlations.uniform_sphere(RAlim, DEClim, size=1).  This</span>
+<span class="sd">        routine does not allow for the RA and Dec ranges to be completely</span>
+<span class="sd">        outside the mask.  If you want that, go to the function in</span>
+<span class="sd">        correlations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        number_to_make : scalar</span>
+<span class="sd">            The number of random objects to place in the RA and Dec range</span>
+<span class="sd">            </span>
+<span class="sd">        ra_range : array-like</span>
+<span class="sd">            Randoms will be placed between ra_range[0] and ra_range[1].</span>
+<span class="sd">            Units are degrees.</span>
+<span class="sd">            </span>
+<span class="sd">        dec_range : array-like</span>
+<span class="sd">            Randoms will be placed between dec_range[0] and dec_range[1].</span>
+<span class="sd">            Units are degrees.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ra : numpy ndarray</span>
+<span class="sd">            RA coords of the randomly placed objects.  Array shape is</span>
+<span class="sd">            (number_to_make,)</span>
+<span class="sd">            </span>
+<span class="sd">        dec : numpy ndarray</span>
+<span class="sd">            Dec coords of the randomly placed objects.  Array shape is</span>
+<span class="sd">            (number_to_make,)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Check that we have an integer number of objects</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_to_make</span><span class="p">)</span> <span class="o">!=</span> <span class="n">number_to_make</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;You must give me an integer number of &quot;</span>
+                             <span class="s">&quot;objects.  You entered &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">number_to_make</span><span class="p">))</span>
+        
+        <span class="c">#Check that we&#39;ll have at least some points in the mask</span>
+        <span class="n">ra_range_high</span> <span class="o">=</span> <span class="n">ra_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">print</span> <span class="n">ra_range_high</span>
+        <span class="n">ra_range_low</span> <span class="o">=</span> <span class="n">ra_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">print</span> <span class="n">ra_range_low</span>
+        <span class="n">bad_ra</span> <span class="o">=</span> <span class="n">ra_range_high</span> <span class="o">|</span> <span class="n">ra_range_low</span>
+        <span class="k">print</span> <span class="n">bad_ra</span>
+        <span class="n">dec_range_high</span> <span class="o">=</span> <span class="n">dec_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">print</span> <span class="n">dec_range_high</span>
+        <span class="n">dec_range_low</span> <span class="o">=</span> <span class="n">dec_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">print</span> <span class="n">dec_range_low</span>
+        <span class="n">bad_dec</span> <span class="o">=</span> <span class="n">dec_range_high</span> <span class="o">|</span> <span class="n">dec_range_low</span>
+        <span class="k">print</span> <span class="n">bad_dec</span>
+        <span class="k">if</span> <span class="n">bad_ra</span> <span class="ow">or</span> <span class="n">bad_dec</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;You have given me a range that doesn&#39;t &quot;</span>
+                             <span class="s">&quot;overlap with the RA and Dec range of the &quot;</span>
+                             <span class="s">&quot;mask.  Please correct that or use the &quot;</span>
+                             <span class="s">&quot;correlations.uniform_sphere function.&quot;</span><span class="p">)</span>
+
+        <span class="c">#Return the call to uniform_sphere</span>
+        <span class="k">return</span> <span class="n">corr</span><span class="o">.</span><span class="n">uniform_sphere</span><span class="p">(</span><span class="n">ra_range</span><span class="p">,</span> <span class="n">dec_range</span><span class="p">,</span>
+                                   <span class="n">size</span><span class="o">=</span><span class="n">number_to_make</span><span class="p">)</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#--------------------------------#</span>
+    <span class="c">#- Generate randoms on the mask -#</span>
+    <span class="c">#--------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.generate_random_sample"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.generate_random_sample">[docs]</a>    <span class="k">def</span> <span class="nf">generate_random_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_to_make</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a given number of random points within the mask.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        number_to_make : scalar</span>
+<span class="sd">            Number of randomly placed objects within the mask area</span>
+<span class="sd">            returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ra : numpy ndarray</span>
+<span class="sd">            The RAs of the randomly placed objects within the mask.  Unit</span>
+<span class="sd">            is degrees.  The array shape is (number_to_make,)</span>
+<span class="sd">            </span>
+<span class="sd">        dec : numpy ndarray</span>
+<span class="sd">            The Decs of the randomly placed objects within the mask.  Unit</span>
+<span class="sd">            is degrees.  The array shape is (number_to_make,)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Check that we have an integer number of objects</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_to_make</span><span class="p">)</span> <span class="o">!=</span> <span class="n">number_to_make</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;You must give me an integer number of &quot;</span>
+                             <span class="s">&quot;objects.  You entered &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">number_to_make</span><span class="p">))</span>
+
+        <span class="c">#Make the first pass of randoms</span>
+        <span class="n">ra_R</span><span class="p">,</span> <span class="n">dec_R</span><span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">uniform_sphere</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">,</span>
+                                         <span class="n">size</span><span class="o">=</span><span class="n">number_to_make</span><span class="p">)</span>
+        
+        <span class="c">#----------------------------------</span>
+        <span class="c">#- Mask and add more if undershot</span>
+        <span class="c">#----------------------------------</span>
+        <span class="c">#Get completenesses and see which to use</span>
+        <span class="n">random_completeness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_completenesses</span><span class="p">(</span><span class="n">ra_R</span><span class="p">,</span> <span class="n">dec_R</span><span class="p">)</span>
+        <span class="n">compare_to</span> <span class="o">=</span> <span class="n">rand</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ra_R</span><span class="p">))</span>
+        <span class="n">use</span> <span class="o">=</span> <span class="n">compare_to</span> <span class="o">&lt;</span> <span class="n">random_completeness</span>
+        <span class="c">#Mask down to the ones that survived</span>
+        <span class="n">ra_R</span> <span class="o">=</span> <span class="n">ra_R</span><span class="p">[</span><span class="n">use</span><span class="p">]</span>
+        <span class="n">dec_R</span> <span class="o">=</span> <span class="n">dec_R</span><span class="p">[</span><span class="n">use</span><span class="p">]</span>
+        <span class="n">compare_to</span> <span class="o">=</span> <span class="n">compare_to</span><span class="p">[</span><span class="n">use</span><span class="p">]</span>
+        <span class="n">random_completeness</span> <span class="o">=</span> <span class="n">random_completeness</span><span class="p">[</span><span class="n">use</span><span class="p">]</span>
+
+        <span class="c">#How many do we have?</span>
+        <span class="n">number_we_have</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ra_R</span><span class="p">)</span>
+        <span class="k">print</span> <span class="p">(</span><span class="s">&quot;ImageMask.generate_random_sample says: &quot;</span>
+               <span class="s">&quot; We made &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">number_we_have</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&quot;      We need &quot;</span><span class="p">,</span> <span class="n">number_to_make</span><span class="p">,</span> <span class="s">&quot; total&quot;</span>
+
+        <span class="c">#Check to see by how many we&#39;ve overshot</span>
+        <span class="n">number_left_to_make</span> <span class="o">=</span> <span class="n">number_to_make</span> <span class="o">-</span> <span class="n">number_we_have</span>
+        
+        <span class="c">#If we&#39;ve actually made too few, make more</span>
+        <span class="k">if</span> <span class="n">number_left_to_make</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&quot;ImageMask.generate_random_sample says: I have &quot;</span>
+                   <span class="s">&quot;made too few objects within the target area. Making &quot;</span>
+                   <span class="s">&quot;more.&quot;</span><span class="p">)</span>
+            <span class="c">#Figure out what fraction of the guys that we made were used</span>
+            <span class="c">#so if my mask is teeny and in a big field, it won&#39;t take</span>
+            <span class="c">#forever to get to where we want to be</span>
+            <span class="n">fraction_used_last_time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">number_we_have</span><span class="p">)</span><span class="o">/</span><span class="n">number_to_make</span>
+            <span class="k">if</span> <span class="n">fraction_used_last_time</span> <span class="o">&lt;</span> <span class="mf">1.e-3</span><span class="p">:</span>
+                <span class="n">fraction_used_last_time</span> <span class="o">=</span> <span class="mf">1e-3</span>
+                
+            <span class="c">#Ask for exactly how many more we need.</span>
+            <span class="c"># new_multiplier = 1. / fraction_used_last_time</span>
+            <span class="c"># ask_for = np.ceil(number_left_to_make * new_multiplier)</span>
+            <span class="n">ask_for</span> <span class="o">=</span> <span class="n">number_left_to_make</span>
+            <span class="n">newguys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">(</span><span class="n">ask_for</span><span class="p">)</span>
+            <span class="c">#Unpack</span>
+            <span class="n">more_ras</span><span class="p">,</span> <span class="n">more_decs</span><span class="p">,</span> <span class="n">more_comps</span> <span class="o">=</span> <span class="n">newguys</span>
+            
+            <span class="c">#Add these galaxies to the existing arrays</span>
+            <span class="n">ra_R</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">ra_R</span><span class="p">,</span> <span class="n">more_ras</span><span class="p">))</span>
+            <span class="n">dec_R</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">dec_R</span><span class="p">,</span> <span class="n">more_decs</span><span class="p">))</span>
+            <span class="n">random_completeness</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">random_completeness</span><span class="p">,</span>
+                                                  <span class="n">more_comps</span><span class="p">))</span>
+            <span class="n">number_we_have</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ra_R</span><span class="p">)</span>
+            <span class="n">number_left_to_make</span> <span class="o">=</span> <span class="n">number_to_make</span> <span class="o">-</span> <span class="n">number_we_have</span>
+            <span class="k">if</span> <span class="n">number_left_to_make</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;Cathy screwed up something major this &quot;</span>
+                                   <span class="s">&quot;time.  We didn&#39;t make the right number&quot;</span>
+                                   <span class="s">&quot; after falling short and calling &quot;</span>
+                                   <span class="s">&quot;generate_randoms again.&quot;</span><span class="p">)</span>
+
+        <span class="c">#If we overshot, cut some off</span>
+        <span class="k">if</span> <span class="n">number_left_to_make</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&quot;ImageMask.generate_random_sample says: &quot;</span>
+                  <span class="s">&quot;Cutting down to exactly as many objects as we need.&quot;</span><span class="p">)</span>
+            <span class="n">ra_R</span><span class="o">=</span><span class="n">ra_R</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">number_to_make</span><span class="p">]</span>
+            <span class="n">dec_R</span><span class="o">=</span><span class="n">dec_R</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">number_to_make</span><span class="p">]</span>
+            <span class="n">random_completeness</span><span class="o">=</span> <span class="n">random_completeness</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">number_to_make</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&quot;ImageMask.generate_random_sample says: &quot;</span>
+                  <span class="s">&quot;I made exactly the right number!  It&#39;s like winning &quot;</span>
+                  <span class="s">&quot;the lottery but not actually fun...&quot;</span><span class="p">)</span>
+            
+                
+        <span class="c">#Return things!</span>
+        <span class="k">return</span> <span class="n">ra_R</span><span class="p">,</span> <span class="n">dec_R</span><span class="p">,</span> <span class="n">random_completeness</span></div>
+        
+
+<span class="c">#==========================================================================</span>
+<span class="c">#==========================================================================</span>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#                 Transforms</span>
+    <span class="c">#----------------------------------------------------------------------</span>
+
+    <span class="c">#-----------------------------------------------#</span>
+    <span class="c">#- Returns the x-y coords of given RA and Decs -#</span>
+    <span class="c">#-----------------------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.ra_dec_to_xy"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.ra_dec_to_xy">[docs]</a>    <span class="k">def</span> <span class="nf">ra_dec_to_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a list of RA and Dec, returns the XY position on the image.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ra : array-like</span>
+<span class="sd">            A list of RA coordinates to transform.  (In degrees.)</span>
+<span class="sd">            </span>
+<span class="sd">        dec : array-like</span>
+<span class="sd">            A list of Dec coordinates to transform.  (In degrees.)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        x : 1D np.ndarray</span>
+<span class="sd">            X positions of the input coordinates</span>
+<span class="sd">            </span>
+<span class="sd">        y : 1D np.ndarray</span>
+<span class="sd">            Y positions of the input coordinates</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pairs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">])</span>
+        <span class="n">positions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_wcs_instance</span><span class="o">.</span><span class="n">wcs_world2pix</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#----------------------------------------------#</span>
+    <span class="c">#- Returns the RA and dec of given x-y coords -#</span>
+    <span class="c">#----------------------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.xy_to_ra_dec"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.xy_to_ra_dec">[docs]</a>    <span class="k">def</span> <span class="nf">xy_to_ra_dec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a list of X and Y coordinates, returns the RA and Dec.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array-like</span>
+<span class="sd">            X positions of the input coordinates</span>
+<span class="sd">            </span>
+<span class="sd">        y : array-like</span>
+<span class="sd">            Y positions of the input coordinates</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ra : np.ndarray</span>
+<span class="sd">            RAs of the input coordinates in degrees</span>
+<span class="sd">            </span>
+<span class="sd">        dec : array-like</span>
+<span class="sd">            Decs of the input coordinates in degrees</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pairs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+        <span class="n">positions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_wcs_instance</span><span class="o">.</span><span class="n">wcs_pix2world</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ra</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">dec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">positions</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span></div>
+
+<span class="c">#==========================================================================</span>
+<span class="c">#==========================================================================</span>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#                 Mask manipulation</span>
+    <span class="c">#----------------------------------------------------------------------</span>
+
+    <span class="c">#------------------------------#</span>
+    <span class="c">#- Set subregions within mask -#</span>
+    <span class="c">#------------------------------# </span>
+<div class="viewcode-block" id="ImageMask.subdivide_mask"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.subdivide_mask">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_shortside</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_longside</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">preview</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                       <span class="n">rotation_angle</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">only_show</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">save_plot</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subdivide mask takes the image mask, draws a rectangle around the</span>
+<span class="sd">        valid region of the mask, rotated to be as small as possible, and</span>
+<span class="sd">        subdivides that rectangle.  The rotation angle of the box can be</span>
+<span class="sd">        set manually and space can be trimmed or added from the sides of</span>
+<span class="sd">        the box.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_shortside : integer (optional)</span>
+<span class="sd">            The number of cells along the short side of the rectangle.</span>
+<span class="sd">            Default is 3.</span>
+<span class="sd">            </span>
+<span class="sd">        n_longside : integer (optional)</span>
+<span class="sd">            The number of cells along the long side of the rectangle.</span>
+<span class="sd">            Default is 4.</span>
+<span class="sd">            </span>
+<span class="sd">        preview : bool (optional)</span>
+<span class="sd">            Should the mask show you what this set of parameters looks like</span>
+<span class="sd">            but not store the results?  If preview == True, either a plot</span>
+<span class="sd">            will be shown on your screen (no value given for save_plot) or</span>
+<span class="sd">            saved to a file (save_plot specified).  The image mask object</span>
+<span class="sd">            will not keep the division information.  If preview == False,</span>
+<span class="sd">            which is the default, the values will be stored and a plot will</span>
+<span class="sd">            only be made if save_plot is specified.</span>
+<span class="sd">            </span>
+<span class="sd">        rotation_angle : scalar (optional)</span>
+<span class="sd">            Fixes the rotation angle that the mask&#39;s bounding box will be</span>
+<span class="sd">            defined at with respect to the XY coordinate system of the</span>
+<span class="sd">            mask.  By default, the routine will choose the integer angle in</span>
+<span class="sd">            degrees which minimizes the area of the bounding box.</span>
+<span class="sd">            </span>
+<span class="sd">        padding : 4 element array-like (optional)</span>
+<span class="sd">            How many pixels extra to allow in the rotated coordinates of</span>
+<span class="sd">            the bounding box.  The order is [bottom, top, left, right].</span>
+<span class="sd">            Positive padding corresponds to moving the edges outwards and</span>
+<span class="sd">            leaving extra room.  Negative padding will move the bounding</span>
+<span class="sd">            box inward and cut off part of the mask.</span>
+<span class="sd">            </span>
+<span class="sd">        only_show : integer (optional)</span>
+<span class="sd">            If you only want to see the random points that fall into one of</span>
+<span class="sd">            the cells in the subdivided mask, you set only_show to that</span>
+<span class="sd">            cell number.  This will only matter if you have preview=True</span>
+<span class="sd">            or have specified save_plot.</span>
+<span class="sd">            </span>
+<span class="sd">        save_plot : string (optional)</span>
+<span class="sd">            Name with path from &#39;/&#39; of the file where you would like the</span>
+<span class="sd">            plot of the subdivided mask saved.  If only_show is set to an</span>
+<span class="sd">            integer that corresponds to a cell number, only the points in</span>
+<span class="sd">            that cell will be shown.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Start by putting down a bunch of randoms.</span>
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_random_sample</span><span class="p">(</span><span class="mf">5.e4</span><span class="p">)</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_dec_to_xy</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">)</span>
+
+        <span class="c">#Set the padding on each side</span>
+        <span class="k">if</span> <span class="n">padding</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">pad_bottom</span><span class="p">,</span> <span class="n">pad_top</span><span class="p">,</span> <span class="n">pad_left</span><span class="p">,</span> <span class="n">pad_right</span><span class="o">=</span><span class="n">padding</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="c">#If we can&#39;t unpack the padding, either raise an</span>
+                <span class="c">#informative error (if we&#39;re doing the subdivision</span>
+                <span class="c">#permanently) or just a warning if we&#39;re only previewing</span>
+                <span class="n">says_str</span> <span class="o">=</span> <span class="s">&quot;subdivide_mask says: &quot;</span>
+                <span class="n">message_str</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;You have given me something I can&#39;t use &quot;</span>
+                               <span class="s">&quot;for padding.  Padding must be a 4-element &quot;</span>
+                               <span class="s">&quot;1D array in the format [bottom, top, left,&quot;</span>
+                               <span class="s">&quot; right].&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">preview</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="p">(</span><span class="n">says_str</span> <span class="o">+</span> <span class="s">&quot;WARNING!  &quot;</span> <span class="o">+</span> <span class="n">message_str</span> <span class="o">+</span>
+                           <span class="s">&quot;  No padding used this time&quot;</span><span class="p">)</span>
+                    <span class="n">pad_bottom</span><span class="p">,</span> <span class="n">pad_top</span><span class="p">,</span> <span class="n">pad_left</span><span class="p">,</span> <span class="n">pad_right</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">says_str</span> <span class="o">+</span> <span class="s">&quot;ERROR!  &quot;</span> <span class="o">+</span> <span class="n">message_str</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pad_bottom</span><span class="p">,</span> <span class="n">pad_top</span><span class="p">,</span> <span class="n">pad_left</span><span class="p">,</span> <span class="n">pad_right</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c">#If we don&#39;t have an already chosen angle, choose a bunch of angles</span>
+        <span class="c">#and transform the coordinates to rotated systems and get the areas</span>
+        <span class="c">#of the rectangle enclosing all the data points at this angle. Take</span>
+        <span class="c">#The angle with the minimum area for the enclosing rectangle.</span>
+        <span class="k">if</span> <span class="n">rotation_angle</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">thetas</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">))</span>
+            <span class="n">areas</span><span class="o">=</span><span class="p">[]</span>
+            <span class="n">corners</span><span class="o">=</span><span class="p">[]</span>
+            <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">thetas</span><span class="p">:</span>
+                <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">rotate_coords</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">th</span><span class="p">)</span>
+                <span class="c">#Don&#39;t take padding into account to determine the angle.</span>
+                <span class="n">x2min</span><span class="o">=</span><span class="n">x2</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">x2max</span><span class="o">=</span><span class="n">x2</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="n">y2min</span><span class="o">=</span><span class="n">y2</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">y2max</span><span class="o">=</span><span class="n">y2</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="n">areas</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x2</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">-</span><span class="n">x2</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">*</span> <span class="p">(</span><span class="n">y2</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">-</span><span class="n">y2</span><span class="o">.</span><span class="n">min</span><span class="p">()))</span>
+
+            <span class="n">areas</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">areas</span><span class="p">)</span>
+            <span class="n">which_theta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">areas</span><span class="o">==</span><span class="n">areas</span><span class="o">.</span><span class="n">min</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">use_theta</span><span class="o">=</span><span class="n">thetas</span><span class="p">[</span><span class="n">which_theta</span><span class="p">]</span>
+        <span class="c">#Else, use the given angle</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">use_theta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">rotation_angle</span><span class="p">)</span>
+
+        <span class="c">#Define the edges of the regions</span>
+        <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">rotate_coords</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">use_theta</span><span class="p">)</span>
+        <span class="n">x2min</span><span class="o">=</span><span class="n">x2</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">pad_left</span>
+        <span class="n">x2max</span><span class="o">=</span><span class="n">x2</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">pad_right</span>
+        <span class="n">y2min</span><span class="o">=</span><span class="n">y2</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">pad_bottom</span>
+        <span class="n">y2max</span><span class="o">=</span><span class="n">y2</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">pad_top</span>
+
+        <span class="c">#Figure out the x2 and y2 bin divisions</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">x2max</span><span class="o">-</span><span class="n">x2min</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">y2max</span><span class="o">-</span><span class="n">y2min</span><span class="p">):</span>
+            <span class="n">nx</span><span class="o">=</span><span class="n">n_shortside</span>
+            <span class="n">ny</span><span class="o">=</span><span class="n">n_longside</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ny</span><span class="o">=</span><span class="n">n_shortside</span>
+            <span class="n">nx</span><span class="o">=</span><span class="n">n_longside</span>
+
+        <span class="n">x2edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x2min</span><span class="p">,</span> <span class="n">x2max</span><span class="p">,</span> <span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">y2edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">y2min</span><span class="p">,</span> <span class="n">y2max</span><span class="p">,</span> <span class="n">ny</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c">#-----------------#</span>
+        <span class="c">#- Make the plot -#</span>
+        <span class="c">#-----------------#</span>
+        <span class="k">if</span> <span class="n">preview</span> <span class="ow">or</span> <span class="n">save_plot</span><span class="p">:</span>
+            <span class="c">#Figure out what subregions we have</span>
+            <span class="n">subregions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_subregions</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="n">use_theta</span><span class="p">,</span>
+                                              <span class="n">rot_xedges</span><span class="o">=</span><span class="n">x2edges</span><span class="p">,</span>
+                                              <span class="n">rot_yedges</span><span class="o">=</span><span class="n">y2edges</span><span class="p">)</span>
+            <span class="n">outside</span> <span class="o">=</span> <span class="n">subregions</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">inside</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">outside</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">only_show</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">this_box</span> <span class="o">=</span> <span class="n">subregions</span><span class="o">==</span><span class="n">only_show</span>
+                <span class="n">inside</span> <span class="o">=</span> <span class="n">inside</span> <span class="o">&amp;</span> <span class="n">this_box</span>
+
+            <span class="c">#Make a figure and plot the random points</span>
+            <span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="n">outside</span><span class="p">],</span> <span class="n">y1</span><span class="p">[</span><span class="n">outside</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s">&#39;LightGray&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="n">inside</span><span class="p">],</span> <span class="n">y1</span><span class="p">[</span><span class="n">inside</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s">&#39;Blue&#39;</span><span class="p">)</span>  
+                      
+            <span class="c">#Plot the vertical lines</span>
+            <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">x2</span><span class="o">=</span><span class="p">[</span><span class="n">x2edges</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">x2edges</span><span class="p">[</span><span class="n">ix</span><span class="p">]]</span>
+                <span class="n">y2</span><span class="o">=</span><span class="p">[</span><span class="n">y2min</span><span class="p">,</span> <span class="n">y2max</span><span class="p">]</span>
+                <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="n">misc</span><span class="o">.</span><span class="n">rotate_coords</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="o">-</span><span class="n">use_theta</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;Red&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="c">#Plot the horizontal lines</span>
+            <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">x2</span><span class="o">=</span><span class="p">[</span><span class="n">x2min</span><span class="p">,</span> <span class="n">x2max</span><span class="p">]</span>
+                <span class="n">y2</span><span class="o">=</span><span class="p">[</span><span class="n">y2edges</span><span class="p">[</span><span class="n">iy</span><span class="p">],</span> <span class="n">y2edges</span><span class="p">[</span><span class="n">iy</span><span class="p">]]</span>
+                <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="n">misc</span><span class="o">.</span><span class="n">rotate_coords</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="o">-</span><span class="n">use_theta</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;Red&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="c">#Figure out the dimensions of the boxes in angular space</span>
+            <span class="n">x2</span><span class="o">=</span><span class="p">[</span><span class="n">x2edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x2edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x2edges</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="n">y2</span><span class="o">=</span><span class="p">[</span><span class="n">y2edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y2edges</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">y2edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">ra_box</span><span class="p">,</span> <span class="n">dec_box</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">xy_to_ra_dec</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span>
+            <span class="n">y_side</span><span class="o">=</span><span class="n">misc</span><span class="o">.</span><span class="n">ang_sep</span><span class="p">(</span><span class="n">ra_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dec_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ra_box</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dec_box</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="n">radians_in</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">radians_out</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span>
+            <span class="n">x_side</span><span class="o">=</span><span class="n">misc</span><span class="o">.</span><span class="n">ang_sep</span><span class="p">(</span><span class="n">ra_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dec_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ra_box</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">dec_box</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                               <span class="n">radians_in</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">radians_out</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span>
+
+            <span class="c">#Print out the parameters</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">.</span><span class="mo">05</span><span class="p">,</span> <span class="o">.</span><span class="mi">95</span><span class="p">,</span> <span class="s">&quot;theta= &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">use_theta</span><span class="p">))[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">.</span><span class="mo">05</span><span class="p">,</span> <span class="o">.</span><span class="mi">925</span><span class="p">,</span> <span class="s">&quot;padding=&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">padding</span><span class="p">),</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">.</span><span class="mo">05</span><span class="p">,</span> <span class="o">.</span><span class="mi">9</span><span class="p">,</span> <span class="s">&quot;n_longside=&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">n_longside</span><span class="p">),</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">.</span><span class="mo">05</span><span class="p">,</span> <span class="o">.</span><span class="mi">875</span><span class="p">,</span> <span class="s">&quot;n_shortside=&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">n_shortside</span><span class="p">),</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mo">05</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;box size: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">x_side</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">+</span><span class="s">&quot; by &quot;</span><span class="o">+</span>
+                              <span class="nb">str</span><span class="p">(</span><span class="n">y_side</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">+</span><span class="s">&quot; arcsec&quot;</span><span class="p">),</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+
+            <span class="c">#Label the subregions</span>
+            <span class="n">y_label_coord</span><span class="o">=.</span><span class="mi">85</span>
+            <span class="n">avg_ngals</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ra</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">outside</span><span class="p">)]))</span><span class="o">/</span><span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">ny</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="s">&quot;N_bin/N_avg&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                    <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s">&quot;outside-&gt; &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ra</span><span class="p">[</span><span class="n">outside</span><span class="p">]))</span><span class="o">/</span><span class="n">avg_ngals</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>
+                    <span class="c">#What bin number is this?</span>
+                    <span class="n">bin_number</span><span class="o">=</span> <span class="n">nx</span><span class="o">*</span><span class="n">iy</span> <span class="o">+</span> <span class="n">ix</span>
+                    <span class="c">#Where&#39;s the center of the box?</span>
+                    <span class="n">text_x2</span><span class="o">=</span><span class="p">(</span><span class="n">x2edges</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">+</span> <span class="n">x2edges</span><span class="p">[</span><span class="n">ix</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mf">2.</span>
+                    <span class="n">text_y2</span><span class="o">=</span><span class="p">(</span><span class="n">y2edges</span><span class="p">[</span><span class="n">iy</span><span class="p">]</span> <span class="o">+</span> <span class="n">y2edges</span><span class="p">[</span><span class="n">iy</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mf">2.</span>
+                    <span class="n">text_x1</span><span class="p">,</span> <span class="n">text_y1</span><span class="o">=</span><span class="n">misc</span><span class="o">.</span><span class="n">rotate_coords</span><span class="p">(</span><span class="n">text_x2</span><span class="p">,</span> <span class="n">text_y2</span><span class="p">,</span>
+                                                        <span class="o">-</span><span class="n">use_theta</span><span class="p">)</span>
+                    <span class="c">#Print the bin number at the center of the box</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">text_x1</span><span class="p">,</span> <span class="n">text_y1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">bin_number</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                            <span class="n">color</span><span class="o">=</span><span class="s">&#39;Lime&#39;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span>
+                            <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">)</span>
+
+                    <span class="c">#Print the number of galaxies in the upper right corner</span>
+                    <span class="n">thisbin</span><span class="o">=</span> <span class="n">subregions</span><span class="o">==</span><span class="n">bin_number</span>
+                    <span class="n">n_thisbin</span><span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ra</span><span class="p">[</span><span class="n">thisbin</span><span class="p">]))</span>
+                    <span class="k">print</span> <span class="p">(</span><span class="s">&quot;bin &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">bin_number</span><span class="p">)</span><span class="o">+</span><span class="s">&quot; has &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">n_thisbin</span><span class="p">)</span><span class="o">+</span>
+                           <span class="s">&quot; randoms in it&quot;</span><span class="p">)</span>
+                    <span class="n">display_string</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;bin &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">bin_number</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;-&gt; &#39;</span><span class="o">+</span>
+                                    <span class="nb">str</span><span class="p">(</span><span class="n">n_thisbin</span><span class="o">/</span><span class="n">avg_ngals</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">y_label_coord</span><span class="p">,</span> <span class="n">display_string</span><span class="p">,</span>
+                            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+                    <span class="n">y_label_coord</span><span class="o">-=</span><span class="mf">0.05</span>
+
+            <span class="k">if</span> <span class="n">save_plot</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_plot</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&#39;tight&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c">#If we want to store the information, do so</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">preview</span><span class="p">:</span>
+            <span class="c">#Store the subregion information</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_subregions</span><span class="p">(</span><span class="n">use_theta</span><span class="p">,</span> <span class="n">x2edges</span><span class="p">,</span> <span class="n">y2edges</span><span class="p">)</span></div>
+
+    <span class="c">#----------------------------------------------------------------------            </span>
+    <span class="c">#---------------------------------#</span>
+    <span class="c">#- Sets up subregion information -#</span>
+    <span class="c">#---------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.set_subregions"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.set_subregions">[docs]</a>    <span class="k">def</span> <span class="nf">set_subregions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">xedges</span><span class="p">,</span> <span class="n">yedges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set subregion information.  Theta is the rotation of the enclosing</span>
+<span class="sd">        rectangle and the x and y edges are the locations in the rotated</span>
+<span class="sd">        coordinate system of the rectangle.  This is mainly useful if you</span>
+<span class="sd">        calculated these quantities with subdivide_mask previously and</span>
+<span class="sd">        would prefer to just set these by hand instead of replicating the</span>
+<span class="sd">        subdivide_mask call.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : scalar</span>
+<span class="sd">            The angle in *radians* of the bounding box rotation</span>
+<span class="sd">            </span>
+<span class="sd">        xedges : array-like</span>
+<span class="sd">            The x coordinates in the rotated coordinate system of the cell</span>
+<span class="sd">            boundaries</span>
+<span class="sd">            </span>
+<span class="sd">        yedges : array-like</span>
+<span class="sd">            The y coordinates in the rotated coordinate system of the cell</span>
+<span class="sd">            boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotation</span><span class="o">=</span><span class="n">theta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_xedges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xedges</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_yedges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">yedges</span><span class="p">)</span>
+        <span class="k">return</span></div>
+    
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#-----------------------------------------------#</span>
+    <span class="c">#- Translate and/or rotate the mask on the sky -#</span>
+    <span class="c">#-----------------------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.move_mask_on_sky"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.move_mask_on_sky">[docs]</a>    <span class="k">def</span> <span class="nf">move_mask_on_sky</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta_ra</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">delta_dec</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta_degrees</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                         <span class="n">preview</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Move the mask around on the sky by changing the parameters in the</span>
+<span class="sd">        WCS instance.  If preview=True, the calling instance won&#39;t be</span>
+<span class="sd">        changed and a copy with the altered WCS instance will be returned.</span>
+<span class="sd">        Otherwise, the ImageMask calling this function will be changed and</span>
+<span class="sd">        nothing is returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        delta_ra : scalar (optional)</span>
+<span class="sd">            Amount to change the central RA.  Defaults to 0</span>
+<span class="sd">            </span>
+<span class="sd">        delta_dec : scalar (optional)</span>
+<span class="sd">            Amount to change the central Dec.  Defaults to 0</span>
+<span class="sd">            </span>
+<span class="sd">        theta_degrees : scalar (optional)</span>
+<span class="sd">            Amount to rotate the WCS instance in degrees.  Defaults to 0</span>
+<span class="sd">            </span>
+<span class="sd">        preview : boolean (optional)</span>
+<span class="sd">            Default it False.  If True, returns an ImageMask instance with</span>
+<span class="sd">            the same mask as the ImageMask that generated it but with the</span>
+<span class="sd">            WCS instance altered.  The calling instance won&#39;t be changed.</span>
+<span class="sd">            If False, the calling instance&#39;s WCS instance will be changed</span>
+<span class="sd">            and nothing will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        altered_mask : ImageMask instance</span>
+<span class="sd">            This is only returned if preview==False.  It is a copy of the</span>
+<span class="sd">            calling ImageMask instance with a changed WCS instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#First, check to make sure that the instance is such that it can be</span>
+        <span class="c">#moved on the sky without causing problems</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs_moveable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;This mask has a WCS instance that is flagged&quot;</span>
+                             <span class="s">&quot; as not moveable.  If it&#39;s something that &quot;</span>
+                             <span class="s">&quot;came from Py2PAC and not from the user, it&#39;s&quot;</span>
+                             <span class="s">&quot; because the astropy WCS package is uncooperative&quot;</span>
+                             <span class="s">&quot; and I couldn&#39;t figure out how to get it to &quot;</span>
+                             <span class="s">&quot;move the masks that I created by hand &quot;</span>
+                             <span class="s">&quot;(in the from_array class method) &quot;</span>
+                             <span class="s">&quot;properly.  The scales ended up messed up.  &quot;</span>
+                             <span class="s">&quot;If you know how to fix this, I would be more&quot;</span>
+                             <span class="s">&quot; than happy to hear your suggestions.&quot;</span><span class="p">)</span>
+
+        <span class="c">#If we&#39;re previewing, make a copy to work with.  If not, use the</span>
+        <span class="c">#WCS instance that we have already</span>
+        <span class="k">if</span> <span class="n">preview</span><span class="p">:</span>
+            <span class="n">work_with</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs_instance</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">work_with</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs_instance</span>
+    
+        <span class="c">#Update the center</span>
+        <span class="n">work_with</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">crval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">delta_ra</span>
+        <span class="n">work_with</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">crval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">delta_dec</span>
+
+        <span class="c">#Apply the rotation</span>
+        <span class="n">sine</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">theta_degrees</span><span class="p">))</span>
+        <span class="n">cosine</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">theta_degrees</span><span class="p">))</span>
+        <span class="n">rotation_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cosine</span><span class="p">,</span> <span class="o">-</span><span class="n">sine</span><span class="p">]</span> <span class="p">,</span> <span class="p">[</span><span class="n">sine</span><span class="p">,</span> <span class="n">cosine</span><span class="p">]])</span>
+        <span class="n">work_with</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">cd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rotation_matrix</span><span class="p">,</span>
+                                           <span class="n">work_with</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">cd</span><span class="p">)</span>
+
+        <span class="c">#If this is a preview, send the altered instance back.  If not,</span>
+        <span class="c">#update the RA and Dec ranges.  </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">preview</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_calc_footprint</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ImageMask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">,</span> <span class="n">work_with</span><span class="p">)</span></div>
+
+<span class="c">#==========================================================================</span>
+<span class="c">#==========================================================================</span>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+    <span class="c">#                 Get info from mask</span>
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+    <span class="c">#----------------------------------------------------------------#</span>
+    <span class="c">#- Returns the solid angle subtended by the &quot;true&quot; region in sr -#</span>
+    <span class="c">#----------------------------------------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.masked_area_solid_angle"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.masked_area_solid_angle">[docs]</a>    <span class="k">def</span> <span class="nf">masked_area_solid_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the solid angle subtended by the masked region- just the</span>
+<span class="sd">        part where data is allowed.  This is a pretty dumb way of doing</span>
+<span class="sd">        it, so it should only be taken as an approximation.</span>
+
+<span class="sd">        **Method**</span>
+
+<span class="sd">        The WCS instance is queried to get the RA and Dec coordinates of</span>
+<span class="sd">        the image.  Those are converted to X and Y coordinates- note that</span>
+<span class="sd">        this involves some distortion.  If the number of coordinates at the</span>
+<span class="sd">        bottom and top are different, a warning is printed but the routine</span>
+<span class="sd">        proceeds. The area is treated as a trapezoid to get the total</span>
+<span class="sd">        number of effective pixels.  This is compared to the number of</span>
+<span class="sd">        pixels on the mask where the mask value is greater than 0,</span>
+<span class="sd">        returning the fraction of the image that is to be considered.</span>
+
+<span class="sd">        Then, a solid angle integral is performed over the ranges in RA and</span>
+<span class="sd">        Dec and multiplied by the fraction of the image to be considered.</span>
+<span class="sd">        This is returned as the solid angle covered.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        solid_angle : scalar</span>
+<span class="sd">            The solid angle in steradians covered by the nonzero elements</span>
+<span class="sd">            of the mask array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#Locations of the corners in RA-Dec, and x-y</span>
+        <span class="n">ra_list</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">dec_list</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_dec_to_xy</span><span class="p">(</span><span class="n">ra_list</span><span class="p">,</span> <span class="n">dec_list</span><span class="p">)</span>
+
+        <span class="c">#Now pretend it&#39;s a trapezoid to get the total area</span>
+        <span class="n">npix_top</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">npix_bottom</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">npix_top</span> <span class="o">!=</span> <span class="n">npix_bottom</span><span class="p">:</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&quot;masked_area_solid_angle says: WARNING!  There is &quot;</span>
+                   <span class="s">&quot;enough distortion from the projection to a flat image &quot;</span>
+                   <span class="s">&quot;over the RA and Dec ranges that this mask spans that &quot;</span>
+                   <span class="s">&quot;the number of pixels across the RA span at the top and&quot;</span>
+                   <span class="s">&quot; bottom are different.  There may be distortion &quot;</span>
+                   <span class="s">&quot;effects strong enough to mess with things.  There are &quot;</span>
+                   <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">npix_top</span><span class="p">)</span><span class="o">+</span><span class="s">&quot; pixels at the max Dec and &quot;</span><span class="o">+</span>
+                   <span class="nb">str</span><span class="p">(</span><span class="n">npix_bottom</span><span class="p">)</span><span class="o">+</span><span class="s">&quot; pixels at the min Dec.&quot;</span><span class="p">)</span>
+        <span class="n">npix_h</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">total_npix</span> <span class="o">=</span> <span class="p">(</span><span class="n">npix_top</span><span class="o">+</span><span class="n">npix_bottom</span><span class="p">)</span> <span class="o">*</span> <span class="n">npix_h</span> <span class="o">/</span> <span class="mf">2.</span>
+
+        <span class="c">#How many pixels are in the valid part of the image?</span>
+        <span class="n">true_false</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">)</span>  <span class="c">#accounts for non-binary masking</span>
+        <span class="n">npix_true</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">true_false</span><span class="p">)</span>
+
+        <span class="c">#What solid angle is covered by the whole RA and Dec range?</span>
+        <span class="c">#Convert the RA and Decs to theta and phi (in radians)</span>
+        <span class="c">#Dec is pi/2 at theta=0 and -pi/2 at theta=pi</span>
+        <span class="n">theta_range</span><span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.</span> 
+        <span class="n">theta_range</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">phi_range</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">)</span>
+        <span class="n">phi_range</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    
+        <span class="c">#Do the integral</span>
+        <span class="n">phi_int</span><span class="p">,</span> <span class="n">phi_int_err</span><span class="o">=</span> <span class="n">intg</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">phi</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="n">phi_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                        <span class="n">phi_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">theta_int</span><span class="p">,</span> <span class="n">theta_int_err</span><span class="o">=</span> <span class="n">intg</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">theta</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span>
+                                            <span class="n">theta_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">theta_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">solid_angle</span> <span class="o">=</span> <span class="n">phi_int</span> <span class="o">*</span> <span class="n">theta_int</span>
+        <span class="k">print</span> <span class="n">solid_angle</span>
+        <span class="k">print</span> <span class="n">npix_true</span>
+        <span class="k">print</span> <span class="n">total_npix</span>
+
+        <span class="c">#Return the fraction of the solid angle that&#39;s covered</span>
+        <span class="c">#by the true part</span>
+        <span class="k">return</span> <span class="n">solid_angle</span> <span class="o">*</span> <span class="n">npix_true</span><span class="o">/</span><span class="n">total_npix</span></div>
+        
+    <span class="c">#----------------------------------------------------------------------        </span>
+    <span class="c">#------------------------------------------#</span>
+    <span class="c">#- Queries completeness for given catalog -#</span>
+    <span class="c">#------------------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.return_completenesses"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.return_completenesses">[docs]</a>    <span class="k">def</span> <span class="nf">return_completenesses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra_list</span><span class="p">,</span> <span class="n">dec_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes a list of RAs and Decs and returns the completenesses for</span>
+<span class="sd">        each point.  This version only supports completeness with no</span>
+<span class="sd">        dependence on object properties.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ra_list : 1D array-like</span>
+<span class="sd">            A list of the RAs in degrees for the objects to query for</span>
+<span class="sd">            completeness.</span>
+<span class="sd">            </span>
+<span class="sd">        dec_list : 1D array-like</span>
+<span class="sd">            A list of the Decs in degrees for the objects to query for</span>
+<span class="sd">            completeness.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        completeness : 1D numpy array</span>
+<span class="sd">            A list of completenesses for the objects in the input lists.</span>
+<span class="sd">            Completenesses are between 0 and 1 (inclusive).  To see if the</span>
+<span class="sd">            object should be used, draw a random uniform number on [0,1]</span>
+<span class="sd">            if that number is less than or equal to the completeness,</span>
+<span class="sd">            include the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Check that the lists are the same length and convert to np arrays</span>
+        <span class="n">ra_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ra_list</span><span class="p">)</span>
+        <span class="n">dec_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dec_list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ra_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dec_list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;The RA and Dec lists must be the same length&quot;</span><span class="p">)</span>
+
+        <span class="c">#Mask down to just the guys that are inside the RA and Dec ranges</span>
+        <span class="n">in_ranges</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_inside</span><span class="p">(</span><span class="n">ra_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">_ra_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">mask</span>
+        <span class="n">in_ranges</span> <span class="o">=</span> <span class="n">in_ranges</span> <span class="o">&amp;</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_inside</span><span class="p">(</span><span class="n">dec_list</span><span class="p">,</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">_dec_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">mask</span>
+        
+        <span class="c">#Get the pixel numbers for all the objects</span>
+        <span class="n">pairs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="n">ra_list</span><span class="p">[</span><span class="n">in_ranges</span><span class="p">],</span> <span class="n">dec_list</span><span class="p">[</span><span class="n">in_ranges</span><span class="p">]])</span>
+        <span class="n">float_inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_wcs_instance</span><span class="o">.</span><span class="n">wcs_world2pix</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">float_inds</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">xinds</span><span class="o">=</span><span class="n">indices</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">yinds</span><span class="o">=</span><span class="n">indices</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c">#Figure out which things are even on the image (this is needed if</span>
+        <span class="c">#the mask is rotated on the sky- the corners of the RA and Dec</span>
+        <span class="c">#square hang off the image mask)</span>
+        <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">inside_x</span><span class="o">=</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_inside</span><span class="p">(</span><span class="n">xinds</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nx</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>
+        <span class="n">inside_y</span><span class="o">=</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_inside</span><span class="p">(</span><span class="n">yinds</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ny</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span>
+        <span class="n">on_image</span><span class="o">=</span> <span class="n">inside_x</span> <span class="o">&amp;</span> <span class="n">inside_y</span>
+        
+        <span class="c">#Now make the completeness array</span>
+        <span class="n">complete</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ra_list</span><span class="p">))</span>
+        <span class="n">temp_complete</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ra_list</span><span class="p">[</span><span class="n">in_ranges</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">on_image</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">print</span> <span class="p">(</span><span class="s">&quot;return_completenesses says: I have &quot;</span> <span class="o">+</span>
+                   <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xinds</span><span class="p">[</span><span class="n">on_image</span><span class="p">]))</span> <span class="o">+</span>
+                   <span class="s">&quot; points that are actually on the image&quot;</span><span class="p">)</span>
+            <span class="n">on_mask_bits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">[</span><span class="n">xinds</span><span class="p">[</span><span class="n">on_image</span><span class="p">],</span><span class="n">yinds</span><span class="p">[</span><span class="n">on_image</span><span class="p">]]</span>
+            <span class="n">temp_complete</span><span class="p">[</span><span class="n">on_image</span><span class="p">]</span> <span class="o">=</span> <span class="n">on_mask_bits</span>
+            <span class="n">complete</span><span class="p">[</span><span class="n">in_ranges</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_complete</span>
+
+        <span class="k">return</span> <span class="n">complete</span></div>
+        
+
+    <span class="c">#----------------------------------------------------------------------    </span>
+    <span class="c">#-----------------------------------------------#</span>
+    <span class="c">#- Returns subregions for a list of RA and Dec -#</span>
+    <span class="c">#-----------------------------------------------#</span>
+<div class="viewcode-block" id="ImageMask.return_subregions"><a class="viewcode-back" href="../maskclass.html#ImageMask_class.ImageMask.return_subregions">[docs]</a>    <span class="k">def</span> <span class="nf">return_subregions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rot_xedges</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                          <span class="n">rot_yedges</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the subregion number for each pair of RA and Dec given the</span>
+<span class="sd">        parameters either stored or given as function parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ra : array-like</span>
+<span class="sd">            A list of RAs to get subregion numbers for (in degrees)</span>
+<span class="sd">            </span>
+<span class="sd">        dec : array-like</span>
+<span class="sd">            A list of Decs to get subregion numbers for (in degrees)</span>
+<span class="sd">            </span>
+<span class="sd">        theta : scalar (optional)</span>
+<span class="sd">            Rotation angle that the mask&#39;s bounding box will be defined at</span>
+<span class="sd">            with respect to the XY coordinate system of the mask.  If not</span>
+<span class="sd">            given, the routine will look for a stored theta.  Units are</span>
+<span class="sd">            degrees</span>
+<span class="sd">            </span>
+<span class="sd">        rot_xedges : array-like (optional)</span>
+<span class="sd">            The x coordinates of the cell boundaries in the rotated</span>
+<span class="sd">            coordinate system.  If not given, the routine will look for a</span>
+<span class="sd">            stored theta.</span>
+<span class="sd">            </span>
+<span class="sd">        rot_yedges : array-like (optional)</span>
+<span class="sd">            The x coordinates of the cell boundaries in the rotated</span>
+<span class="sd">            coordinate system.  If not given, the routine will look for a</span>
+<span class="sd">            stored theta.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        subregions : numpy ndarray</span>
+<span class="sd">            The subregion number for each of the points input.  The array</span>
+<span class="sd">            shape is (len(ra),).  The subregion -1 is outside the bounding</span>
+<span class="sd">            box (this only happens if you&#39;ve set negative padding somewhere</span>
+<span class="sd">            or have asked for things outside the mask).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#Check to make sure we have what we need, pull to local if we have</span>
+        <span class="c">#stored values but no given values</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">theta</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotation</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;ImageMask.return_subregions says: &quot;</span>
+                                 <span class="s">&quot;ERROR!  I don&#39;t have the rotation &quot;</span>
+                                 <span class="s">&quot;angle.  Please provide one.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">theta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotation</span>
+                
+        <span class="k">if</span> <span class="p">(</span><span class="n">rot_xedges</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_xedges</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;ImageMask.return_subregions says: &quot;</span>
+                                 <span class="s">&quot;ERROR!  I don&#39;t have rotated x edges.&quot;</span>
+                                 <span class="s">&quot;  Please provide them.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rot_xedges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_xedges</span>
+                
+        <span class="k">if</span> <span class="p">(</span><span class="n">rot_yedges</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_yedges</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;ImageMask.return_subregions says: &quot;</span>
+                                 <span class="s">&quot;ERROR!  I don&#39;t have rotated y edges.  &quot;</span>
+                                 <span class="s">&quot;Please provide them.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rot_yedges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_subregion_rotated_yedges</span>
+
+        <span class="c">#Now that we know we have everything, put the ra and decs into x</span>
+        <span class="c">#and y coords</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_dec_to_xy</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">)</span>
+
+        <span class="c">#Transform to the rotated coordinate system</span>
+        <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="n">misc</span><span class="o">.</span><span class="n">rotate_coords</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span>
+
+        <span class="c">#Now make masks for each row and column</span>
+        <span class="n">nx</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rot_xedges</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">ny</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rot_yedges</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">ymasks</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">xmasks</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+            <span class="n">xmasks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_inside</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">rot_xedges</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                       <span class="n">rot_xedges</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>
+            <span class="n">ymasks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_inside</span><span class="p">(</span><span class="n">y2</span><span class="p">,</span> <span class="n">rot_yedges</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                       <span class="n">rot_yedges</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">mask</span>
+
+        <span class="c">#Now use the masks to put numbers to each galaxy</span>
+        <span class="c">#No subregion defaults to -1</span>
+        <span class="n">subregion</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ra</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>
+                <span class="n">bin_number</span><span class="o">=</span> <span class="n">nx</span><span class="o">*</span><span class="n">iy</span> <span class="o">+</span> <span class="n">ix</span>
+                <span class="n">thismask</span> <span class="o">=</span> <span class="n">xmasks</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">ymasks</span><span class="p">[</span><span class="n">iy</span><span class="p">]</span>
+                <span class="n">subregion</span><span class="p">[</span><span class="n">thismask</span><span class="p">]</span><span class="o">=</span><span class="n">bin_number</span>
+
+        <span class="k">return</span> <span class="n">subregion</span></div></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

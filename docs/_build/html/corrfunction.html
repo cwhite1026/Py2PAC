@@ -1,0 +1,727 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CorrelationFunction class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="index.html"/>
+        <link rel="next" title="ThetaBins class" href="thetabins.html"/>
+        <link rel="prev" title="ImageMask class" href="maskclass.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thetabins.html">ThetaBins class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpclass.html">Gp class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>CorrelationFunction class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/corrfunction.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="correlationfunction-class">
+<h1>CorrelationFunction class<a class="headerlink" href="#correlationfunction-class" title="Permalink to this headline">¶</a></h1>
+<p>The CorrelationFunction class holds all the relevant information
+about a correlation function.</p>
+<span class="target" id="module-CorrelationFunction_class"></span><dl class="class">
+<dt id="CorrelationFunction_class.CorrelationFunction">
+<em class="property">class </em><code class="descclassname">CorrelationFunction_class.</code><code class="descname">CorrelationFunction</code><span class="sig-paren">(</span><em>name='correlation_function'</em>, <em>cf_type='unknown'</em>, <em>ngals=None</em>, <em>thetas=None</em>, <em>theta_bins=None</em>, <em>estimator=None</em>, <em>theta_bin_object=None</em>, <em>theta_unit='a'</em>, <em>verbose=True</em>, <em>gp_object=None</em>, <em>gp_filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This class holds all the info about a correlation function.
+It has the CF values, theta binning, etc.  It also has the saving
+and loading of correlation function files.  Also will have
+plotting routines eventually.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : string (optional)</p>
+<blockquote>
+<div><p>String for remembering what you did when you calculated the
+correlation function, e.g &#8216;z1_1.5_mstar8_9&#8217;.</p>
+</div></blockquote>
+<p><strong>cf_type</strong> : string (optional)</p>
+<blockquote>
+<div><p>String for describing what error calculation type you used</p>
+</div></blockquote>
+<p><strong>estimator</strong> : string (optional)</p>
+<blockquote>
+<div><p>The CF estimator used.  Options are &#8216;standard&#8217;, which is DD/RR
+and &#8216;landy-szalay&#8217;, which is (DD - 2DR + RR)/RR</p>
+</div></blockquote>
+<p><strong>ngals</strong> : scalar (optional)</p>
+<blockquote>
+<div><p>Number of galaxies the data sample</p>
+</div></blockquote>
+<p><strong>theta_bin_object</strong> : ThetaBins instance (optional)</p>
+<blockquote>
+<div><p>The instance of ThetaBins used to calculate the CF. This form of
+theta information supercedes all other formats.</p>
+</div></blockquote>
+<p><strong>theta_bins</strong> : array (optional)</p>
+<blockquote>
+<div><p>The edges of the theta bins used to calculate the CF.  This will be
+used to calculate the theta bins only if theta_bin_object is not
+given.</p>
+</div></blockquote>
+<p><strong>thetas</strong> : array (optional)</p>
+<blockquote>
+<div><p>The centers of the theta bins that were used to calculate the CF.
+This will only be used if both theta_bin_object and theta_bins are
+not given. The options are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;,
+&#8216;degrees&#8217;; &#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+<p><strong>theta_unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The units that the arrays for theta_bins or thetas are in.  Only
+needed if either of those are to be used in making the ThetaBins
+object</p>
+</div></blockquote>
+<p><strong>verbose</strong> : boolean (optional)</p>
+<blockquote>
+<div><p>Sets whether or not the __init__ function talks to you.  Default is
+True.</p>
+</div></blockquote>
+<p><strong>gp_object</strong> : Gp instance (optional)</p>
+<blockquote>
+<div><p>The Gp instance associated with the geometry of the mask used to
+calculate the CF.  Supercedes gp_filename</p>
+</div></blockquote>
+<p><strong>gp_filename</strong> : string (optional)</p>
+<blockquote class="last">
+<div><p>The file from which to read the Gp information.  Only gets used if
+the gp_object is not given.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="classmethod">
+<dt id="CorrelationFunction_class.CorrelationFunction.from_file">
+<em class="property">classmethod </em><code class="descname">from_file</code><span class="sig-paren">(</span><em>filename</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a CorrelationFunction object from a saved CF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>The file that contains the CF.  Should be the a path from /</p>
+</div></blockquote>
+<p><strong>name</strong> : string (optional)</p>
+<blockquote class="last">
+<div><p>A new description of the correlation function to replace the
+name that was saved.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.get_cf">
+<code class="descname">get_cf</code><span class="sig-paren">(</span><em>get_iterations=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.get_cf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.get_cf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give back the CF information.  Usually don&#8217;t want the iterations
+as well as the average, so only give that if it&#8217;s requested.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>get_iterations: boolean (optional)</strong></p>
+<blockquote>
+<div><p>If get_iterations is True, return the dictionary containing
+the iterations along with the CF and error</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cf</strong> : array</p>
+<blockquote>
+<div><p>The correlation function</p>
+</div></blockquote>
+<p><strong>error</strong> : array</p>
+<blockquote>
+<div><p>The error estimate on the correlation function</p>
+</div></blockquote>
+<p><strong>iterations</strong> : dictionary of arrays (optional)</p>
+<blockquote class="last">
+<div><p>A dictionary of the iterations used to calculate the CF and
+error.  Only returned if get_iterations is True</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.get_cf_type">
+<code class="descname">get_cf_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.get_cf_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.get_cf_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the type of correlation function the object contains</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cf_type</strong> : string</p>
+<blockquote class="last">
+<div><p>A string describing the method of generation (e.g. jackknife,
+single galaxy bootstrapping)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.get_counts">
+<code class="descname">get_counts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.get_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.get_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the DD, DR, and RR counts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>DD</strong> : array</p>
+<blockquote>
+<div><p>Data-data counts.</p>
+</div></blockquote>
+<p><strong>DR</strong> : array (or None)</p>
+<blockquote>
+<div><p>Data-random counts.  None if the estimator is &#8216;standard&#8217;, array
+if the estimator is &#8216;landy-szalay&#8217;</p>
+</div></blockquote>
+<p><strong>RR</strong> : array</p>
+<blockquote class="last">
+<div><p>Random-random counts.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.get_name">
+<code class="descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.get_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name describing what the CorrelationFunction is of</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name describing the correlation function</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.get_points">
+<code class="descname">get_points</code><span class="sig-paren">(</span><em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.get_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.get_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return what you&#8217;d need to plot the CF</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit in which you would like the thetas to be returned.
+The options are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;,
+&#8216;degrees&#8217;; &#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centers</strong> : array</p>
+<blockquote>
+<div><p>The centers of the theta bins in the unit specified</p>
+</div></blockquote>
+<p><strong>cf</strong> : array</p>
+<blockquote>
+<div><p>The correlation function values</p>
+</div></blockquote>
+<p><strong>error</strong> : array</p>
+<blockquote class="last">
+<div><p>The error estimation on the correlation function</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.get_thetas">
+<code class="descname">get_thetas</code><span class="sig-paren">(</span><em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.get_thetas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.get_thetas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the theta binning in the unit requested</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit in which you would like the thetas to be returned.
+The options are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;,
+&#8216;degrees&#8217;; &#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centers</strong> : array</p>
+<blockquote>
+<div><p>The centers of the theta bins in the unit requested.</p>
+</div></blockquote>
+<p><strong>edges</strong> : array</p>
+<blockquote class="last">
+<div><p>The edges of the theta bins in the unit requested.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the numpy load routine to pull in a saved file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote class="last">
+<div><p>The name of the saved CorrelationFunction object.
+This should be the path from /</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.load_gp">
+<code class="descname">load_gp</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.load_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.load_gp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads in a Gp object from a file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote class="last">
+<div><p>The file, with the path from /, where the Gp save file is
+located.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the numpy save routine to save all the information in the
+CorrelationFunction object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote class="last">
+<div><p>The name of the saved Gp object.  This should be the path
+from /</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_cf">
+<code class="descname">set_cf</code><span class="sig-paren">(</span><em>cf</em>, <em>cf_err</em>, <em>iterations={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_cf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_cf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store the correlation function information</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cf</strong> : array</p>
+<blockquote>
+<div><p>The correlation function</p>
+</div></blockquote>
+<p><strong>error</strong> : array</p>
+<blockquote>
+<div><p>The estimated error on the correlation function</p>
+</div></blockquote>
+<p><strong>iterations</strong> : dictionary of arrays (optional)</p>
+<blockquote class="last">
+<div><p>The iterations of the CF calculation done to estimate the
+error.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_cf_type">
+<code class="descname">set_cf_type</code><span class="sig-paren">(</span><em>type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_cf_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_cf_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the type of the CF if it needs renaming from the init call</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cf_type</strong> : string</p>
+<blockquote class="last">
+<div><p>A string describing the method of generation (e.g. jackknife,
+single galaxy bootstrapping)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_counts">
+<code class="descname">set_counts</code><span class="sig-paren">(</span><em>DD=None</em>, <em>DR=None</em>, <em>RR=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the DD, DR, and RR of the CF</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>DD</strong> : array (optional)</p>
+<blockquote>
+<div><p>Data-data pair counts</p>
+</div></blockquote>
+<p><strong>DR</strong> : array (optional)</p>
+<blockquote>
+<div><p>Data-random pair counts</p>
+</div></blockquote>
+<p><strong>RR</strong> : array (optional)</p>
+<blockquote class="last">
+<div><p>Random-random pair counts</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_name">
+<code class="descname">set_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the name of the CF if it needs renaming from the init call</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : string</p>
+<blockquote class="last">
+<div><p>Name describing the correlation function</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_theta_object">
+<code class="descname">set_theta_object</code><span class="sig-paren">(</span><em>bin_object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_theta_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_theta_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the ThetaBins to an existing ThetaBins instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>bin_objects</strong> : ThetaBins instance</p>
+<blockquote class="last">
+<div><p>An instance of ThetaBins that matches the correlation function</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_thetas">
+<code class="descname">set_thetas</code><span class="sig-paren">(</span><em>min_theta</em>, <em>max_theta</em>, <em>nbins</em>, <em>unit='a'</em>, <em>logbins=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_thetas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_thetas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a ThetaBins instance from parameters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>min_theta</strong> : float</p>
+<blockquote>
+<div><p>The minimum of the theta bin edges</p>
+</div></blockquote>
+<p><strong>max_theta</strong> : float</p>
+<blockquote>
+<div><p>The maximum of the theta bin edges</p>
+</div></blockquote>
+<p><strong>nbins</strong> : float</p>
+<blockquote>
+<div><p>The number of theta bins</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote>
+<div><p>The unit that min and max theta are in.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;;
+&#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+<p><strong>logbins</strong> : boolean (optional)</p>
+<blockquote class="last">
+<div><p>If logbins == True, the bins are evenly spaced in log
+space. If logbins == False, the bins are evenly spaced
+in linear space.  Default is True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_thetas_from_centers">
+<code class="descname">set_thetas_from_centers</code><span class="sig-paren">(</span><em>centers</em>, <em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_thetas_from_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_thetas_from_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the ThetaBins object from the bin centers.  The centers must be
+of bins that are equally sized in either linear or log space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>centers</strong> : array</p>
+<blockquote>
+<div><p>The centers of the theta bins desired in the given unit
+(default is arcseconds)</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote class="last">
+<div><p>The unit that min and max theta are in.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;;
+&#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="CorrelationFunction_class.CorrelationFunction.set_thetas_from_edges">
+<code class="descname">set_thetas_from_edges</code><span class="sig-paren">(</span><em>edges</em>, <em>unit='a'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CorrelationFunction_class.html#CorrelationFunction.set_thetas_from_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CorrelationFunction_class.CorrelationFunction.set_thetas_from_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the ThetaBins object from the bin edges.  Bins must be even in
+either linear or log space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>edges</strong> : array</p>
+<blockquote>
+<div><p>The edges of the theta bins desired in the given unit
+(default is arcseconds)</p>
+</div></blockquote>
+<p><strong>unit</strong> : string (optional)</p>
+<blockquote class="last">
+<div><p>The unit that min and max theta are in.  The options
+are &#8216;a&#8217;, &#8216;arcsec&#8217;, &#8216;arcseconds&#8217;; &#8216;d&#8217;, &#8216;deg&#8217;, &#8216;degrees&#8217;;
+&#8216;r&#8217;, &#8216;rad&#8217;, &#8216;radians&#8217;.  Default is &#8216;arcseconds&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="thetabins.html" class="btn btn-neutral float-right" title="ThetaBins class" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="maskclass.html" class="btn btn-neutral" title="ImageMask class" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

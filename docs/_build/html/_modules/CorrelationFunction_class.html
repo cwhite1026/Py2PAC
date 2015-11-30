@@ -1,0 +1,820 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CorrelationFunction_class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpclass.html">Gp class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thetabins.html">ThetaBins class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>CorrelationFunction_class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for CorrelationFunction_class</h1><div class="highlight"><pre>
+<span class="c">#External code</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c">#Py2PAC code</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">ThetaBins_class</span> <span class="kn">as</span> <span class="nn">binclass</span>
+<span class="kn">import</span> <span class="nn">Gp_class</span> <span class="kn">as</span> <span class="nn">gpclass</span>
+
+<div class="viewcode-block" id="CorrelationFunction"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction">[docs]</a><span class="k">class</span> <span class="nc">CorrelationFunction</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class holds all the info about a correlation function.</span>
+<span class="sd">    It has the CF values, theta binning, etc.  It also has the saving</span>
+<span class="sd">    and loading of correlation function files.  Also will have</span>
+<span class="sd">    plotting routines eventually.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : string (optional)</span>
+<span class="sd">        String for remembering what you did when you calculated the</span>
+<span class="sd">        correlation function, e.g &#39;z1_1.5_mstar8_9&#39;.</span>
+<span class="sd">         </span>
+<span class="sd">    cf_type : string (optional)</span>
+<span class="sd">        String for describing what error calculation type you used</span>
+<span class="sd">            </span>
+<span class="sd">    estimator : string (optional)</span>
+<span class="sd">        The CF estimator used.  Options are &#39;standard&#39;, which is DD/RR</span>
+<span class="sd">        and &#39;landy-szalay&#39;, which is (DD - 2DR + RR)/RR</span>
+<span class="sd">        </span>
+<span class="sd">    ngals : scalar (optional)</span>
+<span class="sd">        Number of galaxies the data sample</span>
+<span class="sd">        </span>
+<span class="sd">    theta_bin_object : ThetaBins instance (optional)</span>
+<span class="sd">        The instance of ThetaBins used to calculate the CF. This form of</span>
+<span class="sd">        theta information supercedes all other formats.</span>
+<span class="sd">        </span>
+<span class="sd">    theta_bins : array (optional)</span>
+<span class="sd">        The edges of the theta bins used to calculate the CF.  This will be</span>
+<span class="sd">        used to calculate the theta bins only if theta_bin_object is not</span>
+<span class="sd">        given.</span>
+<span class="sd">    thetas : array (optional)</span>
+<span class="sd">        The centers of the theta bins that were used to calculate the CF.</span>
+<span class="sd">        This will only be used if both theta_bin_object and theta_bins are</span>
+<span class="sd">        not given. The options are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;,</span>
+<span class="sd">        &#39;degrees&#39;; &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+<span class="sd">        </span>
+<span class="sd">    theta_unit : string (optional)</span>
+<span class="sd">        The units that the arrays for theta_bins or thetas are in.  Only</span>
+<span class="sd">        needed if either of those are to be used in making the ThetaBins</span>
+<span class="sd">        object</span>
+<span class="sd">        </span>
+<span class="sd">    verbose : boolean (optional)</span>
+<span class="sd">        Sets whether or not the __init__ function talks to you.  Default is</span>
+<span class="sd">        True.</span>
+<span class="sd">        </span>
+<span class="sd">    gp_object : Gp instance (optional)</span>
+<span class="sd">        The Gp instance associated with the geometry of the mask used to</span>
+<span class="sd">        calculate the CF.  Supercedes gp_filename</span>
+<span class="sd">        </span>
+<span class="sd">    gp_filename : string (optional)</span>
+<span class="sd">        The file from which to read the Gp information.  Only gets used if</span>
+<span class="sd">        the gp_object is not given.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#------------------#</span>
+    <span class="c">#- Initialization -#</span>
+    <span class="c">#------------------#</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;correlation_function&#39;</span><span class="p">,</span> <span class="n">cf_type</span><span class="o">=</span><span class="s">&#39;unknown&#39;</span><span class="p">,</span>
+                 <span class="n">ngals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">thetas</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">theta_bins</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">theta_bin_object</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">theta_unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">gp_object</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">gp_filename</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Organizes all the info we&#39;re given, sets up the ThetaBins option</span>
+<span class="sd">        if we can.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c">#The name doesn&#39;t really matter- it&#39;s just an identifier for you</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="c">#The type is how the error was calculated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_type</span> <span class="o">=</span> <span class="n">cf_type</span>
+        <span class="c">#The number of galaxies used to calculate the CF</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ngals</span> <span class="o">=</span> <span class="n">ngals</span>
+        <span class="c">#The time it was created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span> <span class="o">=</span> <span class="s">&#39;Created &#39;</span> <span class="o">+</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%c</span><span class="s">&quot;</span><span class="p">)</span>
+        <span class="c">#What estimator was used for the CF?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_estimator</span> <span class="o">=</span> <span class="n">estimator</span>
+
+        <span class="c">#Set up the Gp if we can</span>
+        <span class="k">if</span> <span class="n">gp_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                   <span class="k">print</span> <span class="p">(</span><span class="s">&quot;CorrelationFunction.__init__ says: you gave me a&quot;</span>
+                          <span class="s">&quot; valid Gp object.  Storing&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="n">gp_object</span>
+        <span class="k">elif</span> <span class="n">gp_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                   <span class="k">print</span> <span class="p">(</span><span class="s">&quot;CorrelationFunction.__init__ says: you gave me a&quot;</span>
+                          <span class="s">&quot; file name for Gp.  Loading&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_gp</span><span class="p">(</span><span class="n">gp_filename</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                   <span class="k">print</span> <span class="p">(</span><span class="s">&quot;CorrelationFunction.__init__ says: you did not &quot;</span>
+                          <span class="s">&quot;provide any info on Gp.  Leaving it for later&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="bp">None</span>
+        
+        <span class="c">#The thetas</span>
+        <span class="k">if</span> <span class="n">theta_bin_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                   <span class="k">print</span> <span class="p">(</span><span class="s">&quot;CorrelationFunction.__init__ says: you gave me a&quot;</span>
+                          <span class="s">&quot; valid ThetaBin object.  Storing&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_theta_object</span><span class="p">(</span><span class="n">theta_bin_object</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">theta_bins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                   <span class="k">print</span> <span class="p">(</span><span class="s">&quot;CorrelationFunction.__init__ says: constructing &quot;</span>
+                          <span class="s">&quot;the ThetaBin object from the theta_bins&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_thetas_from_edges</span><span class="p">(</span><span class="n">theta_bins</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">theta_unit</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">thetas</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                   <span class="k">print</span> <span class="p">(</span><span class="s">&quot;CorrelationFunction.__init__ says: constructing &quot;</span>
+                          <span class="s">&quot;the ThetaBin object from the bin centers, thetas&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_thetas_from_centers</span><span class="p">(</span><span class="n">thetas</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">theta_unit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                   <span class="k">print</span> <span class="p">(</span><span class="s">&quot;CorrelationFunction.__init__ says: no valid theta &quot;</span>
+                          <span class="s">&quot;information given.  Leaving theta bins for later.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="o">=</span> <span class="bp">None</span>
+            
+        <span class="c">#The CF</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="o">=</span><span class="p">{}</span> <span class="c">#If we&#39;re estimating error, this is a</span>
+                            <span class="c">#place to keep the iterations</span>
+        <span class="c">#Counts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_DD</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_DR</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_RR</span><span class="o">=</span><span class="bp">None</span>
+        
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+    <span class="c">#-------------------------#</span>
+    <span class="c">#- Bring in CF from file -#</span>
+    <span class="c">#-------------------------#</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="CorrelationFunction.from_file"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.from_file">[docs]</a>    <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a CorrelationFunction object from a saved CF file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">            The file that contains the CF.  Should be the a path from /</span>
+<span class="sd">            </span>
+<span class="sd">        name : string (optional)</span>
+<span class="sd">            A new description of the correlation function to replace the</span>
+<span class="sd">            name that was saved.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#Make an empty guy</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="c">#Load the info from file</span>
+        <span class="n">temp</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="c">#If an alternative name is given, set it</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">temp</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">temp</span></div>
+        
+        
+    <span class="c">#======================================================================</span>
+        
+    <span class="c">#----------------------------------------#</span>
+    <span class="c">#- Functions to set/retrieve properties -#</span>
+    <span class="c">#----------------------------------------#</span>
+
+<div class="viewcode-block" id="CorrelationFunction.set_thetas"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_thetas">[docs]</a>    <span class="k">def</span> <span class="nf">set_thetas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_theta</span><span class="p">,</span> <span class="n">max_theta</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">,</span>
+                   <span class="n">logbins</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a ThetaBins instance from parameters</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        min_theta : float</span>
+<span class="sd">            The minimum of the theta bin edges</span>
+<span class="sd">            </span>
+<span class="sd">        max_theta : float</span>
+<span class="sd">            The maximum of the theta bin edges</span>
+<span class="sd">            </span>
+<span class="sd">        nbins : float</span>
+<span class="sd">            The number of theta bins</span>
+<span class="sd">            </span>
+<span class="sd">        unit : string (optional)</span>
+<span class="sd">            The unit that min and max theta are in.  The options</span>
+<span class="sd">            are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;;</span>
+<span class="sd">            &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+<span class="sd">            </span>
+<span class="sd">        logbins : boolean (optional)</span>
+<span class="sd">            If logbins == True, the bins are evenly spaced in log</span>
+<span class="sd">            space. If logbins == False, the bins are evenly spaced</span>
+<span class="sd">            in linear space.  Default is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#If we have a ThetaBins instance, set new bin parameters</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c">#Create a new ThetaBins instance with these parameters</span>
+            <span class="k">if</span> <span class="n">logbins</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">logbins</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="o">=</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="p">(</span><span class="n">min_theta</span><span class="p">,</span> <span class="n">max_theta</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span>
+                                                 <span class="n">theta_unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span>
+                                                 <span class="n">logbins</span><span class="o">=</span><span class="n">logbins</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#Make sure we have logbins right</span>
+            <span class="k">if</span> <span class="n">logbins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">set_logbins</span><span class="p">(</span><span class="n">logbins</span><span class="p">)</span>
+            <span class="c">#Adjust the range and nbins</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">set_new_bins</span><span class="p">(</span><span class="n">min_theta</span><span class="p">,</span> <span class="n">max_theta</span><span class="p">,</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">theta_unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.set_thetas_from_edges"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_thetas_from_edges">[docs]</a>    <span class="k">def</span> <span class="nf">set_thetas_from_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the ThetaBins object from the bin edges.  Bins must be even in</span>
+<span class="sd">        either linear or log space.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        edges : array</span>
+<span class="sd">           The edges of the theta bins desired in the given unit</span>
+<span class="sd">           (default is arcseconds)</span>
+<span class="sd">           </span>
+<span class="sd">        unit : string (optional)</span>
+<span class="sd">            The unit that min and max theta are in.  The options</span>
+<span class="sd">            are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;;</span>
+<span class="sd">            &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="o">=</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="o">.</span><span class="n">from_edges</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span>
+                                                        <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span></div>
+        
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+<div class="viewcode-block" id="CorrelationFunction.set_thetas_from_centers"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_thetas_from_centers">[docs]</a>    <span class="k">def</span> <span class="nf">set_thetas_from_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the ThetaBins object from the bin centers.  The centers must be</span>
+<span class="sd">        of bins that are equally sized in either linear or log space.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        centers : array</span>
+<span class="sd">            The centers of the theta bins desired in the given unit</span>
+<span class="sd">            (default is arcseconds)</span>
+<span class="sd">           </span>
+<span class="sd">        unit : string (optional)</span>
+<span class="sd">            The unit that min and max theta are in.  The options</span>
+<span class="sd">            are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;, &#39;degrees&#39;;</span>
+<span class="sd">            &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">=</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="o">.</span><span class="n">from_centers</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span>
+                                                         <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.set_theta_object"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_theta_object">[docs]</a>    <span class="k">def</span> <span class="nf">set_theta_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bin_object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the ThetaBins to an existing ThetaBins instance</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bin_objects : ThetaBins instance</span>
+<span class="sd">            An instance of ThetaBins that matches the correlation function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bin_object</span><span class="p">,</span> <span class="n">binclass</span><span class="o">.</span><span class="n">ThetaBins</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span> <span class="o">=</span> <span class="n">bin_object</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;CorrelationFunction.set_theta_object says: you&quot;</span>
+                            <span class="s">&quot; have given me something that isn&#39;t a ThetaBins&quot;</span>
+                            <span class="s">&quot; instance.&quot;</span><span class="p">)</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="CorrelationFunction.get_points"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.get_points">[docs]</a>    <span class="k">def</span> <span class="nf">get_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return what you&#39;d need to plot the CF</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : string (optional)</span>
+<span class="sd">            The unit in which you would like the thetas to be returned.</span>
+<span class="sd">            The options are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;,</span>
+<span class="sd">            &#39;degrees&#39;; &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        centers : array</span>
+<span class="sd">            The centers of the theta bins in the unit specified</span>
+<span class="sd">            </span>
+<span class="sd">        cf : array</span>
+<span class="sd">            The correlation function values</span>
+<span class="sd">            </span>
+<span class="sd">        error : array</span>
+<span class="sd">            The error estimation on the correlation function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_bins</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error</span></div>
+           
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.get_thetas"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.get_thetas">[docs]</a>    <span class="k">def</span> <span class="nf">get_thetas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the theta binning in the unit requested</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unit : string (optional)</span>
+<span class="sd">            The unit in which you would like the thetas to be returned.</span>
+<span class="sd">            The options are &#39;a&#39;, &#39;arcsec&#39;, &#39;arcseconds&#39;; &#39;d&#39;, &#39;deg&#39;,</span>
+<span class="sd">            &#39;degrees&#39;; &#39;r&#39;, &#39;rad&#39;, &#39;radians&#39;.  Default is &#39;arcseconds&#39;</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        centers : array</span>
+<span class="sd">            The centers of the theta bins in the unit requested.</span>
+<span class="sd">            </span>
+<span class="sd">        edges : array</span>
+<span class="sd">            The edges of the theta bins in the unit requested.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_bins</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span></div>
+        
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+<div class="viewcode-block" id="CorrelationFunction.set_cf"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_cf">[docs]</a>    <span class="k">def</span> <span class="nf">set_cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">cf_err</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store the correlation function information</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cf : array</span>
+<span class="sd">            The correlation function</span>
+<span class="sd">            </span>
+<span class="sd">        error : array</span>
+<span class="sd">            The estimated error on the correlation function</span>
+<span class="sd">            </span>
+<span class="sd">        iterations : dictionary of arrays (optional)</span>
+<span class="sd">            The iterations of the CF calculation done to estimate the</span>
+<span class="sd">            error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cf_err</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">iterations</span> <span class="o">!=</span> <span class="p">{}:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span> <span class="o">=</span> <span class="n">iterations</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.get_cf"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.get_cf">[docs]</a>    <span class="k">def</span> <span class="nf">get_cf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">get_iterations</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Give back the CF information.  Usually don&#39;t want the iterations</span>
+<span class="sd">        as well as the average, so only give that if it&#39;s requested.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        get_iterations: boolean (optional)</span>
+<span class="sd">            If get_iterations is True, return the dictionary containing</span>
+<span class="sd">            the iterations along with the CF and error</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cf : array</span>
+<span class="sd">            The correlation function</span>
+<span class="sd">            </span>
+<span class="sd">        error : array</span>
+<span class="sd">            The error estimate on the correlation function</span>
+<span class="sd">            </span>
+<span class="sd">        iterations : dictionary of arrays (optional)</span>
+<span class="sd">            A dictionary of the iterations used to calculate the CF and</span>
+<span class="sd">            error.  Only returned if get_iterations is True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">to_return</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">get_iterations</span><span class="p">:</span>
+            <span class="n">to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">to_return</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.set_name"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_name">[docs]</a>    <span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the name of the CF if it needs renaming from the init call</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : string</span>
+<span class="sd">            Name describing the correlation function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span></div>
+        
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+<div class="viewcode-block" id="CorrelationFunction.get_name"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the name describing what the CorrelationFunction is of</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        name : string</span>
+<span class="sd">            Name describing the correlation function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.set_counts"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_counts">[docs]</a>    <span class="k">def</span> <span class="nf">set_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">DD</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">DR</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">RR</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the DD, DR, and RR of the CF</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        DD : array (optional)</span>
+<span class="sd">           Data-data pair counts</span>
+<span class="sd">           </span>
+<span class="sd">        DR : array (optional)</span>
+<span class="sd">           Data-random pair counts</span>
+<span class="sd">           </span>
+<span class="sd">        RR : array (optional)</span>
+<span class="sd">           Random-random pair counts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">DD</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_DD</span> <span class="o">=</span> <span class="n">DD</span>
+        <span class="k">if</span> <span class="n">DR</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_DR</span> <span class="o">=</span> <span class="n">DR</span>
+        <span class="k">if</span> <span class="n">RR</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_RR</span> <span class="o">=</span> <span class="n">RR</span></div>
+        
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+<div class="viewcode-block" id="CorrelationFunction.get_counts"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.get_counts">[docs]</a>    <span class="k">def</span> <span class="nf">get_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the DD, DR, and RR counts.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DD : array</span>
+<span class="sd">           Data-data counts.</span>
+<span class="sd">           </span>
+<span class="sd">        DR : array (or None)</span>
+<span class="sd">           Data-random counts.  None if the estimator is &#39;standard&#39;, array</span>
+<span class="sd">           if the estimator is &#39;landy-szalay&#39;</span>
+<span class="sd">           </span>
+<span class="sd">        RR : array</span>
+<span class="sd">           Random-random counts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DD</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DR</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RR</span></div>
+    
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.set_cf_type"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.set_cf_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_cf_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the type of the CF if it needs renaming from the init call</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cf_type : string</span>
+<span class="sd">                A string describing the method of generation (e.g. jackknife,</span>
+<span class="sd">                single galaxy bootstrapping)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_type</span> <span class="o">=</span> <span class="nb">type</span></div>
+        
+    <span class="c">#----------------------------------------------------------------------</span>
+        
+<div class="viewcode-block" id="CorrelationFunction.get_cf_type"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.get_cf_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_cf_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the type of correlation function the object contains</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cf_type : string</span>
+<span class="sd">                A string describing the method of generation (e.g. jackknife,</span>
+<span class="sd">                single galaxy bootstrapping)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#For symmetry purposes...</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf_type</span></div>
+    
+    <span class="c">#======================================================================</span>
+    
+    <span class="c">#-------------------#</span>
+    <span class="c">#- Save/load files -#</span>
+    <span class="c">#-------------------#</span>
+
+<div class="viewcode-block" id="CorrelationFunction.save"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the numpy save routine to save all the information in the</span>
+<span class="sd">        CorrelationFunction object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">              The name of the saved Gp object.  This should be the path</span>
+<span class="sd">              from /</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">centers</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_bins</span><span class="p">()</span>
+        <span class="n">logbins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theta_bins</span><span class="o">.</span><span class="n">get_logbins</span><span class="p">()</span>
+        <span class="n">to_save</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;created&#39;</span>     <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span><span class="p">,</span>
+                   <span class="s">&#39;name&#39;</span>        <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                   <span class="s">&#39;type&#39;</span>        <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf_type</span><span class="p">,</span>
+                   <span class="s">&#39;estimator&#39;</span>   <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimator</span><span class="p">,</span>
+                   <span class="s">&#39;ngals&#39;</span>       <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ngals</span><span class="p">,</span>
+                   <span class="s">&#39;theta_bins&#39;</span>  <span class="p">:</span> <span class="n">edges</span><span class="p">,</span>
+                   <span class="s">&#39;thetas&#39;</span>      <span class="p">:</span> <span class="n">centers</span><span class="p">,</span>
+                   <span class="s">&#39;log_bins&#39;</span>    <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">logbins</span><span class="p">),</span>
+                   <span class="s">&#39;theta_unit&#39;</span>  <span class="p">:</span> <span class="s">&#39;arcseconds&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;cf&#39;</span>          <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf</span><span class="p">,</span>
+                   <span class="s">&#39;error&#39;</span>       <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error</span><span class="p">,</span>
+                   <span class="s">&#39;DD&#39;</span>          <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DD</span><span class="p">,</span>
+                   <span class="s">&#39;DR&#39;</span>          <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DR</span><span class="p">,</span>
+                   <span class="s">&#39;RR&#39;</span>          <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RR</span>
+                   <span class="p">}</span>
+
+        <span class="c">#If we have the iterations, save each one separately</span>
+        <span class="c">#so they can be parsed easily on re-entry</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span> <span class="o">!=</span> <span class="p">{}:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">to_save</span><span class="p">[</span><span class="s">&#39;iter_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="c">#Bring in the Gp dictionary if we have it</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">gp_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span><span class="o">.</span><span class="n">get_dictionary</span><span class="p">()</span>
+            <span class="c">#Store it, tagged as the Gp info</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">gp_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">to_save</span><span class="p">[</span><span class="s">&#39;gp_&#39;</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">gp_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="c">#Make sure we don&#39;t try to save anything that&#39;s empty</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">to_save</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="c">#also make sure even the one-element things are arrays</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)):</span>
+                <span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">to_save</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">to_save</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="c">#----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="CorrelationFunction.load"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the numpy load routine to pull in a saved file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">              The name of the saved CorrelationFunction object.</span>
+<span class="sd">              This should be the path from /</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">#Pull in the file and get the keys it has</span>
+        <span class="n">saved</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">saved</span><span class="o">.</span><span class="n">files</span>
+
+        <span class="c">#Put things in their correct locations</span>
+        <span class="c">#There are some things we shouldn&#39;t be able to save without</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_created</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;created&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_type</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;cf&#39;</span><span class="p">]</span>
+        <span class="c">#Pull the theta info and set up the ThetaBins object</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;theta_bins&#39;</span><span class="p">]</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;theta_unit&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_thetas_from_edges</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span>
+
+        <span class="c">#There are some that don&#39;t have to be included</span>
+        <span class="k">if</span> <span class="s">&#39;ngals&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ngals</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;ngals&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_error</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">&#39;DD&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_DD</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;DD&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">&#39;DR&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_DR</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;DR&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">&#39;RR&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_RR</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;RR&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">&#39;estimator&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_estimator</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;estimator&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c">#If we saved the individual iterations, pull them back in</span>
+        <span class="c">#First pull out any keys that correspond to the iterations</span>
+        <span class="n">iter_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span> <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">==</span><span class="s">&#39;iter_&#39;</span><span class="p">]</span>
+        <span class="c">#Now put them away if they exist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">if</span> <span class="n">iter_keys</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">iter_keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_iterations</span><span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&#39;iter_&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+        <span class="c">#If we saved the Gp with the CF, pull those keys and use to</span>
+        <span class="c">#reconstruct the Gp</span>
+        <span class="n">gp_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span> <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">==</span><span class="s">&#39;gp_&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">gp_keys</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="n">time_created</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_created&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">Gp</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_Gp&#39;</span><span class="p">]</span>
+            <span class="n">n_randoms</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_n_randoms&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">n_chunks</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_n_chunks&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_theta_bins&#39;</span><span class="p">]</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_theta_unit&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nbins</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">logbins</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_log_bins&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&#39;gp_RR&#39;</span> <span class="ow">in</span> <span class="n">gp_keys</span><span class="p">:</span>
+                <span class="n">RR</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s">&#39;gp_RR&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">RR</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="c">#Create the Gp object</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="n">gpclass</span><span class="o">.</span><span class="n">Gp</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">Gp</span><span class="p">,</span>
+                                  <span class="n">n_randoms</span><span class="p">,</span> <span class="n">n_chunks</span><span class="p">,</span> <span class="n">logbins</span> <span class="o">=</span> <span class="n">logbins</span><span class="p">,</span>
+                                  <span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span><span class="p">,</span> <span class="n">RR</span> <span class="o">=</span> <span class="n">RR</span><span class="p">,</span>
+                                  <span class="n">creation_string</span> <span class="o">=</span> <span class="n">time_created</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c">#All done!</span>
+        <span class="k">return</span></div>
+            
+    <span class="c">#----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="CorrelationFunction.load_gp"><a class="viewcode-back" href="../corrfunction.html#CorrelationFunction_class.CorrelationFunction.load_gp">[docs]</a>    <span class="k">def</span> <span class="nf">load_gp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads in a Gp object from a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">                 The file, with the path from /, where the Gp save file is</span>
+<span class="sd">                 located.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Gp</span> <span class="o">=</span> <span class="n">gpclass</span><span class="o">.</span><span class="n">Gp</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

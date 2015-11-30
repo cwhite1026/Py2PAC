@@ -1,0 +1,762 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ImageMask class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="index.html"/>
+        <link rel="next" title="CorrelationFunction class" href="corrfunction.html"/>
+        <link rel="prev" title="The AngularCatalog class" href="angularclass.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="angularclass.html">The AngularCatalog class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thetabins.html">ThetaBins class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpclass.html">Gp class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>ImageMask class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/maskclass.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="imagemask-class">
+<h1>ImageMask class<a class="headerlink" href="#imagemask-class" title="Permalink to this headline">¶</a></h1>
+<p>The ImageMask class contains all the information about how the sample
+is distributed on the sky.  The basic functions are to create the mask
+object, to generate random samples for the mask, and to manipulate the
+mask in various ways.</p>
+<span class="target" id="module-ImageMask_class"></span><dl class="class">
+<dt id="ImageMask_class.ImageMask">
+<em class="property">class </em><code class="descclassname">ImageMask_class.</code><code class="descname">ImageMask</code><span class="sig-paren">(</span><em>mask</em>, <em>wcs_instance</em>, <em>wcs_moveable=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a class that handles the arrangement of the observations on
+the sky. The default constructor is probably not what you will want to
+access directly.  There are more user-friendly class methods that allow
+mask definition from various sources.</p>
+<p>Class methods are ImageMask.from_FITS_weight_file, ImageMask.from_array, ImageMask.from_ranges</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mask</strong> : 2D array</p>
+<blockquote>
+<div><p>This is an array describing completeness as a function of position
+on the sky</p>
+</div></blockquote>
+<p><strong>wcs_instance</strong> : astropy.wcs.WCS instance</p>
+<blockquote>
+<div><p>Encodes the information about how large the field is and where it
+is on the sky.</p>
+</div></blockquote>
+<p><strong>wcs_moveable</strong> : bool</p>
+<blockquote class="last">
+<div><p>True if the WCS instance can be moved on the sky.  False if it
+can&#8217;t.  The WCS instances that are created froms scratch by the
+class methods from_ranges and from_array cannot be moved.  This is
+a bug that will be fixed later.  Default is True</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="classmethod">
+<dt id="ImageMask_class.ImageMask.from_FITS_weight_file">
+<em class="property">classmethod </em><code class="descname">from_FITS_weight_file</code><span class="sig-paren">(</span><em>weight_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.from_FITS_weight_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.from_FITS_weight_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class method to generate an image mask from a weight file in
+FITS format.  If the FITS file is large, this routine can take
+some time.</p>
+<p><strong>Syntax</strong></p>
+<p>immask = ImageMask.from_FITS_weight_file(weight_file)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>weight_file</strong> : string</p>
+<blockquote>
+<div><p>The file name including the path from / that contains the
+FITS file to mask with</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_mask</strong> : ImageMask instance</p>
+<blockquote class="last">
+<div><p>An image mask that corresponds to the FITS file specified</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="ImageMask_class.ImageMask.from_array">
+<em class="property">classmethod </em><code class="descname">from_array</code><span class="sig-paren">(</span><em>mask</em>, <em>ra_range</em>, <em>dec_range</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.from_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.from_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to create an image mask from an array and RA and Dec ranges.
+The RA and Dec ranges should be the ranges covered by the entire
+mask, not just the part that has galaxies on it.  The main purpose
+of this class method is to create a WCS instance for you when you
+don&#8217;t have one already.</p>
+<p>The mask orientation is important.  The [0, 0] corner corresponds
+to the minimum of both RA and Dec.  The first index increasing
+corresponds to increasing the declination.  The second index
+increasing corresponds to increasing the RA.</p>
+<p>WARNING:  This routine assumes that the region of the sky the mask
+covers is small enough that things like pixel scale in RA is the
+same over the whole image.  This will break for very large masks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mask</strong> : 2D array</p>
+<blockquote>
+<div><p>An array of completenesses as a function of position on the
+sky.  0 means that nothing in that pixel will be used for CFs.
+1 means that everything will be.  Numbers between are
+partially complete.</p>
+</div></blockquote>
+<p><strong>ra_range</strong> : array-like, length 2</p>
+<blockquote>
+<div><p>The RAs of the left and right sides of the mask.  (In degrees.)</p>
+</div></blockquote>
+<p><strong>dec_range</strong> : array-like, length 2</p>
+<blockquote>
+<div><p>The Decs of the top and bottom of the mask.  (In degrees.)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_mask</strong> : ImageMask instance</p>
+<blockquote class="last">
+<div><p>An image mask that has the mask provided and the corresponding
+WCS instance.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="ImageMask_class.ImageMask.from_ranges">
+<em class="property">classmethod </em><code class="descname">from_ranges</code><span class="sig-paren">(</span><em>ra_range</em>, <em>dec_range</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.from_ranges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.from_ranges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to create an image mask from RA and Dec ranges.  This is
+useful for things like mock catalogs that are rectangular (in
+the spherical coordinate sense)</p>
+<p>WARNING:  This routine assumes that the region of the sky the mask
+covers is small enough that things like pixel scale in RA is the
+same over the whole image.  This will break for very large masks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ra_range</strong> : array-like, length 2</p>
+<blockquote>
+<div><p>The min and max RAs to be covered.  (In degrees.)</p>
+</div></blockquote>
+<p><strong>dec_range</strong> : array-like, length 2</p>
+<blockquote>
+<div><p>The min and max Decs to be covered.  (In degrees.)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_mask</strong> : ImageMask instance</p>
+<blockquote class="last">
+<div><p>An image mask that is a rectangle that spans the RA and Dec
+ranges specified</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.generate_random_sample">
+<code class="descname">generate_random_sample</code><span class="sig-paren">(</span><em>number_to_make</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.generate_random_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.generate_random_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a given number of random points within the mask.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>number_to_make</strong> : scalar</p>
+<blockquote>
+<div><p>Number of randomly placed objects within the mask area
+returned.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ra</strong> : numpy ndarray</p>
+<blockquote>
+<div><p>The RAs of the randomly placed objects within the mask.  Unit
+is degrees.  The array shape is (number_to_make,)</p>
+</div></blockquote>
+<p><strong>dec</strong> : numpy ndarray</p>
+<blockquote class="last">
+<div><p>The Decs of the randomly placed objects within the mask.  Unit
+is degrees.  The array shape is (number_to_make,)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.masked_area_solid_angle">
+<code class="descname">masked_area_solid_angle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.masked_area_solid_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.masked_area_solid_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the solid angle subtended by the masked region- just the
+part where data is allowed.  This is a pretty dumb way of doing
+it, so it should only be taken as an approximation.</p>
+<p><strong>Method</strong></p>
+<p>The WCS instance is queried to get the RA and Dec coordinates of
+the image.  Those are converted to X and Y coordinates- note that
+this involves some distortion.  If the number of coordinates at the
+bottom and top are different, a warning is printed but the routine
+proceeds. The area is treated as a trapezoid to get the total
+number of effective pixels.  This is compared to the number of
+pixels on the mask where the mask value is greater than 0,
+returning the fraction of the image that is to be considered.</p>
+<p>Then, a solid angle integral is performed over the ranges in RA and
+Dec and multiplied by the fraction of the image to be considered.
+This is returned as the solid angle covered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>solid_angle</strong> : scalar</p>
+<blockquote class="last">
+<div><p>The solid angle in steradians covered by the nonzero elements
+of the mask array.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.move_mask_on_sky">
+<code class="descname">move_mask_on_sky</code><span class="sig-paren">(</span><em>delta_ra=0</em>, <em>delta_dec=0</em>, <em>theta_degrees=0</em>, <em>preview=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.move_mask_on_sky"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.move_mask_on_sky" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move the mask around on the sky by changing the parameters in the
+WCS instance.  If preview=True, the calling instance won&#8217;t be
+changed and a copy with the altered WCS instance will be returned.
+Otherwise, the ImageMask calling this function will be changed and
+nothing is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>delta_ra</strong> : scalar (optional)</p>
+<blockquote>
+<div><p>Amount to change the central RA.  Defaults to 0</p>
+</div></blockquote>
+<p><strong>delta_dec</strong> : scalar (optional)</p>
+<blockquote>
+<div><p>Amount to change the central Dec.  Defaults to 0</p>
+</div></blockquote>
+<p><strong>theta_degrees</strong> : scalar (optional)</p>
+<blockquote>
+<div><p>Amount to rotate the WCS instance in degrees.  Defaults to 0</p>
+</div></blockquote>
+<p><strong>preview</strong> : boolean (optional)</p>
+<blockquote>
+<div><p>Default it False.  If True, returns an ImageMask instance with
+the same mask as the ImageMask that generated it but with the
+WCS instance altered.  The calling instance won&#8217;t be changed.
+If False, the calling instance&#8217;s WCS instance will be changed
+and nothing will be returned.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>altered_mask</strong> : ImageMask instance</p>
+<blockquote class="last">
+<div><p>This is only returned if preview==False.  It is a copy of the
+calling ImageMask instance with a changed WCS instance.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.ra_dec_to_xy">
+<code class="descname">ra_dec_to_xy</code><span class="sig-paren">(</span><em>ra</em>, <em>dec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.ra_dec_to_xy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.ra_dec_to_xy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of RA and Dec, returns the XY position on the image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ra</strong> : array-like</p>
+<blockquote>
+<div><p>A list of RA coordinates to transform.  (In degrees.)</p>
+</div></blockquote>
+<p><strong>dec</strong> : array-like</p>
+<blockquote>
+<div><p>A list of Dec coordinates to transform.  (In degrees.)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>x</strong> : 1D np.ndarray</p>
+<blockquote>
+<div><p>X positions of the input coordinates</p>
+</div></blockquote>
+<p><strong>y</strong> : 1D np.ndarray</p>
+<blockquote class="last">
+<div><p>Y positions of the input coordinates</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.return_completenesses">
+<code class="descname">return_completenesses</code><span class="sig-paren">(</span><em>ra_list</em>, <em>dec_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.return_completenesses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.return_completenesses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a list of RAs and Decs and returns the completenesses for
+each point.  This version only supports completeness with no
+dependence on object properties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ra_list</strong> : 1D array-like</p>
+<blockquote>
+<div><p>A list of the RAs in degrees for the objects to query for
+completeness.</p>
+</div></blockquote>
+<p><strong>dec_list</strong> : 1D array-like</p>
+<blockquote>
+<div><p>A list of the Decs in degrees for the objects to query for
+completeness.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>completeness</strong> : 1D numpy array</p>
+<blockquote class="last">
+<div><p>A list of completenesses for the objects in the input lists.
+Completenesses are between 0 and 1 (inclusive).  To see if the
+object should be used, draw a random uniform number on [0,1]
+if that number is less than or equal to the completeness,
+include the object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.return_subregions">
+<code class="descname">return_subregions</code><span class="sig-paren">(</span><em>ra</em>, <em>dec</em>, <em>theta=None</em>, <em>rot_xedges=None</em>, <em>rot_yedges=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.return_subregions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.return_subregions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the subregion number for each pair of RA and Dec given the
+parameters either stored or given as function parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ra</strong> : array-like</p>
+<blockquote>
+<div><p>A list of RAs to get subregion numbers for (in degrees)</p>
+</div></blockquote>
+<p><strong>dec</strong> : array-like</p>
+<blockquote>
+<div><p>A list of Decs to get subregion numbers for (in degrees)</p>
+</div></blockquote>
+<p><strong>theta</strong> : scalar (optional)</p>
+<blockquote>
+<div><p>Rotation angle that the mask&#8217;s bounding box will be defined at
+with respect to the XY coordinate system of the mask.  If not
+given, the routine will look for a stored theta.  Units are
+degrees</p>
+</div></blockquote>
+<p><strong>rot_xedges</strong> : array-like (optional)</p>
+<blockquote>
+<div><p>The x coordinates of the cell boundaries in the rotated
+coordinate system.  If not given, the routine will look for a
+stored theta.</p>
+</div></blockquote>
+<p><strong>rot_yedges</strong> : array-like (optional)</p>
+<blockquote>
+<div><p>The x coordinates of the cell boundaries in the rotated
+coordinate system.  If not given, the routine will look for a
+stored theta.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>subregions</strong> : numpy ndarray</p>
+<blockquote class="last">
+<div><p>The subregion number for each of the points input.  The array
+shape is (len(ra),).  The subregion -1 is outside the bounding
+box (this only happens if you&#8217;ve set negative padding somewhere
+or have asked for things outside the mask).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.set_subregions">
+<code class="descname">set_subregions</code><span class="sig-paren">(</span><em>theta</em>, <em>xedges</em>, <em>yedges</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.set_subregions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.set_subregions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set subregion information.  Theta is the rotation of the enclosing
+rectangle and the x and y edges are the locations in the rotated
+coordinate system of the rectangle.  This is mainly useful if you
+calculated these quantities with subdivide_mask previously and
+would prefer to just set these by hand instead of replicating the
+subdivide_mask call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : scalar</p>
+<blockquote>
+<div><p>The angle in <em>radians</em> of the bounding box rotation</p>
+</div></blockquote>
+<p><strong>xedges</strong> : array-like</p>
+<blockquote>
+<div><p>The x coordinates in the rotated coordinate system of the cell
+boundaries</p>
+</div></blockquote>
+<p><strong>yedges</strong> : array-like</p>
+<blockquote class="last">
+<div><p>The y coordinates in the rotated coordinate system of the cell
+boundaries</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.subdivide_mask">
+<code class="descname">subdivide_mask</code><span class="sig-paren">(</span><em>n_shortside=3</em>, <em>n_longside=4</em>, <em>preview=False</em>, <em>rotation_angle=None</em>, <em>padding=None</em>, <em>only_show=None</em>, <em>save_plot=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.subdivide_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.subdivide_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subdivide mask takes the image mask, draws a rectangle around the
+valid region of the mask, rotated to be as small as possible, and
+subdivides that rectangle.  The rotation angle of the box can be
+set manually and space can be trimmed or added from the sides of
+the box.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_shortside</strong> : integer (optional)</p>
+<blockquote>
+<div><p>The number of cells along the short side of the rectangle.
+Default is 3.</p>
+</div></blockquote>
+<p><strong>n_longside</strong> : integer (optional)</p>
+<blockquote>
+<div><p>The number of cells along the long side of the rectangle.
+Default is 4.</p>
+</div></blockquote>
+<p><strong>preview</strong> : bool (optional)</p>
+<blockquote>
+<div><p>Should the mask show you what this set of parameters looks like
+but not store the results?  If preview == True, either a plot
+will be shown on your screen (no value given for save_plot) or
+saved to a file (save_plot specified).  The image mask object
+will not keep the division information.  If preview == False,
+which is the default, the values will be stored and a plot will
+only be made if save_plot is specified.</p>
+</div></blockquote>
+<p><strong>rotation_angle</strong> : scalar (optional)</p>
+<blockquote>
+<div><p>Fixes the rotation angle that the mask&#8217;s bounding box will be
+defined at with respect to the XY coordinate system of the
+mask.  By default, the routine will choose the integer angle in
+degrees which minimizes the area of the bounding box.</p>
+</div></blockquote>
+<p><strong>padding</strong> : 4 element array-like (optional)</p>
+<blockquote>
+<div><p>How many pixels extra to allow in the rotated coordinates of
+the bounding box.  The order is [bottom, top, left, right].
+Positive padding corresponds to moving the edges outwards and
+leaving extra room.  Negative padding will move the bounding
+box inward and cut off part of the mask.</p>
+</div></blockquote>
+<p><strong>only_show</strong> : integer (optional)</p>
+<blockquote>
+<div><p>If you only want to see the random points that fall into one of
+the cells in the subdivided mask, you set only_show to that
+cell number.  This will only matter if you have preview=True
+or have specified save_plot.</p>
+</div></blockquote>
+<p><strong>save_plot</strong> : string (optional)</p>
+<blockquote class="last">
+<div><p>Name with path from &#8216;/&#8217; of the file where you would like the
+plot of the subdivided mask saved.  If only_show is set to an
+integer that corresponds to a cell number, only the points in
+that cell will be shown.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.unmasked_random_sample">
+<code class="descname">unmasked_random_sample</code><span class="sig-paren">(</span><em>number_to_make</em>, <em>ra_range</em>, <em>dec_range</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.unmasked_random_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.unmasked_random_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a given number of randomly placed points in a specified
+RA and Dec range.  This is really just an intermediary for a call
+to correlations.uniform_sphere(RAlim, DEClim, size=1).  This
+routine does not allow for the RA and Dec ranges to be completely
+outside the mask.  If you want that, go to the function in
+correlations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>number_to_make</strong> : scalar</p>
+<blockquote>
+<div><p>The number of random objects to place in the RA and Dec range</p>
+</div></blockquote>
+<p><strong>ra_range</strong> : array-like</p>
+<blockquote>
+<div><p>Randoms will be placed between ra_range[0] and ra_range[1].
+Units are degrees.</p>
+</div></blockquote>
+<p><strong>dec_range</strong> : array-like</p>
+<blockquote>
+<div><p>Randoms will be placed between dec_range[0] and dec_range[1].
+Units are degrees.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ra</strong> : numpy ndarray</p>
+<blockquote>
+<div><p>RA coords of the randomly placed objects.  Array shape is
+(number_to_make,)</p>
+</div></blockquote>
+<p><strong>dec</strong> : numpy ndarray</p>
+<blockquote class="last">
+<div><p>Dec coords of the randomly placed objects.  Array shape is
+(number_to_make,)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ImageMask_class.ImageMask.xy_to_ra_dec">
+<code class="descname">xy_to_ra_dec</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ImageMask_class.html#ImageMask.xy_to_ra_dec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ImageMask_class.ImageMask.xy_to_ra_dec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of X and Y coordinates, returns the RA and Dec.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : array-like</p>
+<blockquote>
+<div><p>X positions of the input coordinates</p>
+</div></blockquote>
+<p><strong>y</strong> : array-like</p>
+<blockquote>
+<div><p>Y positions of the input coordinates</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ra</strong> : np.ndarray</p>
+<blockquote>
+<div><p>RAs of the input coordinates in degrees</p>
+</div></blockquote>
+<p><strong>dec</strong> : array-like</p>
+<blockquote class="last">
+<div><p>Decs of the input coordinates in degrees</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="corrfunction.html" class="btn btn-neutral float-right" title="CorrelationFunction class" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="angularclass.html" class="btn btn-neutral" title="The AngularCatalog class" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

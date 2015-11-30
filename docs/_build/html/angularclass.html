@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The AngularCatalog class &mdash; Py2PAC 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Py2PAC 0.1 documentation" href="index.html"/>
+        <link rel="next" title="ImageMask class" href="maskclass.html"/>
+        <link rel="prev" title="Introduction" href="introduction.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Py2PAC
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">The AngularCatalog class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maskclass.html">ImageMask class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corrfunction.html">CorrelationFunction class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpclass.html">Gp class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thetabins.html">ThetaBins class</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Py2PAC</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>The AngularCatalog class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/angularclass.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="the-angularcatalog-class">
+<h1>The AngularCatalog class<a class="headerlink" href="#the-angularcatalog-class" title="Permalink to this headline">¶</a></h1>
+<p>The AngularCatalog is the front-end for organizing and analyzing
+observations.  The idea is that you give it all the information about
+where the galaxies are and where the field is on the sky and it does
+the rest.</p>
+<span class="target" id="module-AngularCatalog_class"></span><dl class="class">
+<dt id="AngularCatalog_class.AngularCatalog">
+<em class="property">class </em><code class="descclassname">AngularCatalog_class.</code><code class="descname">AngularCatalog</code><span class="sig-paren">(</span><em>ra</em>, <em>dec</em>, <em>generate_randoms=False</em>, <em>default_oversample=1.0</em>, <em>properties=None</em>, <em>weight_file=None</em>, <em>image_mask=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This class is the workhorse of Py2PAC.  It manages the actual catalogs
+of objects, it creates various objects to hold information, and it
+performs the correlation function calculations on the catalogs.
+AngularCatalogs are single-bin objects, so if you want to sub-divide
+your data set, do so before you pull it into AngularCatalogs.  Future
+releases of Py2PAC will include a MultiCatalog that manages slicing a
+catalog into bins.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ra</strong> : array-like</p>
+<blockquote>
+<div><p>A list of RAs for your objects in degrees</p>
+</div></blockquote>
+<p><strong>dec</strong> : array-like</p>
+<blockquote>
+<div><p>A list of declinations for your objects in degrees</p>
+</div></blockquote>
+<p><strong>generate_randoms</strong> : bool (optional)</p>
+<blockquote>
+<div><p>If True, <code class="docutils literal"><span class="pre">__init__</span></code> will call the mask&#8217;s random generation to
+produce a random sample of size <code class="docutils literal"><span class="pre">len(ra)</span> <span class="pre">*</span> <span class="pre">default_oversample</span></code>.
+If False, no randoms will be generated.  Default is False.</p>
+</div></blockquote>
+<p><strong>default_oversample</strong> : float (optional)</p>
+<blockquote>
+<div><p>The default number of randoms to make in units of the number of
+data points.  If <code class="docutils literal"><span class="pre">default_oversample==1</span></code>, then by default the
+object will generate the same number of randoms as you have data
+points.  If <code class="docutils literal"><span class="pre">default_oversample==1</span></code>, then by default the
+object will generate twice as many randoms as you have data points,
+etc.  Default value is 1.</p>
+</div></blockquote>
+<p><strong>properties</strong> : dictionary (optional)</p>
+<blockquote>
+<div><p>Any additional properties that you want to carry around with the
+angular positions.  This isn&#8217;t used at all by AngularCatalog, but
+makes it easier to access things.</p>
+</div></blockquote>
+<p><strong>weight_file</strong> : string (optional)</p>
+<blockquote>
+<div><p>A path from / to a FITS weight file to be used to generate the
+ImageMask.</p>
+</div></blockquote>
+<p><strong>image_mask</strong> : ImageMask instance (optional)</p>
+<blockquote>
+<div><p>An instance of an ImageMask object.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cat</strong> : AngularCatalog instance</p>
+<blockquote class="last">
+<div><p>The AngularCatalog instance with all the properties that you gave
+it.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.cf">
+<code class="descname">cf</code><span class="sig-paren">(</span><em>estimator='landy-szalay'</em>, <em>n_iter=1</em>, <em>clobber=False</em>, <em>random_oversample=None</em>, <em>save_steps_file=None</em>, <em>name='cf'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.cf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.cf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.cf_block_bootstrap">
+<code class="descname">cf_block_bootstrap</code><span class="sig-paren">(</span><em>n_boots=10</em>, <em>ignore_regions=None</em>, <em>estimator='landy-szalay'</em>, <em>random_oversample=None</em>, <em>bootstrap_oversample=1</em>, <em>save_steps_file=None</em>, <em>name='block_bootstrap'</em>, <em>clobber=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.cf_block_bootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.cf_block_bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.cf_bootstrap">
+<code class="descname">cf_bootstrap</code><span class="sig-paren">(</span><em>n_boots=10</em>, <em>bootstrap_oversample=1</em>, <em>random_oversample=None</em>, <em>estimator='landy-szalay'</em>, <em>save_steps_file=None</em>, <em>name='galaxy_bootstrap'</em>, <em>clobber=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.cf_bootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.cf_bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.cf_jackknife">
+<code class="descname">cf_jackknife</code><span class="sig-paren">(</span><em>ignore_regions=[]</em>, <em>estimator='landy-szalay'</em>, <em>random_oversample=None</em>, <em>save_steps_file=None</em>, <em>name='jackknife'</em>, <em>clobber=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.cf_jackknife"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.cf_jackknife" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.generate_rr">
+<code class="descname">generate_rr</code><span class="sig-paren">(</span><em>set_nbins=None</em>, <em>logbins=True</em>, <em>min_sep=0.01</em>, <em>force_n_randoms=None</em>, <em>save_to=None</em>, <em>n_chunks=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.generate_rr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.generate_rr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.load_cf">
+<code class="descname">load_cf</code><span class="sig-paren">(</span><em>filen</em>, <em>overwrite_existing=False</em>, <em>name_prefix=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.load_cf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.load_cf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.load_gp">
+<code class="descname">load_gp</code><span class="sig-paren">(</span><em>filename</em>, <em>overwrite_existing=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.load_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.load_gp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.make_data_tree">
+<code class="descname">make_data_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.make_data_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.make_data_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.make_random_tree">
+<code class="descname">make_random_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.make_random_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.make_random_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.move_mask">
+<code class="descname">move_mask</code><span class="sig-paren">(</span><em>delta_ra=None</em>, <em>delta_dec=None</em>, <em>theta_degrees=None</em>, <em>preview=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.move_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.move_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="AngularCatalog_class.AngularCatalog.random_catalog">
+<em class="property">classmethod </em><code class="descname">random_catalog</code><span class="sig-paren">(</span><em>n_randoms</em>, <em>image_mask=None</em>, <em>ra_range=None</em>, <em>dec_range=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.random_catalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.random_catalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an AngularCatalog populated with RAs and Decs placed
+randomly within the mask.  This can be passed either an image
+mask or an RA and Dec range</p>
+<p><strong>Syntax</strong></p>
+<ul class="simple">
+<li>cat = ac_class.AngularCatalog.random_catalog(n_randoms, image_mask=ImageMask_object)</li>
+</ul>
+<p>OR
+* cat = ac_class.AngularCatalog.random_catalog(n_randoms, ra_range=[min, max], dec_range=[min, max])</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_randoms</strong> : scalar</p>
+<blockquote>
+<div><p>The number of randoms that you want in you catalog</p>
+</div></blockquote>
+<p><strong>image_mask</strong> : ImageMask object (optional)</p>
+<blockquote>
+<div><p>An ImageMask object with the outline that you want for your
+randoms.  This is one option.</p>
+</div></blockquote>
+<p><strong>ra_range</strong> : two-element array-like (optional)</p>
+<blockquote>
+<div><p>The minimum and maximum RA you would like your randoms to have.
+This is an alternative to the image_mask option.  This must be
+combined with the dec_range argument as well.</p>
+</div></blockquote>
+<p><strong>dec_range</strong> : two-element array-like (optional)</p>
+<blockquote>
+<div><p>The minimum and maximum Dec you would like your randoms to have.
+This is an alternative to the image_mask option.  This must be
+combined with the ra_range argument.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cat</strong> : AngularCatalog object</p>
+<blockquote class="last">
+<div><p>An AngularCatalog instance with n_randoms distributed over either
+the image_mask or over the RA and Dec range.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.save_cf">
+<code class="descname">save_cf</code><span class="sig-paren">(</span><em>file_base</em>, <em>cf_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.save_cf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.save_cf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.save_gp">
+<code class="descname">save_gp</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.save_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.save_gp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.set_mask_to_weight_file">
+<code class="descname">set_mask_to_weight_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.set_mask_to_weight_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.set_mask_to_weight_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the weight file name and process the file to an image mask</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote class="last">
+<div><p>The location of the FITS file that you want to process to
+a weight mask.  The file name should be specified from /</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.set_theta_bins">
+<code class="descname">set_theta_bins</code><span class="sig-paren">(</span><em>min_theta</em>, <em>max_theta</em>, <em>nbins</em>, <em>unit='a'</em>, <em>logbins=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.set_theta_bins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.set_theta_bins" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="AngularCatalog_class.AngularCatalog.setup_mask">
+<code class="descname">setup_mask</code><span class="sig-paren">(</span><em>force_remake=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AngularCatalog_class.html#AngularCatalog.setup_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#AngularCatalog_class.AngularCatalog.setup_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="maskclass.html" class="btn btn-neutral float-right" title="ImageMask class" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="introduction.html" class="btn btn-neutral" title="Introduction" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Catherine White.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

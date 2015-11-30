@@ -16,42 +16,49 @@ class CorrelationFunction(object):
     Parameters
     ----------
     name : string (optional)
-         String for remembering what you did when you calculated the
-         correlation function, e.g 'z1_1.5_mstar8_9'.
+        String for remembering what you did when you calculated the
+        correlation function, e.g 'z1_1.5_mstar8_9'.
+         
     cf_type : string (optional)
-            String for describing what error calculation type you used
+        String for describing what error calculation type you used
+            
     estimator : string (optional)
-             The CF estimator used.  Options are standard, which is DD/RR
-             and landy-szalay, which is (DD - 2DR + RR)/RR
+        The CF estimator used.  Options are 'standard', which is DD/RR
+        and 'landy-szalay', which is (DD - 2DR + RR)/RR
+        
     ngals : scalar (optional)
-          Number of galaxies the data sample
+        Number of galaxies the data sample
+        
     theta_bin_object : ThetaBins instance (optional)
-                     The instance of ThetaBins used to calculate the CF.
-                     This form of theta information supercedes all other
-                     formats.
+        The instance of ThetaBins used to calculate the CF. This form of
+        theta information supercedes all other formats.
+        
     theta_bins : array (optional)
-               The edges of the theta bins used to calculate the CF.  This
-               will be used to calculate the theta bins only if
-               theta_bin_object is not given.
+        The edges of the theta bins used to calculate the CF.  This will be
+        used to calculate the theta bins only if theta_bin_object is not
+        given.
     thetas : array (optional)
-           The centers of the theta bins that were used to calculate the
-           CF.  This will only be used if both theta_bin_object and
-           theta_bins are not given. The options
-           are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-           'r', 'rad', 'radians'.  Default is 'arcseconds'
+        The centers of the theta bins that were used to calculate the CF.
+        This will only be used if both theta_bin_object and theta_bins are
+        not given. The options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg',
+        'degrees'; 'r', 'rad', 'radians'.  Default is 'arcseconds'
+        
     theta_unit : string (optional)
-               The units that the arrays for theta_bins or thetas are in.
-               Only needed if either of those are to be used in making
-               the ThetaBins object
+        The units that the arrays for theta_bins or thetas are in.  Only
+        needed if either of those are to be used in making the ThetaBins
+        object
+        
     verbose : boolean (optional)
-            Sets whether or not the __init__ function talks to you.
-            Default is True.
+        Sets whether or not the __init__ function talks to you.  Default is
+        True.
+        
     gp_object : Gp instance (optional)
-              The Gp instance associated with the geometry of the mask
-              used to calculate the CF.  Supercedes gp_filename
+        The Gp instance associated with the geometry of the mask used to
+        calculate the CF.  Supercedes gp_filename
+        
     gp_filename : string (optional)
-                The file from which to read the Gp information.  Only
-                gets used if the gp_object is not given.
+        The file from which to read the Gp information.  Only gets used if
+        the gp_object is not given.
     """
     #------------------#
     #- Initialization -#
@@ -138,11 +145,11 @@ class CorrelationFunction(object):
         Parameters
         ----------
         filename : string
-                 The file that contains the CF.  Should be given as
-                 a path from /
+            The file that contains the CF.  Should be the a path from /
+            
         name : string (optional)
-             A new description of the correlation function to replace
-             the name that was saved.
+            A new description of the correlation function to replace the
+            name that was saved.
         """
         #Make an empty guy
         temp = cls(verbose=False)
@@ -169,19 +176,23 @@ class CorrelationFunction(object):
         Parameters
         ----------
         min_theta : float
-                  The minimum of the theta bin edges
+            The minimum of the theta bin edges
+            
         max_theta : float
-                  The maximum of the theta bin edges
+            The maximum of the theta bin edges
+            
         nbins : float
-              The number of theta bins
+            The number of theta bins
+            
         unit : string (optional)
-             The unit that min and max theta are in.  The options
-             are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-             'r', 'rad', 'radians'.  Default is 'arcseconds'
+            The unit that min and max theta are in.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
+            'r', 'rad', 'radians'.  Default is 'arcseconds'
+            
         logbins : boolean (optional)
-                If logbins == True, the bins are evenly spaced in log
-                space. If logbins == False, the bins are evenly spaced
-                in linear space.  Default is True.
+            If logbins == True, the bins are evenly spaced in log
+            space. If logbins == False, the bins are evenly spaced
+            in linear space.  Default is True.
         """
         #If we have a ThetaBins instance, set new bin parameters
         if self._theta_bins is None:
@@ -210,10 +221,11 @@ class CorrelationFunction(object):
         edges : array
            The edges of the theta bins desired in the given unit
            (default is arcseconds)
+           
         unit : string (optional)
-             The unit that min and max theta are in.  The options
-             are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-             'r', 'rad', 'radians'.  Default is 'arcseconds'
+            The unit that min and max theta are in.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
+            'r', 'rad', 'radians'.  Default is 'arcseconds'
         """
         self._theta_bins = binclass.ThetaBins.from_edges(edges,
                                                         unit=unit)
@@ -228,12 +240,13 @@ class CorrelationFunction(object):
         Parameters
         ----------
         centers : array
-           The centers of the theta bins desired in the given unit
-           (default is arcseconds)
+            The centers of the theta bins desired in the given unit
+            (default is arcseconds)
+           
         unit : string (optional)
-             The unit that min and max theta are in.  The options
-             are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-             'r', 'rad', 'radians'.  Default is 'arcseconds'
+            The unit that min and max theta are in.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
+            'r', 'rad', 'radians'.  Default is 'arcseconds'
         """
         self._theta_bins= binclass.ThetaBins.from_centers(centers,
                                                          unit=unit)
@@ -272,11 +285,13 @@ class CorrelationFunction(object):
         Returns
         -------
         centers : array
-           The centers of the theta bins in the unit specified
+            The centers of the theta bins in the unit specified
+            
         cf : array
-           The correlation function values
+            The correlation function values
+            
         error : array
-           The error estimation on the correlation function
+            The error estimation on the correlation function
         """
         centers, edges = self._theta_bins.get_bins(unit=unit)
         return centers, self._cf, self._error
@@ -298,6 +313,7 @@ class CorrelationFunction(object):
         -------
         centers : array
             The centers of the theta bins in the unit requested.
+            
         edges : array
             The edges of the theta bins in the unit requested.
         """
@@ -313,8 +329,10 @@ class CorrelationFunction(object):
         ----------
         cf : array
             The correlation function
+            
         error : array
             The estimated error on the correlation function
+            
         iterations : dictionary of arrays (optional)
             The iterations of the CF calculation done to estimate the
             error.
@@ -341,8 +359,10 @@ class CorrelationFunction(object):
         -------
         cf : array
             The correlation function
+            
         error : array
             The error estimate on the correlation function
+            
         iterations : dictionary of arrays (optional)
             A dictionary of the iterations used to calculate the CF and
             error.  Only returned if get_iterations is True
@@ -389,8 +409,10 @@ class CorrelationFunction(object):
         ----------
         DD : array (optional)
            Data-data pair counts
+           
         DR : array (optional)
            Data-random pair counts
+           
         RR : array (optional)
            Random-random pair counts
         """
@@ -412,9 +434,11 @@ class CorrelationFunction(object):
         -------
         DD : array
            Data-data counts.
+           
         DR : array (or None)
            Data-random counts.  None if the estimator is 'standard', array
            if the estimator is 'landy-szalay'
+           
         RR : array
            Random-random counts.
         """
