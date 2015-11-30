@@ -4,5 +4,5 @@ from distutils.core import setup
 
 setup(name='Py2PAC',
       version='0.1',
-      py_modules=['AngularCatalog_class'],
+      py_modules=['numpy', 'AngularCatalog_class'],
       )
