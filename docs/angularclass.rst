@@ -9,7 +9,7 @@ the rest.
 **WARNING**:  This is the part of the code that doesn't work yet.  I
 should have it up in the next week or two.
 
-.. autodoc:: AngularCatalog
+.. automodule:: py2pac.AngularCatalog
 		:members:
 		:undoc-members:
 		:show-inheritance:
