@@ -14,7 +14,7 @@ class Mock(MagicMock):
 MOCK_MODULES = ['astroML']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-call(['source', 'py2pac/compile_cython_bits'])
+call(['source', './py2pac/compile_cython_bits'])
 
 
 def readme():
