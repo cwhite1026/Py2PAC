@@ -1,8 +1,8 @@
-#-------------------------------------------------------------------#
-# This is the file that contains the main class that Py2PAC is      #
-# built around, the AngularCatalog, which holds RAs and Decs and    #
-# does the actual calculations of correlation functions.            #
-#-------------------------------------------------------------------#
+#---------------------------------------------------------------------#
+#- This is the file that contains the main class that Py2PAC is      -#
+#- built around, the AngularCatalog, which holds RAs and Decs and    -#
+#- does the actual calculations of correlation functions.            -#
+#---------------------------------------------------------------------#
 
 # External code
 import copy
@@ -178,9 +178,10 @@ class AngularCatalog(object):
         #image mask already
         need_image_mask = image_mask is None
         if need_image_mask:
-            image_mask = imclass.ImageMask(forced_ra_range=ra_range,
-                                           forced_dec_range=dec_range)
+            image_mask = imclass.ImageMask.from_ranges(ra_range, dec_range)
 
+
+        # generate_random_sample(self, number_to_make)
         #Make a dummy catalog and generate the randoms we want
         dummy_cat = cls([0], [0], generate_randoms=False,
                         image_mask=image_mask)

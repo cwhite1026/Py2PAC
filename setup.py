@@ -4,6 +4,7 @@ from setuptools import setup
 import os
 import sys
 from mock import Mock as MagicMock
+from subprocess import call
     
 class Mock(MagicMock):
     @classmethod
@@ -12,7 +13,10 @@ class Mock(MagicMock):
         
 MOCK_MODULES = ['astroML']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-        
+
+call(['python', 'setup_im_cybits.py', 'build_ext', '--inplace'])
+
+
 def readme():
     with open('README.md') as f:
         return f.read()
