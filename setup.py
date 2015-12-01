@@ -3,24 +3,24 @@
 from setuptools import setup
 import os
 import sys
-from mock import Mock as MagicMock
 from subprocess import call
-    
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-        
-MOCK_MODULES = ['astroML']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-call(['source', './py2pac/compile_cython_bits'])
+#Compile the cython pieces with the proper options
+sys.argv = ['setup.py', 'build_ext', '--inplace']
+import distutils.core as core
+from Cython.Build import cythonize
+import numpy
+core.setup(
+    ext_modules = cythonize("py2pac/image_mask_cybits.pyx"),
+    include_dirs=[numpy.get_include()]
+)
 
-
+#Define the readme command
 def readme():
     with open('README.md') as f:
         return f.read()
 
+#Set up the package
 setup(name='py2pac',
       version='0.1',
       description='Python package for computing 2-point angular correlation functions',
