@@ -20,13 +20,13 @@ To-do before release
 * Check all routines in AngularCatalog
 * Check the jackknife error bar magnitude
 * Come up with example data sets and add to repository
-* Tutorial ipython notebook that walks you from importing py2pac to plotting each kind of CF.  Also make sure it has the different ways to create ImageMasks
+* Tutorial ipython notebook
 
 To-do eventually
 ^^^^^^^^^^^^^^
 
-* Set up an ImageMask classmethod to deal with rotated boxes
-* Fitting things are the next science thing to do
-* After that, it's multi catalogs.  I think they should probably inherit AngularCatalog and then build off of it?
-* Parallel processing for CF calculation?
-* I should probably figure out why the WCS instances I make by hand aren't ok with being moved and then figure out how to fix it.
+* Set up an ImageMask classmethod to deal with rotated boxes (currently just a range in RA and Dec)
+* Next feature: fitting correlation functions
+* After that, multi-catalogs that take a catalog and slice by property into different AngularCatalogs
+* Make hand-made WCS instances (in ImageMask.from\_array and ImageMask.from\_ranges) moveable on the sky
+* Parallel processing for CF calculation
