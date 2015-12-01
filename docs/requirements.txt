@@ -1,1 +1,4 @@
 numpydoc
+numpy
+scipy
+astropy
