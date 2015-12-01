@@ -180,17 +180,10 @@ class AngularCatalog(object):
         if need_image_mask:
             image_mask = imclass.ImageMask.from_ranges(ra_range, dec_range)
 
-
-        # generate_random_sample(self, number_to_make)
-        #Make a dummy catalog and generate the randoms we want
-        dummy_cat = cls([0], [0], generate_randoms=False,
-                        image_mask=image_mask)
-        temp = dummy_cat.generate_random_sample(store=False,
-                                                make_exactly=n_randoms)
-        rand_ras, rand_decs = temp[0:2]
-
-        #Return the angular catalog with the RAs and Decs
-        return AngularCatalog(rand_ras, rand_decs, image_mask=image_mask)
+        #Use the ImageMask to create random RAs and Decs and make them into
+        #an AngularCatalog with the corresponding mask.
+        ra, dec, comp = image_mask.generate_random_sample(n_randoms)
+        return AngularCatalog(ra, dec, image_mask=image_mask)
         
     #------------------------------------------------------------------------------------------
 
