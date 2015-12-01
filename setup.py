@@ -13,7 +13,7 @@ setup(name='py2pac',
       author='Catherine White',
       author_email='ccavigl1@jh.edu',
       packages=['py2pac'],
-      install_requires[
+      install_requires=[
           'numpy',
           ],
       )
