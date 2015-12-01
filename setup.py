@@ -4,7 +4,6 @@ from setuptools import setup
 import os
 import sys
 from mock import Mock as MagicMock
-
     
 class Mock(MagicMock):
     @classmethod
