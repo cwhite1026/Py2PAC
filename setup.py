@@ -1,6 +1,8 @@
 #My attempt at a setup... I have no idea how this is supposed to work.
 
 from setuptools import setup
+import os
+import sys
 
 #Yoinked from HMF: https://github.com/steven-murray/hmf/blob/master/setup.py
 class Mock(object):
