@@ -3,16 +3,16 @@
 from setuptools import setup
 import os
 import sys
-# from mock import Mock as MagicMock
+from mock import Mock as MagicMock
 
     
-# class Mock(MagicMock):
-#     @classmethod
-#     def __getattr__(cls, name):
-#             return Mock()
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
         
-# MOCK_MODULES = ['numpy', 'scipy', 'scikit-learn', 'astropy', 'copy', 'time', 'matplotlib']
-# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+MOCK_MODULES = ['numpy', 'scipy', 'scikit-learn', 'astropy', 'copy', 'time', 'matplotlib']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
         
 def readme():
     with open('README.md') as f:
