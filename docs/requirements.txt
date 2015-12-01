@@ -2,3 +2,4 @@ numpydoc
 sklearn
 astroML
 astropy
+Cython
