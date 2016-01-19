@@ -171,8 +171,8 @@ class ImageMask:
 
         #Check some basic stuff
         if (len(ra_range) !=2) or (len(dec_range) !=2):
-            raise ValueError("ImageMask.from_array says:  The RA and Dec"
-                             "ranges must be array-like objects of length"
+            raise ValueError("ImageMask.from_array says:  The RA and Dec "
+                             "ranges must be array-like objects of length "
                              "two.")
         
         #Get some basic info from the mask and make the WCS instance accordingly
@@ -402,7 +402,7 @@ class ImageMask:
     #--------------------------------#
     #- Generate randoms on the mask -#
     #--------------------------------#
-    def generate_random_sample(self, number_to_make):
+    def generate_random_sample(self, number_to_make, completeness_flag='simple'):
         """
         Generate a given number of random points within the mask.
 
@@ -421,6 +421,19 @@ class ImageMask:
         dec : numpy ndarray
             The Decs of the randomly placed objects within the mask.  Unit
             is degrees.  The array shape is (number_to_make,)
+
+        completeness_flag : string
+            Tells function which kind of completeness will be used.
+            Options:
+            'simple' - completeness is not dependent on magnitude or
+                radius; completeness read from mask and CompletenessFunction
+                is not called
+            'mag' - completeness is dependent only on magnitude;
+                CompletenessFunction.from_1d_array() is called
+            'mag_rad' - completeness is dependent on magnitude and radius;
+                CompletenessFunction.from_2d_array() is called
+            'npz' - completeness is dependent on magnitude and radius;
+                CompletenessFunction.from_npz() is called
         """
         
         #Check that we have an integer number of objects
@@ -488,7 +501,7 @@ class ImageMask:
                                    "generate_randoms again.")
 
         #If we overshot, cut some off
-        if number_left_to_make < 0:
+        elif number_left_to_make < 0:
             print ("ImageMask.generate_random_sample says: "
                   "Cutting down to exactly as many objects as we need.")
             ra_R=ra_R[0:number_to_make]

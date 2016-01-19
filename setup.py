@@ -28,4 +28,5 @@ setup(name='py2pac',
       author='Catherine White',
       author_email='ccavigl1@jh.edu',
       packages=['py2pac'],
+      requirements=['numpy', 'scipy', 'astropy', 'astroML', 'scikit-learn']
       )
