@@ -30,7 +30,7 @@ class CompletenessFunction:
     """
 
     #----------------------------------------------------------------------
-    #              Routines for making CompletenessFunctions
+    #              Routines for making completeness functions
     #----------------------------------------------------------------------
         
     #------------------#
@@ -38,6 +38,7 @@ class CompletenessFunction:
     #------------------#
     def __init__(self, completeness_array, mag_range, r_range=None):
         completeness_array = np.asarray(completeness_array)
+        # make sure completeness values are within acceptable range
         if (np.min(completeness_array) < 0) or \
         (np.max(completeness_array) > 1):
             warnings.warn("Your completeness array contains values less "
@@ -45,16 +46,17 @@ class CompletenessFunction:
                           "to zero or one.")
         completeness_array[completeness_array < 0] = 0
         completeness_array[completeness_array > 1] = 1
+        # store relevant values
         self._completeness_array = completeness_array
         self._mag_range = np.asarray(mag_range)
         self._min_mag = np.min(mag_range) # should this be reversed?
         self._max_mag = np.max(mag_range)
-        self._mag_bin_size = np.abs(mag_range[0] - mag_range[1])
+        self._mag_bin_size = mag_range[1] - mag_range[0]
         if r_range is not None:
             self._r_range = np.asarray(r_range)
             self._min_r = r_range.min()
             self._max_r = r_range.max()
-            self._r_bin_size = np.abs(r_range[0] - r_range[1])
+            self._r_bin_size = r_range[1] - r_range[0]
 
     #----------------------------------------------------------------------
     #-----------------------------------------------#
@@ -94,14 +96,16 @@ class CompletenessFunction:
         """
 
         mag_length = len(completeness_array) + 1
+        # check for appropriately sized magnitude input
         if len(mag_range) not in [2, mag_length]:
             raise ValueError("The length of your magnitude array must be "
                              "either 2 (min, max) or one greater than the "
                              "length of the completeness array.")
+        # create magnitude bin edges if min and max given
         if len(mag_range) == 2:
-            mag_range = np.linspace(mag_range[0], mag_range[1],
+            mag_range = np.linspace(mag_range.min(), mag_range.max(),
                 mag_length)
-
+        # construct class instance
         completeness_function_1D = cls(completeness_array, mag_range)
         return completeness_function_1D
 
@@ -153,19 +157,21 @@ class CompletenessFunction:
         
         mag_length = completeness_array.shape[1] + 1
         r_length = completeness_array.shape[0] + 1
+        # check for appropriately sized mag and radius input
         if (len(mag_range) not in [2, mag_length]) or \
         (len(r_range) not in [2, r_length]):
             raise ValueError("The length of your magnitude and radius "
                              "arrays must be either 2 (min, max) or one "
                              "greater than the corresponding dimension "
                              "of the completeness array.")
+        # create magnitude and radius bin edges if min and max given
         if len(mag_range) == 2:
-            mag_range = np.linspace(mag_range[0], mag_range[1],
+            mag_range = np.linspace(mag_range.min(), mag_range.max(),
                 mag_length)
         if len(r_range) == 2:
-            r_range = np.linspace(r_range[0], r_range[1],
+            r_range = np.linspace(r_range.min(), r_range.max(),
                 r_length)
-
+        # construct class instance
         completeness_function_2D = cls(completeness_array, mag_range,
             r_range=r_range)
         return completeness_function_2D
@@ -211,9 +217,9 @@ class CompletenessFunction:
         return completeness_function_npz
 
     #----------------------------------------------------------------------
-    #--------------------------------#
-    #- Generate randoms on the mask -#
-    #--------------------------------#
+    #--------------------------------------------#
+    #- Find completenesses for mag/radius lists -#
+    #--------------------------------------------#
     def query(self, mag_list, r_list=None):
         """Queries an instance of CompletenessFunction to find
 
@@ -238,7 +244,7 @@ class CompletenessFunction:
 
         Notes
         -----
-        Assumes equal bin widths.
+        Assumes equal bin widths and increasing bin edges.
         """
 
         if (np.min(mag_list) < self._min_mag) or \
