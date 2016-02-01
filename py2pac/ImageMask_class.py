@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import miscellaneous as misc
 import image_mask_cybits as cybits
 import correlations as corr
+from CompletenessFunction_class import CompletenessFunction
 
 
 #===============================================================================
@@ -25,7 +26,7 @@ class ImageMask:
     access directly.  There are more user-friendly class methods that allow
     mask definition from various sources.
     
-    Class methods are ImageMask.from_FITS_weight_file, ImageMask.from_array, ImageMask.from_ranges
+    Class methods are ImageMask.from_FITS_file, ImageMask.from_array, ImageMask.from_ranges
 
     Parameters
     ----------
@@ -51,7 +52,7 @@ class ImageMask:
     #------------------#
     #- Initialization -#
     #------------------#
-    def __init__(self, mask, wcs_instance, wcs_moveable=True):
+    def __init__(self, mask, wcs_instance, wcs_moveable=True, completeness_dict=None, levels=None):
         """
         Takes the mask and WCS instance and stores them, along with
         extracting some useful information from them
@@ -63,8 +64,8 @@ class ImageMask:
         if isinstance(wcs_instance, wcs.WCS):
             self._wcs_instance = wcs_instance
         else:
-            raise TypeError("The WCS instance you pass to ImageMask must"
-                            "be an instance of astropy.wcs.WCS.  This one"
+            raise TypeError("The WCS instance you pass to ImageMask must "
+                            "be an instance of astropy.wcs.WCS.  This one "
                             "was not.")
         self._nx_pixels, self._ny_pixels = self._mask.shape
         nx, ny = self._mask.shape
@@ -80,28 +81,33 @@ class ImageMask:
         self._subregion_rotation=None
         self._subregion_rotated_xedges=None
         self._subregion_rotated_yedges=None
+        self._completeness_dict=completeness_dict
+        self._levels=levels
 
     #----------------------------------------------------------------------
     #--------------------------------#
     #- Make a mask from a FITS file -#
     #--------------------------------#
     @classmethod
-    def from_FITS_weight_file(cls, weight_file):
+    def from_FITS_file(cls, fits_file, fits_file_type='weight'):
         """
-        Class method to generate an image mask from a weight file in
-        FITS format.  If the FITS file is large, this routine can take
+        Class method to generate an image mask from a weight or levels file
+        in FITS format.  If the FITS file is large, this routine can take
         some time.
 
         **Syntax**
         
-        immask = ImageMask.from_FITS_weight_file(weight_file)
+        immask = ImageMask.from_FITS_weight_file(fits_file)
 
         Parameters
         ----------
         
-        weight_file : string
+        fits_file : string
             The file name including the path from / that contains the
             FITS file to mask with
+
+        fits_file_type : string
+            Valid options: 'weight' or 'levels'
 
         Returns
         -------
@@ -111,14 +117,27 @@ class ImageMask:
         
         #Get the mask info from the fits file via a Cython routine (because
         #it's super slow in plain python)
-        mask_info = cybits.make_mask_from_weights(weight_file)
-        nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
+        if fits_file_type=='weight':
+            mask_info = cybits.make_mask_from_weights(fits_file)
+            nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
+        elif fits_file_type=='levels':
+            mask = fits.getdata(fits_file)
+        else:
+            raise ValueError("'fits_file_type' kwarg must be either "
+                             "'weight' or 'levels'")
         
         #Make a WCS instance and get useful things from it
-        wcs_instance=wcs.WCS(weight_file)
+        wcs_instance=wcs.WCS(fits_file)
+
+        #filetype
+        if fits_file_type == 'levels':
+            print 'Getting level values'
+            levels=sorted(np.unique(mask))
+        else:
+            levels=None
 
         #Make and return the mask
-        immask = cls(mask, wcs_instance)
+        immask = cls(mask, wcs_instance, levels=levels)
         return immask
 
     #----------------------------------------------------------------------
@@ -402,7 +421,7 @@ class ImageMask:
     #--------------------------------#
     #- Generate randoms on the mask -#
     #--------------------------------#
-    def generate_random_sample(self, number_to_make, completeness_flag='simple'):
+    def generate_random_sample(self, number_to_make):
         """
         Generate a given number of random points within the mask.
 
@@ -1012,6 +1031,43 @@ class ImageMask:
     #------------------------------------------#
     #- Queries completeness for given catalog -#
     #------------------------------------------#
+    def make_completeness_dict(self, *args):
+        """
+        Takes a list of CompletenessFunction instances and returns a 
+        dictionary of them.
+
+        Parameters
+        ----------
+        *args : CompletenessFunction instances
+            As many completeness function instances as you have
+
+        Returns
+        -------
+        completeness_dict : dictionary
+            A dictionary of completeness functions
+        """
+
+        #Check that the lists are the same length and convert to np arrays
+        completeness_dict = {}
+        for arg in args:
+            if not isinstance(arg, CompletenessFunction):
+                raise TypeError("Arguments passed to make_completeness_dict "
+                                "must be CompletenessFunction instances")
+            elif not hasattr(arg, '_level'):
+                raise ValueError("No level specified in CompletenessFunction "
+                                 "instance.")
+            else:
+                if hasattr(arg, '_galtype'):
+                    completeness_dict[str(arg._level) + '_' + str(arg._galtype)] = arg
+                else:
+                    completeness_dict[str(arg._level)] = arg
+        self._completeness_dict = completeness_dict
+        return
+
+    #----------------------------------------------------------------------        
+    #------------------------------------------#
+    #- Queries completeness for given catalog -#
+    #------------------------------------------#
     def return_completenesses(self, ra_list, dec_list):
         """
         Takes a list of RAs and Decs and returns the completenesses for
@@ -1074,7 +1130,20 @@ class ImageMask:
                    str(len(xinds[on_image])) +
                    " points that are actually on the image")
             on_mask_bits = self._mask[xinds[on_image],yinds[on_image]]
-            temp_complete[on_image] = on_mask_bits
+            if self._completeness_dict is not None:
+                mag = np.random.uniform(20,28,len(on_mask_bits))
+                lumratio = 10**((mag-24.)/-2.5)
+                mu = np.log10(0.3/0.05)+0.3333*np.log10(lumratio)
+                rad = np.random.normal(mu,0.2)
+                for level in self._levels:
+                    level_string = str(int(level))
+                    if level_string in self._completeness_dict.keys():
+                        cf = self._completeness_dict[level_string]
+                        at_level = np.where(on_mask_bits == int(level))
+                        if len(mag[at_level]) > 1:
+                            temp_complete[at_level] = cf.query(mag[at_level], rad[at_level])
+            else:
+                temp_complete[on_image] = on_mask_bits
             complete[in_ranges] = temp_complete
 
         return complete
