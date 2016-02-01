@@ -1130,7 +1130,11 @@ class ImageMask:
                    str(len(xinds[on_image])) +
                    " points that are actually on the image")
             on_mask_bits = self._mask[xinds[on_image],yinds[on_image]]
+            # if there is a dictionary of completeness functions
+            # this doesn't work with all options yet
             if self._completeness_dict is not None:
+                # randomize mags, have radii be a function of mag
+                # will be changed
                 mag = np.random.uniform(20,28,len(on_mask_bits))
                 lumratio = 10**((mag-24.)/-2.5)
                 mu = np.log10(0.3/0.05)+0.3333*np.log10(lumratio)
@@ -1140,10 +1144,11 @@ class ImageMask:
                     if level_string in self._completeness_dict.keys():
                         cf = self._completeness_dict[level_string]
                         at_level = np.where(on_mask_bits == int(level))
-                        if len(mag[at_level]) > 1:
+                        if len(mag[at_level]) > 1: # chokes when length is 1 - to fix
                             temp_complete[at_level] = cf.query(mag[at_level], rad[at_level])
             else:
                 temp_complete[on_image] = on_mask_bits
+            
             complete[in_ranges] = temp_complete
 
         return complete
