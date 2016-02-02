@@ -220,6 +220,19 @@ class CompletenessFunction:
             r_range=r_range, **kwargs)
         return completeness_function_npz
 
+    #----------------------------------------------------------------------        
+    #-------------------------------------------#
+    #- Randomly generates magnitudes and radii -#
+    #-------------------------------------------#
+    def generate_mags_and_radii(self, size):
+        mags = np.random.uniform(self._min_mag, self._max_mag, size=size)
+        lumratio = 10**((mags-24.)/-2.5)
+        mu = np.log10(0.3/0.05)+0.3333*np.log10(lumratio)
+        radii = np.random.normal(loc=mu,scale=0.1)
+        if size == 1:
+            radii = np.array([radii])
+        return mags, radii
+
     #----------------------------------------------------------------------
     #--------------------------------------------#
     #- Find completenesses for mag/radius lists -#
@@ -252,8 +265,9 @@ class CompletenessFunction:
         """
 
         # check for valid magnitude input
+        mag_list = np.asarray(mag_list)
         if (np.min(mag_list) < self._min_mag) or \
-        (np.min(mag_list) > self._max_mag):
+        (np.max(mag_list) > self._max_mag):
             raise ValueError("Your magnitude array contains values outside "
                              "the specified range.")
         # find magnitude bin that each input mag falls into
@@ -265,13 +279,15 @@ class CompletenessFunction:
         # this is a hack
         mag_condition[mag_condition == len(self._mag_range)] -= 1
         if hasattr(self, '_r_range'):
+            r_list = np.asarray(r_list)
             # check if mag and radius input are same size
             if len(r_list) != len(mag_list):
                 raise ValueError("Your magnitude and radius arrays are "
-                                 "not the same size.")
+                                 "not the same size:", len(mag_list),
+                                 len(r_list))
             # do the same processing for radius as magnitude
             if (np.min(r_list) < self._min_r) or \
-            (np.min(r_list) > self._max_r):
+            (np.max(r_list) > self._max_r):
                 raise ValueError("Your radius array contains values outside "
                                  "the specified range.")
             r_condition = [np.where((r >= self._r_range) &

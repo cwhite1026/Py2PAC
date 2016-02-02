@@ -1,4 +1,5 @@
 from AngularCatalog_class import AngularCatalog
+from CompletenessFunction_class import CompletenessFunction
 from CorrelationFunction_class import CorrelationFunction
 from Gp_class import Gp
 from ImageMask_class import ImageMask

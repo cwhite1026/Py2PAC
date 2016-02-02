@@ -118,8 +118,10 @@ class ImageMask:
         #Get the mask info from the fits file via a Cython routine (because
         #it's super slow in plain python)
         if fits_file_type=='weight':
-            mask_info = cybits.make_mask_from_weights(fits_file)
-            nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
+            #mask_info = cybits.make_mask_from_weights(fits_file)
+            #nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
+            mask = fits.getdata(fits_file)
+            mask = mask / np.max(mask)
         elif fits_file_type=='levels':
             mask = fits.getdata(fits_file)
         else:
@@ -481,12 +483,13 @@ class ImageMask:
         number_we_have = len(ra_R)
         print ("ImageMask.generate_random_sample says: "
                " We made "+str(number_we_have))
-        print "      We need ", number_to_make, " total"
+        print "      We need", number_to_make, "total"
+        print "      We will make", number_to_make - number_we_have, "more"
 
         #Check to see by how many we've overshot
         number_left_to_make = number_to_make - number_we_have
         
-        #If we've actually made too few, make more
+        #If we've actually made too few, make more    
         if number_left_to_make > 0:
             print ("ImageMask.generate_random_sample says: I have "
                    "made too few objects within the target area. Making "
@@ -495,8 +498,8 @@ class ImageMask:
             #so if my mask is teeny and in a big field, it won't take
             #forever to get to where we want to be
             fraction_used_last_time = float(number_we_have)/number_to_make
-            if fraction_used_last_time < 1.e-3:
-                fraction_used_last_time = 1e-3
+            if fraction_used_last_time < 1.e-2:
+                fraction_used_last_time = 1e-2
                 
             #Ask for exactly how many more we need.
             # new_multiplier = 1. / fraction_used_last_time
@@ -507,8 +510,8 @@ class ImageMask:
             more_ras, more_decs, more_comps = newguys
             
             #Add these galaxies to the existing arrays
-            ra_R= np.concatenate((ra_R, more_ras))
-            dec_R= np.concatenate((dec_R, more_decs))
+            ra_R = np.concatenate((ra_R, more_ras))
+            dec_R = np.concatenate((dec_R, more_decs))
             random_completeness = np.concatenate((random_completeness,
                                                   more_comps))
             number_we_have = len(ra_R)
@@ -523,9 +526,9 @@ class ImageMask:
         elif number_left_to_make < 0:
             print ("ImageMask.generate_random_sample says: "
                   "Cutting down to exactly as many objects as we need.")
-            ra_R=ra_R[0:number_to_make]
-            dec_R=dec_R[0:number_to_make]
-            random_completeness= random_completeness[0:number_to_make]
+            ra_R =ra_R[0:number_to_make]
+            dec_R =dec_R[0:number_to_make]
+            random_completeness = random_completeness[0:number_to_make]
         else:
             print ("ImageMask.generate_random_sample says: "
                   "I made exactly the right number!  It's like winning "
@@ -1135,17 +1138,16 @@ class ImageMask:
             if self._completeness_dict is not None:
                 # randomize mags, have radii be a function of mag
                 # will be changed
-                mag = np.random.uniform(20,28,len(on_mask_bits))
-                lumratio = 10**((mag-24.)/-2.5)
-                mu = np.log10(0.3/0.05)+0.3333*np.log10(lumratio)
-                rad = np.random.normal(mu,0.2)
                 for level in self._levels:
                     level_string = str(int(level))
                     if level_string in self._completeness_dict.keys():
                         cf = self._completeness_dict[level_string]
                         at_level = np.where(on_mask_bits == int(level))
-                        if len(mag[at_level]) > 1: # chokes when length is 1 - to fix
-                            temp_complete[at_level] = cf.query(mag[at_level], rad[at_level])
+                        num_to_generate = len(temp_complete[at_level])
+                        print level_string, cf._level, num_to_generate
+                        if num_to_generate > 0:
+                            mags, rads = cf.generate_mags_and_radii(num_to_generate)
+                            temp_complete[at_level] = cf.query(mags, rads)
             else:
                 temp_complete[on_image] = on_mask_bits
             
