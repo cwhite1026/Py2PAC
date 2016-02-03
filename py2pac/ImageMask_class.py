@@ -1058,10 +1058,7 @@ class ImageMask:
                 raise ValueError("No level specified in CompletenessFunction "
                                  "instance.")
             else:
-                if hasattr(arg, '_galtype'):
-                    completeness_dict[str(arg._level) + '_' + str(arg._galtype)] = arg
-                else:
-                    completeness_dict[str(arg._level)] = arg
+                completeness_dict[str(arg._level)] = arg
         self._completeness_dict = completeness_dict
         return
 
