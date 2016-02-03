@@ -89,7 +89,7 @@ class ImageMask:
     #- Make a mask from a FITS file -#
     #--------------------------------#
     @classmethod
-    def from_FITS_file(cls, fits_file, fits_file_type='weight'):
+    def from_FITS_file(cls, fits_file, mask_type='weight'):
         """
         Class method to generate an image mask from a weight or levels file
         in FITS format.  If the FITS file is large, this routine can take
@@ -97,7 +97,7 @@ class ImageMask:
 
         **Syntax**
         
-        immask = ImageMask.from_FITS_weight_file(fits_file)
+        immask = ImageMask.from_FITS_weight_file(fits_file, mask_type)
 
         Parameters
         ----------
@@ -117,12 +117,10 @@ class ImageMask:
         
         #Get the mask info from the fits file via a Cython routine (because
         #it's super slow in plain python)
-        if fits_file_type=='weight':
-            #mask_info = cybits.make_mask_from_weights(fits_file)
-            #nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
-            mask = fits.getdata(fits_file)
-            mask = mask / np.max(mask)
-        elif fits_file_type=='levels':
+        if mask_type=='weight':
+            mask_info = cybits.make_mask_from_weights(fits_file)
+            nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
+        elif mask_type=='levels':
             mask = fits.getdata(fits_file)
         else:
             raise ValueError("'fits_file_type' kwarg must be either "
@@ -1133,7 +1131,7 @@ class ImageMask:
                    str(len(xinds[on_image])) +
                    " points that are actually on the image")
             on_mask_bits = self._mask[xinds[on_image],yinds[on_image]]
-            # if there is a dictionary of completeness functions
+            # use completeness functions if they exist
             # this doesn't work with all options yet
             if self._completeness_dict is not None:
                 # randomize mags, have radii be a function of mag
@@ -1144,7 +1142,6 @@ class ImageMask:
                         cf = self._completeness_dict[level_string]
                         at_level = np.where(on_mask_bits == int(level))
                         num_to_generate = len(temp_complete[at_level])
-                        print level_string, cf._level, num_to_generate
                         if num_to_generate > 0:
                             mags, rads = cf.generate_mags_and_radii(num_to_generate)
                             temp_complete[at_level] = cf.query(mags, rads)
