@@ -448,14 +448,14 @@ class ImageMask:
                              "objects.  You entered "+str(number_to_make))
 
         #Make the first pass of randoms
-        ra_R, dec_R= corr.uniform_sphere(self._ra_range, self._dec_range,
-                                         size=number_to_make)
+        ra_R, dec_R = corr.uniform_sphere(self._ra_range, self._dec_range,
+                                          size=number_to_make)
         
         #----------------------------------
         #- Mask and add more if undershot
         #----------------------------------
         #Get completenesses and see which to use
-        random_completeness = self.return_completenesses(ra_R, dec_R, mag_list, rad_list)
+        random_completeness = self.return_completenesses(ra_R, dec_R)
         compare_to = rand.random(size=len(ra_R))
         use = compare_to < random_completeness
         #Mask down to the ones that survived
@@ -1122,7 +1122,9 @@ class ImageMask:
                 for level in self._levels:
                     level_string = str(int(level))
                     if level_string in self._completeness_dict.keys():
+                        # get completeness object corresponding to level
                         cf = self._completeness_dict[level_string]
+                        # find all galaxies located within level
                         at_level = np.where(on_mask_bits == int(level))
                         num_to_generate = len(temp_complete[at_level])
                         if num_to_generate > 0:
