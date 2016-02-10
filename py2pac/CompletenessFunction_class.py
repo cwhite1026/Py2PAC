@@ -225,6 +225,9 @@ class CompletenessFunction:
     #- Randomly generates magnitudes and radii -#
     #-------------------------------------------#
     def generate_mags_and_radii(self, size):
+        '''Generate magnitudes and radii
+        NEEDS MORE OPTIONS
+        '''
         mags = np.random.uniform(self._min_mag, self._max_mag, size=size)
         lumratio = 10**((mags-24.)/-2.5)
         mu = np.log10(0.3/0.05)+0.3333*np.log10(lumratio)
@@ -238,7 +241,7 @@ class CompletenessFunction:
     #- Find completenesses for mag/radius lists -#
     #--------------------------------------------#
     def query(self, mag_list, r_list=None):
-        """Queries an instance of CompletenessFunction to find
+        """Queries an instance of CompletenessFunction to get completenesses.
 
         **Syntax**
 

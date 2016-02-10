@@ -89,7 +89,7 @@ class ImageMask:
     #- Make a mask from a FITS file -#
     #--------------------------------#
     @classmethod
-    def from_FITS_file(cls, fits_file, mask_type='weight'):
+    def from_FITS_file(cls, fits_file, fits_file_type='weight'):
         """
         Class method to generate an image mask from a weight or levels file
         in FITS format.  If the FITS file is large, this routine can take
@@ -117,10 +117,10 @@ class ImageMask:
         
         #Get the mask info from the fits file via a Cython routine (because
         #it's super slow in plain python)
-        if mask_type=='weight':
+        if fits_file_type=='weight':
             mask_info = cybits.make_mask_from_weights(fits_file)
             nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
-        elif mask_type=='levels':
+        elif fits_file_type=='levels':
             mask = fits.getdata(fits_file)
         else:
             raise ValueError("'fits_file_type' kwarg must be either "
@@ -440,19 +440,6 @@ class ImageMask:
         dec : numpy ndarray
             The Decs of the randomly placed objects within the mask.  Unit
             is degrees.  The array shape is (number_to_make,)
-
-        completeness_flag : string
-            Tells function which kind of completeness will be used.
-            Options:
-            'simple' - completeness is not dependent on magnitude or
-                radius; completeness read from mask and CompletenessFunction
-                is not called
-            'mag' - completeness is dependent only on magnitude;
-                CompletenessFunction.from_1d_array() is called
-            'mag_rad' - completeness is dependent on magnitude and radius;
-                CompletenessFunction.from_2d_array() is called
-            'npz' - completeness is dependent on magnitude and radius;
-                CompletenessFunction.from_npz() is called
         """
         
         #Check that we have an integer number of objects
@@ -468,7 +455,7 @@ class ImageMask:
         #- Mask and add more if undershot
         #----------------------------------
         #Get completenesses and see which to use
-        random_completeness = self.return_completenesses(ra_R, dec_R)
+        random_completeness = self.return_completenesses(ra_R, dec_R, mag_list, rad_list)
         compare_to = rand.random(size=len(ra_R))
         use = compare_to < random_completeness
         #Mask down to the ones that survived
@@ -1066,7 +1053,7 @@ class ImageMask:
     #------------------------------------------#
     #- Queries completeness for given catalog -#
     #------------------------------------------#
-    def return_completenesses(self, ra_list, dec_list):
+    def return_completenesses(self, ra_list, dec_list, mag_list=None, rad_list=None):
         """
         Takes a list of RAs and Decs and returns the completenesses for
         each point.  This version only supports completeness with no
@@ -1131,8 +1118,7 @@ class ImageMask:
             # use completeness functions if they exist
             # this doesn't work with all options yet
             if self._completeness_dict is not None:
-                # randomize mags, have radii be a function of mag
-                # will be changed
+                # iterate over levels
                 for level in self._levels:
                     level_string = str(int(level))
                     if level_string in self._completeness_dict.keys():
@@ -1140,8 +1126,15 @@ class ImageMask:
                         at_level = np.where(on_mask_bits == int(level))
                         num_to_generate = len(temp_complete[at_level])
                         if num_to_generate > 0:
-                            mags, rads = cf.generate_mags_and_radii(num_to_generate)
-                            temp_complete[at_level] = cf.query(mags, rads)
+                            if mag_list is not None:
+                                mags_in_ranges = mag_list[in_ranges]
+                                mags = mags_in_ranges[at_level]
+                                if rad_list is not None:
+                                    rads_in_ranges = rad_list[in_ranges]
+                                    rads = rads_in_ranges[at_level]
+                            else:
+                                mags, rads = cf.generate_mags_and_radii(num_to_generate)
+                            temp_complete[at_level] = cf.query(mags, r_list=rads)
             else:
                 temp_complete[on_image] = on_mask_bits
             
