@@ -226,7 +226,7 @@ class CompletenessFunction:
     #-------------------------------------------#
     def generate_mags_and_radii(self, size):
         '''Generate magnitudes and radii
-        NEEDS MORE OPTIONS
+        WILL GO BYE BYE
         '''
         mags = np.random.uniform(self._min_mag, self._max_mag, size=size)
         lumratio = 10**((mags-24.)/-2.5)
