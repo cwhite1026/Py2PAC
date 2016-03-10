@@ -1,5 +1,7 @@
 #External code
 import numpy as np
+from astropy.cosmology import default_cosmology
+from schechter_functions import get_schechter_mags, get_radii
 
 #===============================================================================
 #===============================================================================
@@ -51,7 +53,7 @@ class GalaxyParameters:
     #- Make a magnitude-only completeness function -#
     #-----------------------------------------------#
     @classmethod
-    def schechter_function(cls, size):
+    def get_mags_and_radii(cls, size, radii=True, min_mag = 20, max_mag = 28, z = 1.7):
         """Class method to generate a completeness function dependent only
         on magnitude.
 
@@ -82,14 +84,10 @@ class GalaxyParameters:
         -----
         Assumes equal bin widths.
         """
+        df = default_cosmology.get_cosmology_from_string('Planck13')
+        distmod = df.distmod(z).value
+        mags = get_schechter_mags(size, distmod, min_mag, max_mag)
+        radii = get_radii(mags)
+        return cls(mags + distmod, radii)
 
-    #----------------------------------------------------------------------
-    #-----------------------------------------------#
-    #- Make a magnitude-only completeness function -#
-    #-----------------------------------------------#
-    def schechter(m, phi_star=0.00681, m_star=-19.61, alpha=-1.33):
-        fudge_factor = np.log(10)*0.4 * phi_star
-        base_exp = 10**(0.4*(m_star - m))
-        function = fudge_factor * (base_exp**(1 + alpha)) * np.exp(-base_exp)
-        return function
 
