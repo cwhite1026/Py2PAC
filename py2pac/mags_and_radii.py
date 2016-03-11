@@ -6,37 +6,7 @@ from astropy.cosmology import default_cosmology
 #===============================================================================
 #===============================================================================
 
-def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 0.3):
-    """Class method to generate a completeness function dependent only
-    on magnitude.
-
-    **Syntax**
-
-    completeness_function = CompletenessFunction.from_1D_array(completeness_array, mag_range)
-
-    Parameters
-    ----------
-
-    completeness_array : 1D array-like
-        A 1D array describing completeness over a set of magnitudes
-
-    mag_range : 1D array-like
-        A 1D array containing the magnitude range over which
-        completeness is known. Can either be of length 2, containing
-        the minimum and maximum magnitude, or one greater than the
-        length of the completeness array, containing completeness
-        histogram bin edges.
-
-    Returns
-    -------
-    completeness_function_1D : CompletenessFunction instance
-        An object that describes completeness over the specified
-        magnitude range.
-
-    Notes
-    -----
-    Assumes equal bin widths.
-    """
+def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 1.7):
     df = default_cosmology.get_cosmology_from_string('Planck13')
     distmod = df.distmod(z).value
     mags = get_schechter_mags(size, distmod, min_mag, max_mag)
