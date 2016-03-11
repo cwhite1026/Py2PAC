@@ -14,6 +14,7 @@ import miscellaneous as misc
 import image_mask_cybits as cybits
 import correlations as corr
 from CompletenessFunction_class import CompletenessFunction
+from mags_and_radii import get_mags_and_radii
 
 
 #===============================================================================
@@ -421,7 +422,7 @@ class ImageMask:
     #--------------------------------#
     #- Generate randoms on the mask -#
     #--------------------------------#
-    def generate_random_sample(self, number_to_make):
+    def generate_random_sample(self, number_to_make, complicated_completeness = False):
         """
         Generate a given number of random points within the mask.
 
@@ -455,7 +456,12 @@ class ImageMask:
         #- Mask and add more if undershot
         #----------------------------------
         #Get completenesses and see which to use
-        random_completeness = self.return_completenesses(ra_R, dec_R)
+        if complicated_completeness:
+            mags, radii = get_mags_and_radii(number_to_make, z=0.3)
+        else:
+            mags = None
+            radii = None
+        random_completeness = self.return_completenesses(ra_R, dec_R, mags, radii, complicated_completeness)
         compare_to = rand.random(size=len(ra_R))
         use = compare_to < random_completeness
         #Mask down to the ones that survived
@@ -475,7 +481,10 @@ class ImageMask:
         number_left_to_make = number_to_make - number_we_have
         
         #If we've actually made too few, make more    
-        if number_left_to_make > 0:
+        # if number_we_have == 0:
+        #     print 'Well heck.'
+        # else:
+        if number_left_to_make > 0 and number_we_have != 0:
             print ("ImageMask.generate_random_sample says: I have "
                    "made too few objects within the target area. Making "
                    "more.")
@@ -490,9 +499,9 @@ class ImageMask:
             # new_multiplier = 1. / fraction_used_last_time
             # ask_for = np.ceil(number_left_to_make * new_multiplier)
             ask_for = number_left_to_make
-            newguys = self.generate_random_sample(ask_for)
+            newguys = self.generate_random_sample(ask_for, complicated_completeness)
             #Unpack
-            more_ras, more_decs, more_comps = newguys
+            more_ras, more_decs, more_comps, more_mag, more_rad = newguys
             
             #Add these galaxies to the existing arrays
             ra_R = np.concatenate((ra_R, more_ras))
@@ -518,10 +527,9 @@ class ImageMask:
             print ("ImageMask.generate_random_sample says: "
                   "I made exactly the right number!  It's like winning "
                   "the lottery but not actually fun...")
-            
                 
         #Return things!
-        return ra_R, dec_R, random_completeness
+        return ra_R, dec_R, random_completeness, mags, radii
         
 
 #==========================================================================
@@ -1053,7 +1061,7 @@ class ImageMask:
     #------------------------------------------#
     #- Queries completeness for given catalog -#
     #------------------------------------------#
-    def return_completenesses(self, ra_list, dec_list, mag_list=None, rad_list=None):
+    def return_completenesses(self, ra_list, dec_list, mag_list=None, rad_list=None, complicated_completeness=False):
         """
         Takes a list of RAs and Decs and returns the completenesses for
         each point.  This version only supports completeness with no
@@ -1117,7 +1125,7 @@ class ImageMask:
             on_mask_bits = self._mask[xinds[on_image],yinds[on_image]]
             # use completeness functions if they exist
             # this doesn't work with all options yet
-            if self._completeness_dict is not None:
+            if complicated_completeness:
                 # iterate over levels
                 for level in self._levels:
                     level_string = str(int(level))
@@ -1134,9 +1142,7 @@ class ImageMask:
                                 if rad_list is not None:
                                     rads_in_ranges = rad_list[in_ranges]
                                     rads = rads_in_ranges[at_level]
-                            else:
-                                mags, rads = cf.generate_mags_and_radii(num_to_generate)
-                            temp_complete[at_level] = cf.query(mags, r_list=rads)
+                                temp_complete[at_level] = cf.query(mags, r_list=rads)
             else:
                 temp_complete[on_image] = on_mask_bits
             

@@ -220,22 +220,6 @@ class CompletenessFunction:
             r_range=r_range, **kwargs)
         return completeness_function_npz
 
-    #----------------------------------------------------------------------        
-    #-------------------------------------------#
-    #- Randomly generates magnitudes and radii -#
-    #-------------------------------------------#
-    def generate_mags_and_radii(self, size):
-        '''Generate magnitudes and radii
-        WILL GO BYE BYE
-        '''
-        mags = np.random.uniform(self._min_mag, self._max_mag, size=size)
-        lumratio = 10**((mags-24.)/-2.5)
-        mu = np.log10(0.3/0.05)+0.3333*np.log10(lumratio)
-        radii = np.random.normal(loc=mu,scale=0.1)
-        if size == 1:
-            radii = np.array([radii])
-        return mags, radii
-
     #----------------------------------------------------------------------
     #--------------------------------------------#
     #- Find completenesses for mag/radius lists -#
