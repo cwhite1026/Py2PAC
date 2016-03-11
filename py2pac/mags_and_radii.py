@@ -6,7 +6,7 @@ from astropy.cosmology import default_cosmology
 #===============================================================================
 #===============================================================================
 
-def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 1.7):
+def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 0.3):
     """Class method to generate a completeness function dependent only
     on magnitude.
 

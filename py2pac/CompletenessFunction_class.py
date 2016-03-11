@@ -280,7 +280,7 @@ class CompletenessFunction:
                                  "the specified range.")
             r_condition = [np.where((r >= self._r_range) &
                 (r < self._r_range + self._r_bin_size)) for r in r_list]
-            r_condition = np.asarray(r_condition1)
+            r_condition = np.asarray(r_condition)
             r_condition[r_condition == len(self._r_range)] = np.array([len(self._r_range) - 1])
             # select completeness values corresponding to correct bins
             r_condition = r_condition.ravel()
