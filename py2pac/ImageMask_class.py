@@ -457,7 +457,7 @@ class ImageMask:
         #----------------------------------
         #Get completenesses and see which to use
         if complicated_completeness:
-            mags, radii = get_mags_and_radii(number_to_make, z=0.3)
+            mags, radii = get_mags_and_radii(number_to_make)
         else:
             mags = None
             radii = None
@@ -481,10 +481,8 @@ class ImageMask:
         number_left_to_make = number_to_make - number_we_have
         
         #If we've actually made too few, make more    
-        # if number_we_have == 0:
-        #     print 'Well heck.'
         # else:
-        if number_left_to_make > 0 and number_we_have != 0:
+        if number_left_to_make > 0:
             print ("ImageMask.generate_random_sample says: I have "
                    "made too few objects within the target area. Making "
                    "more.")

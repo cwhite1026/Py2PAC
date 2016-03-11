@@ -48,7 +48,7 @@ def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
     mean = r0 * exp**beta
     rand = np.random.lognormal(mean, sigma)
     log_rand = np.log10(rand)
-    if not hasattr(log_rand, 'shape'):
+    if type(log_rand).__name__ != 'ndarray':
         log_rand = np.array([log_rand])
     log_rand[log_rand > 2.5] = 2.5
     log_rand[log_rand < -1.] = -1.
