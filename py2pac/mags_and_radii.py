@@ -28,6 +28,13 @@ def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 1.7):
 
     z : scalar, optional
         Redshift of fake galaxies
+
+    Returns
+    ----------
+        mags : array
+            Array of apparent magnitudes for randoms
+        radii : array
+            Array of log of radii in pixels for randoms
     """
     df = default_cosmology.get_cosmology_from_string('Planck13')
     distmod = df.distmod(z).value
@@ -56,6 +63,11 @@ def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
 
     sigma : scalar, optional
         Default is 0.7
+
+    Returns
+    ----------
+        log_rand : array
+            Array of log of radii in pixels
     """
     exp = 10**(0.4*(m0 - m))
     mean = r0 * exp**beta
@@ -86,7 +98,11 @@ def schechter(m, phi_star=0.00681, m_star=-19.61, alpha=-1.33):
 
     alpha : scalar, optional
         Faint-end slope of Schechter function
-        Default is -1.33
+
+    Returns
+    ----------
+        n : float or array
+            Number density of galaxies by magnitude
     """
     fudge_factor = np.log(10)*0.4 * phi_star
     base_exp = 10**(0.4*(m_star - m))
@@ -110,6 +126,12 @@ def get_schechter_mags(size, distmod, min_mag, max_mag):
 
     max_mag : scalar
         Numerically highest (dimmest) allowable magnitude
+
+    Returns
+    ----------
+        mags : array
+            Array of absolute magnitudes for randoms
+            sampled according to Schechter function
     """
     nmax = schechter(max_mag - distmod)
     mags = []
