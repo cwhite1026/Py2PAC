@@ -1,6 +1,7 @@
 #External code
 import numpy as np
 from astropy.cosmology import default_cosmology
+from scipy import stats
 
 #===============================================================================
 #===============================================================================
@@ -37,10 +38,18 @@ def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 1.7):
             Array of log of radii in pixels for randoms
     """
     df = default_cosmology.get_cosmology_from_string('Planck13')
+    shape, loc, scale = 0.519904595968, -0.398557693623, 1.74601245963
+    z_array = stats.lognorm.rvs(shape, loc, scale, size=size)
+    z_array[z_array < 0.3] = z
+    z_array[z_array > z] = z
+    dmod_array = df.distmod(z_array).value
     distmod = df.distmod(z).value
     mags = get_schechter_mags(size, distmod, min_mag, max_mag)
     radii = get_radii(mags)
-    return mags + distmod, radii
+    apparent_mags = mags + dmod_array
+    apparent_mags[apparent_mags < min_mag] = min_mag
+    apparent_mags[apparent_mags > max_mag] = max_mag
+    return apparent_mags, radii
 
 def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
     """
