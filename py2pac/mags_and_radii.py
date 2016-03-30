@@ -6,8 +6,20 @@ from scipy import stats
 #===============================================================================
 #===============================================================================
 #===============================================================================
+lookup_table = np.array([[1.25,8.5,26.34667761,0.67892732],
+                        [1.25,9.5,24.07570187,0.50435506],
+                        [1.25,11.,22.33910589,0.56583984],
+                        [2.,8.5,27.00955795,0.67639655],
+                        [2.,9.5,24.98014983,0.53994574],
+                        [2.,11.,23.7487221,1.05912046],
+                        [3.5,8.5,27.99870314,0.76291203],
+                        [3.5,9.5,26.46102337,1.00514572],
+                        [3.5,11.,25.79922306,1.83962567],
+                        [5.25,8.5,28.39936568,0.55549091],
+                        [5.25,9.5,27.48977546,1.13281005],
+                        [5.25,11.,27.38154824,1.75470488]])
 
-def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 1.7):
+def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
     """
     This is a function that generates fake magnitudes and optionally radii for
     randoms.
@@ -38,18 +50,24 @@ def get_mags_and_radii(size, radii=True, min_mag = 20, max_mag = 28, z = 1.7):
             Array of log of radii in pixels for randoms
     """
     df = default_cosmology.get_cosmology_from_string('Planck13')
-    shape, loc, scale = 0.519904595968, -0.398557693623, 1.74601245963
-    z_array = stats.lognorm.rvs(shape, loc, scale, size=size)
-    z_array[z_array < 0.3] = z
-    z_array[z_array > z] = z
-    dmod_array = df.distmod(z_array).value
-    distmod = df.distmod(z).value
-    mags = get_schechter_mags(size, distmod, min_mag, max_mag)
-    radii = get_radii(mags)
-    apparent_mags = mags + dmod_array
-    apparent_mags[apparent_mags < min_mag] = min_mag
-    apparent_mags[apparent_mags > max_mag] = max_mag
-    return apparent_mags, radii
+    #loc, scale = -0.398557693623, 1.74601245963
+    # z_array = np.random.normal(shape, loc, scale, size=size)
+    # z_array[z_array < 0.4] = z
+    # z_array[z_array > z] = z
+    # dmod_array = df.distmod(z_array).value
+    dmod = df.distmod(z).value
+    mags = get_gaussian_mags(size, z, mstar)
+    absolute_mags = mags - dmod
+    radii = get_radii(absolute_mags)
+    mags[mags < min_mag] = min_mag
+    mags[mags > max_mag] = max_mag
+    return mags, radii
+
+def get_gaussian_mags(size, z, mstar, lookup_table = lookup_table):
+    row = lookup_table[(lookup_table[:,0] == z) & (lookup_table[:,1] == mstar)][0]
+    loc, scale = row[2], row[3]
+    mags = np.random.normal(loc=loc,scale=scale,size=size)
+    return mags
 
 def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
     """

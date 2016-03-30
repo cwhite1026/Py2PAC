@@ -458,10 +458,12 @@ class ImageMask:
         #Get completenesses and see which to use
         if complicated_completeness:
             mags, radii = get_mags_and_radii(number_to_make)
+            #galtype = np.random.randint(2, size=number_to_make)
         else:
             mags = None
             radii = None
-        random_completeness = self.return_completenesses(ra_R, dec_R, mags, radii, complicated_completeness)
+        random_completeness = self.return_completenesses(ra_R, dec_R, mags,
+            radii, complicated_completeness)
         compare_to = rand.random(size=len(ra_R))
         use = compare_to < random_completeness
         #Mask down to the ones that survived
@@ -486,16 +488,6 @@ class ImageMask:
             print ("ImageMask.generate_random_sample says: I have "
                    "made too few objects within the target area. Making "
                    "more.")
-            #Figure out what fraction of the guys that we made were used
-            #so if my mask is teeny and in a big field, it won't take
-            #forever to get to where we want to be
-            fraction_used_last_time = float(number_we_have)/number_to_make
-            if fraction_used_last_time < 1.e-2:
-                fraction_used_last_time = 1e-2
-                
-            #Ask for exactly how many more we need.
-            # new_multiplier = 1. / fraction_used_last_time
-            # ask_for = np.ceil(number_left_to_make * new_multiplier)
             ask_for = number_left_to_make
             newguys = self.generate_random_sample(ask_for, complicated_completeness)
             #Unpack
