@@ -5,7 +5,7 @@
 import numpy as np
 import numpy.ma as ma
 from sklearn.neighbors import BallTree
-from astroML.utils import check_random_state
+from sklearn.utils import check_random_state
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
@@ -294,7 +294,6 @@ def two_point(data, bins, BT_D=None, BT_R=None, method='standard',
             counts_DR[i] = np.sum(BT_R.query_radius(data, bins[i],
                                                     count_only=True))
         DR = np.diff(counts_DR)
-
         corr = (factor ** 2 * DD - 2 * factor * DR + RR) / RR
 
     corr[RR_zero] = np.nan

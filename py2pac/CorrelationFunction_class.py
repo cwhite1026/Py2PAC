@@ -1,10 +1,12 @@
 #External code
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 #Py2PAC code
 import ThetaBins_class as binclass
 import Gp_class as gpclass
+import miscellaneous as misc
 
 class CorrelationFunction(object):
     """
@@ -623,3 +625,88 @@ class CorrelationFunction(object):
         """
 
         self._Gp = gpclass.Gp.from_file(filename)
+
+    #======================================================================
+    
+    #------------#
+    #- Plotting -#
+    #------------#
+    
+    def plot(self, ax=None, theta_unit="arcsec", save_to=None, 
+        log_yscale=True, **kwargs):
+        """
+        Plots the correlation function.  This can either be called as a 
+        stand-alone routine that will make the plot and either show it or 
+        save it or it can be called with an axis as a keyword argument to
+        add the correlation function to an existing plot.
+        
+        Parameters
+        ----------
+        ax : instance of matplotlib.axis.Axis (optional)
+            If ax is specified, the correlation function will be added to
+            that axis.  If `ax==None`, the correlation function will be 
+            plotted on a new axis and either shown or saved at the end of
+            this routine.  Default is `ax=None`.
+            
+        theta_unit : string (optional)
+            A string specifying the appropriate output unit for the x axis.
+            Default is "arcsec".
+            
+        log_yscale : bool (optional)
+            If True, the y axis will be log-scaled.  If False, the y axis 
+            will be linearly scaled.  Default is True.
+        
+        save_to : string (optional)
+            If save_to is specified, the plot will be saved to `save_to` at 
+            the end of the routine.  If not saving to the current directory,
+            `save_to` should be the path from /.  Note that if `ax` and
+            `save_to` are both specified, the whole plot will be saved.
+            
+        **kwargs : (optional)
+            keyword arguments to matplotlib.axes.Axes.errorbar 
+        """
+        
+        #Figure out what we're doing with x axis units
+        if theta_unit in misc.arcsec_opts:
+            lbl="theta (arcsec)"
+        elif theta_unit in misc.degree_opts:
+            lbl = "theta (degrees)"
+        elif theta_unit in misc.radian_opts:
+            lbl = "theta (radians)"
+        else:
+            raise ValueError("Your options for theta_unit are arcseconds "
+                "('arcseconds', 'arcsecond', 'arcsec', 'a'), degrees "
+                "('degrees', 'degree', 'deg', 'd'), or radians ('radians',"
+                " 'radian', 'rad', 'r')")
+        
+        #Make an axis if we don't have one
+        if not ax:
+            fig = plt.figure()
+            fig.set_size_inches(4,4)
+            ax=fig.add_subplot(111)
+            ax.set_xscale('log')
+            if log_yscale:
+                ax.set_yscale('log')
+            ax.set_xlabel(lbl, fontsize=10)
+            ax.set_ylabel("w(theta)", fontsize=10)
+            ax.tick_params(labelsize=9)
+        
+        #Plot the thing- if all the errors are zero and we haveno external 
+        #instructions, hide the error bars
+        if (self._error == 0).all():
+            if 'capthick' not in kwargs.keys():
+                kwargs['capthick'] = 0
+            if 'elinewidth' not in kwargs.keys():
+                kwargs['elinewidth'] = 0
+                
+        thetas, __ = self.get_thetas(unit=theta_unit)
+        cf, errs = self.get_cf()
+        ax.errorbar(thetas, cf, yerr = errs, **kwargs)
+        
+        #If we have a save_to, save the figure
+        if save_to:
+            plt.savefig(save_to, bbox_inches="tight")
+            plt.close()
+        return
+
+
