@@ -97,7 +97,7 @@ class AngularCatalog(object):
 
         #Store some defaults/holders
         self._theta_bins=None
-        self._cfs={}
+        self.cfs={}
 
         #Make blank things so I can ask "is None" rather than "exists"
         self._weight_file_name = None
@@ -350,8 +350,8 @@ class AngularCatalog(object):
     #--------------------#
     #- Generate randoms -#
     #--------------------#
-    def generate_random_sample(self, number_to_make=None, multiple_of_data=None,
-                               density_on_sky=None):
+    def generate_random_sample(self, number_to_make=None, 
+                            multiple_of_data=None, density_on_sky=None):
         """
         This routine calls the image mask's masked random generation to
         create a random sample to compare the data to.  The number of
@@ -415,9 +415,9 @@ class AngularCatalog(object):
         
     #----------------------------------------------------------------------
 
-    #--------------------#
-    #- Generate randoms -#
-    #--------------------#
+    #-----------------------#
+    #- Re-generate randoms -#
+    #-----------------------#
     def rerun_generate_randoms(self):
         """
         Takes the stored parameters from the last time that we ran
@@ -442,6 +442,15 @@ class AngularCatalog(object):
             raise ValueError("rerun_randoms says: Not sure how you managed"
                              " this, but you have an invalid random_number"
                              "_type.")
+        
+    def subdivide_mask(self, **kwargs):
+        """
+        Calls the image mask's subdivide_mask routine- see the 
+        ImageMask_class documentation for all the options.
+        """
+        self._image_mask.subdivide_mask(**kwargs)
+        self._subregion_number = self._image_mask.return_subregions(
+                                                    self._ra, self._dec)
         
 #==========================================================================
 #==========================================================================     
@@ -515,7 +524,7 @@ class AngularCatalog(object):
         catalog to reduce noise in the CF with less additional computation
         time than increasing the number of randoms in the random catalog.
 
-        The correlation function information is stored in self._cfs[name],
+        The correlation function information is stored in self.cfs[name],
         with the default name 'cf'.
 
         Parameters
@@ -542,18 +551,18 @@ class AngularCatalog(object):
             name will result in a ValueError.  Default is False.
 
         save_file_base : string (optional)
-            Base of the file name to save the correlation function to as it is
-            computed.  The final result will also be saved.  NOTE:  
+            Base of the file name to save the correlation function to as it 
+            is computed.  The final result will also be saved.  NOTE:  
             `save_file_base` is not the full file name!  The saving routine 
             saves files as `file_base + name + '.npz'`, so if name="cf" and
             `save_file_base = "/path/to/file/"`, then the saved file will be
             /path/to/file/cf.npz.  Default is None, so no file is saved.
         """
 
-        if (name in self._cfs.keys()) and not clobber:
+        if (name in self.cfs.keys()) and not clobber:
             raise ValueError("AngularCatalog.cf says: There's already"
-                             " a CF by that name.  Please choose another or "
-                             "overwrite by calling with clobber=True")
+                             " a CF by that name.  Please choose another or"
+                             " overwrite by calling with clobber=True")
 
         #Make sure that we have everything we need and fix anything missing
         #that's fixable
@@ -567,8 +576,8 @@ class AngularCatalog(object):
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
              'estimator'        : estimator
              }
-        self._cfs[name] = cfclass.CorrelationFunction(**info)
-        centers, edges = self._cfs[name].get_thetas(unit='degrees')
+        self.cfs[name] = cfclass.CorrelationFunction(**info)
+        centers, edges = self.cfs[name].get_thetas(unit='degrees')
         nbins=len(centers)
 
         #Do the calculation
@@ -594,9 +603,9 @@ class AngularCatalog(object):
             DD += this_dd/2.
             if save_file_base is not None:
                 #Set the CF and DD to the averages so far and save.
-                self._cfs[name].set_cf(cf/(it+1), np.zeros(nbins),
+                self.cfs[name].set_cf(cf/(it+1), np.zeros(nbins),
                                        iterations=iterations)
-                self._cfs[name].set_counts(DD=DD/(it+1))
+                self.cfs[name].set_counts(DD=DD/(it+1))
                 self.save_cf(save_file_base, cf_keys=[name])
             if n_iter >1:
                 #Make a new set of randoms
@@ -608,15 +617,15 @@ class AngularCatalog(object):
         
         #Make sure we've stored everything properly even if we're not
         #saving
-        self._cfs[name].set_cf(cf, np.zeros(nbins), iterations=iterations)
-        self._cfs[name].set_counts(DD)
+        self.cfs[name].set_cf(cf, np.zeros(nbins), iterations=iterations)
+        self.cfs[name].set_counts(DD)
 
     #----------------------------------------------------------------------
 
     #----------------------------------------------------#
     #- Find the CF and error by single-galaxy bootstrap -#
     #----------------------------------------------------#
-    def cf_bootstrap(self, n_boots=10, oversample=1, clobber=False,
+    def cf_bootstrap(self, n_boots=10, clobber=False, 
                      estimator='landy-szalay', save_file_base=None,
                      name='galaxy_bootstrap'):
         """
@@ -630,23 +639,11 @@ class AngularCatalog(object):
         bootstrapping may be a bad idea, but I haven't had any trouble with
         it in my own work.
 
-        It's possible to do this with more than the actual number of data
-        points, so if you have 10 galaxies in your catalog, you can draw
-        12 galaxies from that with replacement.  This option is managed by
-        the oversample option, which would be 1.2 in the example.
-
         Parameters
         ----------
         n_boots : int (optional)
             Number of times the bootstrap resampling and correlation
             function measurement will be done.  Default is 10.
-
-        oversample : float (optional)
-            How many galaxies to draw from the data for each bootstrap as
-            a multiple of the number of data points.  If you have 100
-            galaxies and want each bootstrap to have 110 galaxies drawn,
-            set oversample=1.1.  Default is 1 (so you draw the same number
-            of data points as you have).
 
         estimator : string (optional)
             Which correlation function estimator to use.  The default is
@@ -665,15 +662,15 @@ class AngularCatalog(object):
             name will result in a ValueError.  Default is False.
 
         save_file_base : string (optional)
-            Base of the file name to save the correlation function to as it is
-            computed.  The final result will also be saved.  NOTE:  
+            Base of the file name to save the correlation function to as it 
+            is computed.  The final result will also be saved.  NOTE:  
             `save_file_base` is not the full file name!  The saving routine 
             saves files as `file_base + name + '.npz'`, so if name="cf" and
             `save_file_base = "/path/to/file/"`, then the saved file will be
             /path/to/file/cf.npz.  Default is None, so no file is saved.
         """
 
-        if (name in self._cfs.keys()) and not clobber:
+        if (name in self.cfs.keys()) and not clobber:
             raise ValueError("AngularCatalog.cf_bootstrap says: "
                              "There's already a CF by that name.  Please "
                              "choose another or overwrite by calling with "
@@ -690,8 +687,8 @@ class AngularCatalog(object):
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
              'estimator'        : estimator
              }
-        self._cfs[name] = cfclass.CorrelationFunction(**info)
-        centers, edges = self._cfs[name].get_thetas(unit='degrees')
+        self.cfs[name] = cfclass.CorrelationFunction(**info)
+        centers, edges = self.cfs[name].get_thetas(unit='degrees')
         nbins=len(centers)
 
         #Make an array so it's easy to average over the boots
@@ -714,8 +711,7 @@ class AngularCatalog(object):
             print "calculating boot", i
             
             #Choose the right number of galaxies *with replacement*
-            ind=np.random.randint(0, self._n_objects,
-                                  oversample*self._n_objects)
+            ind=np.random.randint(0, self._n_objects, self._n_objects)
             ra_b=self._ra[self._use][ind]
             dec_b=self._dec[self._use][ind]
             
@@ -733,15 +729,17 @@ class AngularCatalog(object):
             temp[i]=bootstrap_boots[i]
             if (save_file_base is not None):
                 bootstrap_cf=np.nanmean(temp[0:i+1], axis=0)
-                bootstrap_cf_err=np.nanstd(temp[0:i+1], axis=0)
+                #The denominator should have an Nboots-1 in it, hence
+                # the ddof=1.  See Norberg et al 2009, section 2.4
+                bootstrap_cf_err=np.nanstd(temp[0:i+1], axis=0, ddof=1)
                 self.save_cf(save_file_base, cf_keys=[name])
                 
         #Now we're done- do the final storage.
         bootstrap_cf=np.nanmean(temp, axis=0)
-        bootstrap_cf_err=np.nanstd(temp, axis=0)
-        self._cfs[name].set_cf(bootstrap_cf, bootstrap_cf_err,
+        bootstrap_cf_err=np.nanstd(temp, axis=0, ddof=1)
+        self.cfs[name].set_cf(bootstrap_cf, bootstrap_cf_err,
                                iterations=bootstrap_boots)
-        self._cfs[name].set_counts(RR=rr)
+        self.cfs[name].set_counts(RR=rr)
         self.save_cf(save_file_base, cf_keys=[name])
         
     #----------------------------------------------------------------------
@@ -793,15 +791,15 @@ class AngularCatalog(object):
             name will result in a ValueError.  Default is False.
 
         save_file_base : string (optional)
-            Base of the file name to save the correlation function to as it is
-            computed.  The final result will also be saved.  NOTE:  
+            Base of the file name to save the correlation function to as it 
+            is computed.  The final result will also be saved.  NOTE:  
             `save_file_base` is not the full file name!  The saving routine 
             saves files as `file_base + name + '.npz'`, so if name="cf" and
             `save_file_base = "/path/to/file/"`, then the saved file will be
             /path/to/file/cf.npz.  Default is None, so no file is saved.
         """
 
-        if (name in self._cfs.keys()) and not clobber:
+        if (name in self.cfs.keys()) and not clobber:
             raise ValueError("AngularCatalog.cf_jackknife says: "
                              "There's already a CF by that name.  Please "
                              "choose another or overwrite by calling with "
@@ -818,8 +816,9 @@ class AngularCatalog(object):
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
              'estimator'        : estimator
              }
-        self._cfs[name] = cfclass.CorrelationFunction(**info)
-        centers, edges = self._cfs[name].get_thetas(unit='degrees')
+        self.cfs[name] = cfclass.CorrelationFunction(**info)
+        centers, edges = self.cfs[name].get_thetas(unit='degrees')
+        nbins=len(centers)
         
         #pull out the unique subregion numbers and figure out which to use
         regions=np.asarray(list(set(self._subregion_number)))
@@ -829,17 +828,20 @@ class AngularCatalog(object):
         n_jacks=len(use_regions)
 
         #Figure out which subregions the randoms are in
-        random_subregions=self._image_mask.return_subregions(self._ra_random,
-                                                             self._dec_random)
+        random_subregions=self._image_mask.return_subregions(
+                                    self._ra_random, self._dec_random)
 
         #Make masks that exclude the galaxies outside the mask
         #(subregion == -1) or are in ignored regions
-        valid_subregion = ma.masked_not_equal(self._subregion_number, -1).mask
-        random_valid_subregion=ma.masked_not_equal(random_subregions, -1).mask
+        valid_subregion = ma.masked_not_equal(self._subregion_number, 
+                                                            -1).mask
+        random_valid_subregion=ma.masked_not_equal(random_subregions, 
+                                                                -1).mask
         for bad_reg in ignore_regions:
             #Change the masks so that it masks out the guys in this ignored
             #region too
-            this_mask = ma.masked_not_equal(self._subregion_number, bad_reg).mask
+            this_mask = ma.masked_not_equal(self._subregion_number, 
+                                                            bad_reg).mask
             valid_subregion = valid_subregion & this_mask
             this_mask = ma.masked_not_equal(random_subregions, bad_reg).mask
             random_valid_subregion = random_valid_subregion & this_mask        
@@ -847,15 +849,18 @@ class AngularCatalog(object):
         #Now loop through the regions that you should be using 
         #and calculate the correlation function leaving out each
         jackknife_jacks = {}
-        temp = np.zeros((n_jacks, len(self._cf_thetas)))
+        temp = np.zeros((n_jacks, nbins))
         for i, r in enumerate(use_regions):
             #Make the mask for the data
-            not_region_r = ma.masked_not_equal(self._subregion_number, r).mask  
+            not_region_r = ma.masked_not_equal(self._subregion_number, 
+                                                            r).mask  
             this_jackknife = valid_subregion & not_region_r & self._use  
             
             #Make the mask for the randoms
-            random_not_region_r = ma.masked_not_equal(random_subregions, r).mask
-            random_this_jackknife = random_not_region_r & random_valid_subregion
+            random_not_region_r = ma.masked_not_equal(random_subregions, 
+                                                            r).mask
+            random_this_jackknife = (random_not_region_r & 
+                                            random_valid_subregion)
 
             #Do the calculation for this jackknife and store it
             print "calculating jackknife", i
@@ -871,11 +876,15 @@ class AngularCatalog(object):
             
             #Do the saving if we have a file to save to
             jackknife_cf=np.nanmean(temp[0:i+1], axis=0)
-            jackknife_cf_err=np.nanstd(temp[0:i+1], axis=0)
-            self._cfs[name].set_cf(jackknife_cf, jackknife_cf_err,
-                                   iterations=bootstrap_boots)
+            #The factor of np.sqrt(n_jacks - 1.) is to take into account
+            #the fact that the different samples aren't all independent.
+            #Taken from Norberg et al 2009, section 2.3
+            jackknife_cf_err=(np.sqrt(n_jacks - 1.) * 
+                                    np.nanstd(temp[0:i+1], axis=0))
+            self.cfs[name].set_cf(jackknife_cf, jackknife_cf_err,
+                                   iterations=jackknife_jacks)
             if (save_file_base is not None):
-                    self.save_cfs(save_file_base, cf_keys=[name])
+                    self.save_cf(save_file_base, cf_keys=[name])
 
     #----------------------------------------------------------------------
 
@@ -883,24 +892,21 @@ class AngularCatalog(object):
     #- Find the CF and error by block bootstrap -#
     #--------------------------------------------#
     def cf_block_bootstrap(self, n_boots=10, estimator='landy-szalay', 
-                           oversample=1, save_file_base=None,
-                           name='block_bootstrap', clobber=False,
-                           ignore_regions=[]):
+                           save_file_base=None, name='block_bootstrap', 
+                           clobber=False, ignore_regions=[]):
         """
-        Compute the correlation function with 
+        Compute the correlation function with errors from block
+        bootstrapping.  Block bootstrapping is similar to single-galaxy
+        bootstrapping, but instead of selecting from the set of galaxies,
+        it selects from spatial blocks on the image.  This routine 
+        requires that the mask be subdivided into blocks.
+        
 
         Parameters
         ----------
         n_boots : int (optional)
             Number of iterations of the bootstrapping process to do.
             Default is 10.
-            
-        oversample : float (optional)
-            How many blocks to draw from the list with replacement.  If
-            you have 10 blocks not in ignore_regions and want to draw 11,
-            you would set oversample = 1.2.  Default is 1.  If you set an
-            oversample that gives a fractional number of blocks, it will
-            draw np.floor(oversample * n_blocks).
             
         ignore_regions : 1D array-like (optional)
             Which subregions to leave out when calculating the block
@@ -934,7 +940,7 @@ class AngularCatalog(object):
         """
 
         #Make sure we have a legit name
-        if (name in self._cfs.keys()) and not clobber:
+        if (name in self.cfs.keys()) and not clobber:
             raise ValueError("AngularCatalog.cf_block_bootstrap says: "
                              "There's already a CF by that name.  Please "
                              "choose another or overwrite by calling with "
@@ -951,8 +957,8 @@ class AngularCatalog(object):
              'theta_bin_object' : copy.deepcopy(self._theta_bins),
              'estimator'        : estimator
              }
-        self._cfs[name] = cfclass.CorrelationFunction(**info)
-        centers, edges = self._cfs[name].get_thetas(unit='degrees')
+        self.cfs[name] = cfclass.CorrelationFunction(**info)
+        centers, edges = self.cfs[name].get_thetas(unit='degrees')
         nbins = len(centers)
 
         #Figure out which subregions we should be using
@@ -975,7 +981,7 @@ class AngularCatalog(object):
 
         #Loop through the bootstraps
         block_bootstrap_boots = {}
-        n_choose = np.floor(len(use_regions)*oversample)
+        n_choose = len(use_regions)
         temp = np.zeros((n_boots, nbins))
         print "block boots looping through boots"
         for i in np.arange(n_boots):
@@ -988,8 +994,8 @@ class AngularCatalog(object):
             for region in this_boot:
                 this_boot_indices=np.concatenate((this_boot_indices,
                                                   indices[region]))
-                this_boot_random_indices=np.concatenate((this_boot_random_indices,
-                                                         random_indices[region]))
+                this_boot_random_indices=np.concatenate(
+                        (this_boot_random_indices, random_indices[region]))
 
             print "calculating boot", i
             #Calculate this boot's CF
@@ -1002,10 +1008,13 @@ class AngularCatalog(object):
                                              dec_R = this_random_dec)
             block_bootstrap_boots[i] = temp[i]
             cf=np.nanmean(temp[0:i+1], axis=0)
-            cf_err=np.nanstd(temp[0:i+1], axis=0)
-            self._cfs[name].set_cf(cf, cf_err, iterations=bootstrap_boots)
+            #The denominator should have an Nboots-1 in it, hence
+            # the ddof=1.  See Norberg et al 2009, section 2.4
+            cf_err=np.nanstd(temp[0:i+1], axis=0, ddof=1)
+            self.cfs[name].set_cf(cf, cf_err, 
+                    iterations=block_bootstrap_boots)
             if (save_file_base is not None):
-                self.save_cfs(save_file_base, cfkeys=[name])
+                self.save_cf(save_file_base, cf_keys=[name])
 
 
 #==========================================================================
@@ -1114,7 +1123,7 @@ class AngularCatalog(object):
 
         <filen>*.npz
 
-        The keys to the AngularCatalog._cf dictionary that the files will
+        The keys to the AngularCatalog.cfs dictionary that the files will
         be read in to are the entire file name.  So, if you have a
         directory that contains /sample/path/this_cf.npz and
         /sample/path/this_other_cf.npz, by default they will be read in
@@ -1201,11 +1210,11 @@ class AngularCatalog(object):
             names[i] = add_prefix + n
 
         #Subset down to just the files and key names that we want to load
-        if not only_keys:
+        if only_keys is None:
             only_keys = names
-        else:
-            files_to_load = [candidate_files[i] for i, n in enumerate(names)
+        files_to_load = [candidate_files[i] for i, n in enumerate(names)
                              if (n in only_keys)]
+        print files_to_load
             
         #If there's a custom name dictionary, use it to make the name
         #substitutions
@@ -1214,9 +1223,11 @@ class AngularCatalog(object):
 
         #Now load the guys that we've been asked for
         for i, key in enumerate(only_keys):
-            load_allowed = (key not in self._cf.keys()) | clobber
+            load_allowed = (key not in self.cfs.keys()) | clobber
             if load_allowed:
-                self._cf[key] = cfclass.from_file(files_to_load[i], name=key)
+                print "Loading: ", files_to_load[i]
+                self.cfs[key] = cfclass.CorrelationFunction.from_file(
+                                            files_to_load[i], name=key)
             else:
                 warnings.warn("You already have a correlation function "
                               "loaded called " + key + ".  This CF will "
@@ -1255,11 +1266,11 @@ class AngularCatalog(object):
 
         #If they didn't say which ones specifically, save all
         if cf_keys is None:
-            cf_keys=self._cfs.keys()
+            cf_keys=self.cfs.keys()
 
         for k in cf_keys:
             filen = file_base + k
-            self._cfs[k].save(filen)
+            self.cfs[k].save(filen)
         
     #----------------------------------------------------------------------
 
@@ -1374,7 +1385,8 @@ class AngularCatalog(object):
 
         #Make a legend
         handles, labels=ax.get_legend_handles_labels()
-        legnd=ax.legend(handles, labels, loc=4, labelspacing=.15, fancybox=True, fontsize=8, handlelength=3)
+        legnd=ax.legend(handles, labels, loc=4, labelspacing=.15, 
+            fancybox=True, fontsize=8, handlelength=3)
         legnd.get_frame().set_alpha(0.)
 
         #Show or save
@@ -1385,8 +1397,214 @@ class AngularCatalog(object):
         else:  
             print "showing"
             plt.show()
+        
+    #----------------------------------------------------------------------
+    def plot_cfs(self, ax=None, save_to=None, return_axis=None, 
+                colors=None, which_cfs=None, labels=None, 
+                make_legend=True, **kwargs):
+        """
+        Plots up the correlation functions (all or a subset) currently 
+        loaded in the catalog.  They can be put on an existing axis or 
+        on a new plot.
+        
+        Parameters
+        ----------
+        ax : instance of a matplotlib axis (optional)
+            If ax is specified, the correlation functions will be added to
+            that axis.  If `ax==None`, the correlation function will be 
+            plotted on a new axis.  Default is `ax=None`.
+            
+        which_cfs : array-like (optional)
+            If you don't want to use all of the correlation functions saved
+            in the catalog, pass the list of keys to the catalog.cfs 
+            dictionary that you want to use.  Default is `which_cfs=None`, 
+            which plots all of the correlation functions.
+            
+        colors : array-like (optional)
+            Colors for the correlation functions.  Default is 
+            `colors=None`, which uses an internal list of colors.
+            
+        labels : array-like (optional)
+            A list of strings that contains the labels for the correlation
+            functions to plot.  This list must be the same length as 
+            `which_cfs`.  If `which_cfs==None`, `labels` must be the same
+            length as the list of keys to `catalog.cfs`.
+            
+        make_legend : bool (optional)
+            If `make_legend==True`, the routine will make a legend before 
+            returning, saving, or showing the plot.  If False it won't.
+            Default is True.
+            
+        save_to : string (optional)
+            If save_to is specified, the plot will be saved to `save_to` at 
+            the end of the routine.  If not saving to the current 
+            directory, `save_to` should be the path from /.  Note that if 
+            `ax` and `save_to` are both specified, the whole plot will be 
+            saved.  If `save_to` and `return_axis` are both true, the
+            plot will be saved and not returned.  If both are False, 
+            plt.show() will be called at the end of the routine.
+            
+        return_axis : bool (optional)
+            If True, this routine will return the axis that has been 
+            plotted to after adding the correlation function. This is true 
+            whether this routine was given the axis or created it.  Default 
+            is False.  If `save_to` and `return_axis` are both true, the
+            plot will be saved and not returned.  If both are False, 
+            plt.show() will be called at the end of the routine.
+            
+        **kwargs : (optional)
+            Keyword arguments to be passed to the CorrelationFunction class
+            plotting routine, `CorrelationFunction.plot`.  You can specify
+            `theta_unit`, which dictates the unit on the x axis, and 
+            `log_yscale`, which sets the scale of the Y axis to logarithmic
+            if it's True and linear if it's False.  The remaining keyword 
+            arguments will be passed to ax.errorbar().
+        
+        Returns
+        -------
+        ax : instance of a matplotlib axis
+            If return_axis is True, the axis plotted on will be returned.
+        """
+        
+        #First, do some bookkeeping
+        if which_cfs is None:
+            which_cfs = self.cfs.keys()
+            
+        if labels is None:
+            labels = which_cfs
+        elif len(labels) != len(which_cfs):
+            raise ValueError("If you specify labels, the array must be"
+                        " the same length as which_cfs.  Which_cfs ="
+                        " "+str(which_cfs))
+        
+        default_colors = ['r', 'Orange', 'Lime', "Blue", "Purple", 
+                        "Magenta", "Cyan", "Green", "Yellow", "DarkCyan", 
+                        "DimGray", "HotPink", "MediumPurple"]
+        if colors is None:
+            colors = default_colors
+        if len(colors) < len(which_cfs):
+            raise ValueError("I don't have enough colors.  If you gave me "
+                    "the colors, you need to add more.  If you used the "
+                    "default colors, then you have more than " + 
+                    str(len(default_colors)) + " correlation functions.  "
+                    "Cathy didn't think you'd need that many, so you'll "
+                    "need to define your own colors.")
+        
+        #Now we can make our plot
+        for i, cf_name in enumerate(which_cfs):
+            ax = self.cfs[cf_name].plot(return_axis=True, ax=ax, 
+                            label=labels[i], color=colors[i], **kwargs)
+        
+        #Make the legend
+        if make_legend:
+            handles, labels=ax.get_legend_handles_labels()
+            legnd=ax.legend(handles, labels, loc=0, labelspacing=.15, 
+                                fancybox=True, fontsize=8)
+            legnd.get_frame().set_alpha(0.)
+        
+        #Do something with the plot
+        if save_to:
+            plt.savefig(save_to, bbox_inches="tight")
+            plt.close()
+        elif return_axis:
+            return ax
+        else:
+            plt.show()
 
+    #----------------------------------------------------------------------
+    def plot_errors(self, which_cfs=None, labels=None, save_to=None, 
+                    colors=None, log_yscale=True, **kwargs):
+        """
+        A plotting routine to compare the size of the error bars on 
+        different correlation functions stored in the catalog.
+        
+        Parameters
+        ----------
+        which_cfs : array-like (optional)
+            If you don't want to use the errors on all of the correlation 
+            functions saved in the catalog, pass the list of keys to the 
+            catalog.cfs  dictionary that you want to use.  Default is 
+            `which_cfs=None`, which plots all of the correlation functions.
+            
+        labels : array-like (optional)
+            A list of strings that contains the labels for the errors
+            to plot.  This list must be the same length as 
+            `which_cfs`.  If `which_cfs==None`, `labels` must be the same
+            length as the list of keys to `catalog.cfs`.
+        
+        colors : array-like (optional)
+            Colors for the correlation functions.  Default is 
+            `colors=None`, which uses an internal list of colors.
+            
+        log_yscale : bool (optional)
+            If True, the y axis will be log-scaled.  If False, the y axis 
+            will be linearly scaled.  Default is True.            
+            
+        save_to : string (optional)
+            If save_to is specified, the plot will be saved to `save_to` at 
+            the end of the routine.  If not saving to the current 
+            directory, `save_to` should be the path from /.  If save_to is 
+            None, the plot will be shown with plt.show().  Default is None.
+        
+        **kwargs : (optional)
+            keyword arguments to matplotlib.axes.Axes.plot
+        """
+        
+        #Bookkeeping
+        if which_cfs is None:
+            which_cfs = self.cfs.keys()
+            
+        if labels is None:
+            labels = which_cfs
+        elif len(labels) != len(which_cfs):
+            raise ValueError("If you specify labels, the array must be"
+                        " the same length as which_cfs.  Which_cfs ="
+                        " "+str(which_cfs))    
 
-
-
-
+        default_colors = ['r', 'Orange', 'Lime', "Blue", "Purple", 
+                        "Magenta", "Cyan", "Green", "Yellow", "DarkCyan", 
+                        "DimGray", "HotPink", "MediumPurple"]
+        if colors is None:
+            colors = default_colors
+        if len(colors) < len(which_cfs):
+            raise ValueError("I don't have enough colors.  If you gave me "
+                    "the colors, you need to add more.  If you used the "
+                    "default colors, then you have more than " + 
+                    str(len(default_colors)) + " correlation functions.  "
+                    "Cathy didn't think you'd need that many, so you'll "
+                    "need to define your own colors.")
+            
+        #Make the figure
+        fig=plt.figure()
+        ax=fig.add_subplot(111)
+        ax.set_xlabel('theta (arcsec)')
+        ax.set_ylabel("error size")
+        ax.set_xscale('log')
+        if log_yscale:
+            ax.set_yscale('log')
+        for i, k in enumerate(which_cfs):
+            thetas, __ = self.cfs[k].get_thetas()
+            cf, err = self.cfs[k].get_cf()
+            if log_yscale:
+                if (err==0).all():
+                    print "Skipping", k, "because it has no non-zero errors"
+                else:
+                    msk = err != 0
+                    ax.plot(thetas[msk], err[msk], label=labels[i], 
+                        color=colors[i], **kwargs)
+            else:
+                ax.plot(thetas, err, label=labels[i], 
+                            color=colors[i], **kwargs)
+        
+        #Make the legend
+        handles, labels=ax.get_legend_handles_labels()
+        legnd=ax.legend(handles, labels, loc=0, labelspacing=.15, 
+                            fancybox=True, fontsize=8)
+        legnd.get_frame().set_alpha(0.)
+        
+        #Save or show
+        if save_to:
+            plt.savefig(save_to, bbox_inches="tight")
+            plt.close()
+        else:
+            plt.show()

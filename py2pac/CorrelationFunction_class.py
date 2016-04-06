@@ -550,7 +550,7 @@ class CorrelationFunction(object):
         #Pull in the file and get the keys it has
         saved = np.load(filename)
         keys = saved.files
-
+        
         #Put things in their correct locations
         #There are some things we shouldn't be able to save without
         self._time_created = saved['created'][0]
@@ -633,7 +633,7 @@ class CorrelationFunction(object):
     #------------#
     
     def plot(self, ax=None, theta_unit="arcsec", save_to=None, 
-        log_yscale=True, **kwargs):
+        log_yscale=True, return_axis=False, **kwargs):
         """
         Plots the correlation function.  This can either be called as a 
         stand-alone routine that will make the plot and either show it or 
@@ -642,11 +642,10 @@ class CorrelationFunction(object):
         
         Parameters
         ----------
-        ax : instance of matplotlib.axis.Axis (optional)
+        ax : instance of a matplotlib axis (optional)
             If ax is specified, the correlation function will be added to
             that axis.  If `ax==None`, the correlation function will be 
-            plotted on a new axis and either shown or saved at the end of
-            this routine.  Default is `ax=None`.
+            plotted on a new axis.  Default is `ax=None`.
             
         theta_unit : string (optional)
             A string specifying the appropriate output unit for the x axis.
@@ -658,12 +657,26 @@ class CorrelationFunction(object):
         
         save_to : string (optional)
             If save_to is specified, the plot will be saved to `save_to` at 
-            the end of the routine.  If not saving to the current directory,
-            `save_to` should be the path from /.  Note that if `ax` and
-            `save_to` are both specified, the whole plot will be saved.
+            the end of the routine.  If not saving to the current 
+            directory, `save_to` should be the path from /.  Note that if 
+            `ax` and `save_to` are both specified, the whole plot will be 
+            saved.  If `save_to` and `return_axis` are both true, the
+            plot will be saved and not returned.
+        
+        return_axis : bool (optional)
+            If True, this routine will return the axis that has been 
+            plotted to after adding the correlation function. This is true 
+            whether this routine was given the axis or created it.  Default 
+            is False.  If `save_to` and `return_axis` are both true, the
+            plot will be saved and not returned.
             
         **kwargs : (optional)
             keyword arguments to matplotlib.axes.Axes.errorbar 
+            
+        Returns
+        -------
+        ax : instance of a matplotlib axis
+            If return_axis is True, the axis plotted on will be returned.
         """
         
         #Figure out what we're doing with x axis units
@@ -707,6 +720,9 @@ class CorrelationFunction(object):
         if save_to:
             plt.savefig(save_to, bbox_inches="tight")
             plt.close()
-        return
+        elif return_axis:
+            return ax
+        else:
+            plt.show()
 
 
