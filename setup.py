@@ -3,7 +3,6 @@
 from setuptools import setup
 import os
 import sys
-from subprocess import call
 
 #Compile the cython pieces with the proper options
 sys.argv = ['setup.py', 'build_ext', '--inplace']
@@ -25,7 +24,13 @@ setup(name='py2pac',
       version='0.1',
       description='Python package for computing 2-point angular correlation functions',
       url='https://github.com/cwhite1026/Py2PAC',
+      install_requires = ['numpy>=1.10', "cython>=0.24"],
       author='Catherine White',
       author_email='ccavigl1@jh.edu',
       packages=['py2pac'],
+      package_data = {
+        # If any package contains *.txt or *.rst files, include them:
+        '': ['*.txt', '*.rst']
+        },
+      license = "BSD",
       )
