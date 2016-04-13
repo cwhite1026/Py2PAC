@@ -33,4 +33,5 @@ setup(name='py2pac',
         '': ['*.txt', '*.rst']
         },
       license = "BSD",
+      requirements=['numpy', 'scipy', 'astropy', 'astroML', 'scikit-learn'],
       )

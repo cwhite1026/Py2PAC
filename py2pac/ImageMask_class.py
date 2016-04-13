@@ -14,11 +14,13 @@ import miscellaneous as misc
 import image_mask_cybits as cybits
 import correlations as corr
 import ThetaBins_class as binclass
+from CompletenessFunction_class import CompletenessFunction
+from mags_and_radii import get_mags_and_radii
 
 
-#===============================================================================
-#===============================================================================
-#===============================================================================
+#==========================================================================
+#==========================================================================
+#==========================================================================
 
 class ImageMask:
     """This is a class that handles the arrangement of the observations on
@@ -26,7 +28,7 @@ class ImageMask:
     access directly.  There are more user-friendly class methods that allow
     mask definition from various sources.
     
-    Class methods are ImageMask.from_FITS_weight_file, ImageMask.from_array, ImageMask.from_ranges
+    Class methods are ImageMask.from_FITS_file, ImageMask.from_array, ImageMask.from_ranges
 
     Parameters
     ----------
@@ -52,7 +54,7 @@ class ImageMask:
     #------------------#
     #- Initialization -#
     #------------------#
-    def __init__(self, mask, wcs_instance, wcs_moveable=True):
+    def __init__(self, mask, wcs_instance, wcs_moveable=True, completeness_dict=None, levels=None):
         """
         Takes the mask and WCS instance and stores them, along with
         extracting some useful information from them
@@ -64,45 +66,50 @@ class ImageMask:
         if isinstance(wcs_instance, wcs.WCS):
             self._wcs_instance = wcs_instance
         else:
-            raise TypeError("The WCS instance you pass to ImageMask must"
-                            "be an instance of astropy.wcs.WCS.  This one"
+            raise TypeError("The WCS instance you pass to ImageMask must "
+                            "be an instance of astropy.wcs.WCS.  This one "
                             "was not.")
         self._nx_pixels, self._ny_pixels = self._mask.shape
         nx, ny = self._mask.shape
 
         #Get the RA and Dec range that the mask covers.
         self._calc_footprint()
-        self._ra_bin_size, self._ra_edges=self._make_bin_edges(self._ra_range,
-                                                              self._nx_pixels)
-        self._dec_bin_size, self._dec_edges=self._make_bin_edges(self._dec_range,
-                                                                self._ny_pixels)
-
+        temp = self._make_bin_edges(self._ra_range, self._nx_pixels)
+        self._ra_bin_size, self._ra_edges = temp
+        temp = self._make_bin_edges(self._dec_range, self._ny_pixels)
+        self._dec_bin_size, self._dec_edges = temp
+        
         #Set up some holders for things we might use later
         self._subregion_rotation=None
         self._subregion_rotated_xedges=None
         self._subregion_rotated_yedges=None
+        self._completeness_dict=completeness_dict
+        self._levels=levels
 
     #----------------------------------------------------------------------
     #--------------------------------#
     #- Make a mask from a FITS file -#
     #--------------------------------#
     @classmethod
-    def from_FITS_weight_file(cls, weight_file):
+    def from_FITS_file(cls, fits_file, fits_file_type='weight'):
         """
-        Class method to generate an image mask from a weight file in
-        FITS format.  If the FITS file is large, this routine can take
+        Class method to generate an image mask from a weight or levels file
+        in FITS format.  If the FITS file is large, this routine can take
         some time.
 
         **Syntax**
         
-        immask = ImageMask.from_FITS_weight_file(weight_file)
+        immask = ImageMask.from_FITS_weight_file(fits_file, mask_type)
 
         Parameters
         ----------
         
-        weight_file : string
+        fits_file : string
             The file name including the path from / that contains the
             FITS file to mask with
+
+        fits_file_type : string
+            Valid options: 'weight' or 'levels'
 
         Returns
         -------
@@ -112,14 +119,27 @@ class ImageMask:
         
         #Get the mask info from the fits file via a Cython routine (because
         #it's super slow in plain python)
-        mask_info = cybits.make_mask_from_weights(weight_file)
-        nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
+        if fits_file_type=='weight':
+            mask_info = cybits.make_mask_from_weights(fits_file)
+            nx_pixels, ny_pixels, approx_frac_nonzero, mask = mask_info
+        elif fits_file_type=='levels':
+            mask = fits.getdata(fits_file)
+        else:
+            raise ValueError("'fits_file_type' kwarg must be either "
+                             "'weight' or 'levels'")
         
         #Make a WCS instance and get useful things from it
-        wcs_instance=wcs.WCS(weight_file)
+        wcs_instance=wcs.WCS(fits_file)
+
+        #filetype
+        if fits_file_type == 'levels':
+            print 'Getting level values'
+            levels=sorted(np.unique(mask))
+        else:
+            levels=None
 
         #Make and return the mask
-        immask = cls(mask, wcs_instance)
+        immask = cls(mask, wcs_instance, levels=levels)
         return immask
 
     #----------------------------------------------------------------------
@@ -189,8 +209,8 @@ class ImageMask:
 
         #Check some basic stuff
         if (len(ra_range) !=2) or (len(dec_range) !=2):
-            raise ValueError("ImageMask.from_array says:  The RA and Dec"
-                             "ranges must be array-like objects of length"
+            raise ValueError("ImageMask.from_array says:  The RA and Dec "
+                             "ranges must be array-like objects of length "
                              "two.")
         mask = np.array(mask)
         
@@ -415,7 +435,7 @@ class ImageMask:
     #--------------------------------#
     #- Generate randoms on the mask -#
     #--------------------------------#
-    def generate_random_sample(self, number_to_make):
+    def generate_random_sample(self, number_to_make, complicated_completeness = False):
         """
         Generate a given number of random points within the mask.
 
@@ -442,14 +462,21 @@ class ImageMask:
                              "objects.  You entered "+str(number_to_make))
 
         #Make the first pass of randoms
-        ra_R, dec_R= corr.uniform_sphere(self._ra_range, self._dec_range,
-                                         size=number_to_make)
+        ra_R, dec_R = corr.uniform_sphere(self._ra_range, self._dec_range,
+                                          size=number_to_make)
         
         #----------------------------------
         #- Mask and add more if undershot
         #----------------------------------
         #Get completenesses and see which to use
-        random_completeness = self.return_completenesses(ra_R, dec_R)
+        if complicated_completeness:
+            mags, radii = get_mags_and_radii(number_to_make)
+            #galtype = np.random.randint(2, size=number_to_make)
+        else:
+            mags = None
+            radii = None
+        random_completeness = self.return_completenesses(ra_R, dec_R, mags,
+            radii, complicated_completeness)
         compare_to = rand.random(size=len(ra_R))
         use = compare_to < random_completeness
         #Mask down to the ones that survived
@@ -462,34 +489,27 @@ class ImageMask:
         number_we_have = len(ra_R)
         print ("ImageMask.generate_random_sample says: "
                " We made "+str(number_we_have))
-        print "      We need ", number_to_make, " total"
+        print "      We need", number_to_make, "total"
+        print "      We will make", number_to_make - number_we_have, "more"
 
         #Check to see by how many we've overshot
         number_left_to_make = number_to_make - number_we_have
         
-        #If we've actually made too few, make more
+        #If we've actually made too few, make more    
+        # else:
         if number_left_to_make > 0:
             print ("ImageMask.generate_random_sample says: I have "
                    "made too few objects within the target area. Making "
                    "more.")
-            #Figure out what fraction of the guys that we made were used
-            #so if my mask is teeny and in a big field, it won't take
-            #forever to get to where we want to be
-            # fraction_used_last_time = float(number_we_have)/number_to_make
-            # if fraction_used_last_time < 1.e-3:
-            #     fraction_used_last_time = 1e-3
-                
-            #Ask for exactly how many more we need.
-            # new_multiplier = 1. / fraction_used_last_time
-            # ask_for = np.ceil(number_left_to_make * new_multiplier)
+
             ask_for = number_left_to_make
-            newguys = self.generate_random_sample(ask_for)
+            newguys = self.generate_random_sample(ask_for, complicated_completeness)
             #Unpack
-            more_ras, more_decs, more_comps = newguys
+            more_ras, more_decs, more_comps, more_mag, more_rad = newguys
             
             #Add these galaxies to the existing arrays
-            ra_R= np.concatenate((ra_R, more_ras))
-            dec_R= np.concatenate((dec_R, more_decs))
+            ra_R = np.concatenate((ra_R, more_ras))
+            dec_R = np.concatenate((dec_R, more_decs))
             random_completeness = np.concatenate((random_completeness,
                                                   more_comps))
             number_we_have = len(ra_R)
@@ -501,20 +521,19 @@ class ImageMask:
                                    "generate_randoms again.")
 
         #If we overshot, cut some off
-        if number_left_to_make < 0:
+        elif number_left_to_make < 0:
             print ("ImageMask.generate_random_sample says: "
                   "Cutting down to exactly as many objects as we need.")
-            ra_R=ra_R[0:number_to_make]
-            dec_R=dec_R[0:number_to_make]
-            random_completeness= random_completeness[0:number_to_make]
+            ra_R =ra_R[0:number_to_make]
+            dec_R =dec_R[0:number_to_make]
+            random_completeness = random_completeness[0:number_to_make]
         else:
             print ("ImageMask.generate_random_sample says: "
                   "I made exactly the right number!  It's like winning "
                   "the lottery but not actually fun...")
-            
                 
         #Return things!
-        return ra_R, dec_R, random_completeness
+        return ra_R, dec_R, random_completeness, mags, radii
     
     #----------------------------------------------------------------------
     
@@ -1138,7 +1157,41 @@ class ImageMask:
     #------------------------------------------#
     #- Queries completeness for given catalog -#
     #------------------------------------------#
-    def return_completenesses(self, ra_list, dec_list):
+    def make_completeness_dict(self, *args):
+        """
+        Takes a list of CompletenessFunction instances and returns a 
+        dictionary of them.
+
+        Parameters
+        ----------
+        *args : CompletenessFunction instances
+            As many completeness function instances as you have
+
+        Returns
+        -------
+        completeness_dict : dictionary
+            A dictionary of completeness functions
+        """
+
+        #Check that the lists are the same length and convert to np arrays
+        completeness_dict = {}
+        for arg in args:
+            if not isinstance(arg, CompletenessFunction):
+                raise TypeError("Arguments passed to make_completeness_dict "
+                                "must be CompletenessFunction instances")
+            elif not hasattr(arg, '_level'):
+                raise ValueError("No level specified in CompletenessFunction "
+                                 "instance.")
+            else:
+                completeness_dict[str(arg._level)] = arg
+        self._completeness_dict = completeness_dict
+        return
+
+    #----------------------------------------------------------------------        
+    #------------------------------------------#
+    #- Queries completeness for given catalog -#
+    #------------------------------------------#
+    def return_completenesses(self, ra_list, dec_list, mag_list=None, rad_list=None, complicated_completeness=False):
         """
         Takes a list of RAs and Decs and returns the completenesses for
         each point.  This version only supports completeness with no
@@ -1205,7 +1258,29 @@ class ImageMask:
                    str(len(xinds[on_image])) +
                    " points that are actually on the image")
             on_mask_bits = self._mask[xinds[on_image],yinds[on_image]]
-            temp_complete[on_image] = on_mask_bits
+            # use completeness functions if they exist
+            # this doesn't work with all options yet
+            if complicated_completeness:
+                # iterate over levels
+                for level in self._levels:
+                    level_string = str(int(level))
+                    if level_string in self._completeness_dict.keys():
+                        # get completeness object corresponding to level
+                        cf = self._completeness_dict[level_string]
+                        # find all galaxies located within level
+                        at_level = np.where(on_mask_bits == int(level))
+                        num_to_generate = len(temp_complete[at_level])
+                        if num_to_generate > 0:
+                            if mag_list is not None:
+                                mags_in_ranges = mag_list[in_ranges]
+                                mags = mags_in_ranges[at_level]
+                                if rad_list is not None:
+                                    rads_in_ranges = rad_list[in_ranges]
+                                    rads = rads_in_ranges[at_level]
+                                temp_complete[at_level] = cf.query(mags, r_list=rads)
+            else:
+                temp_complete[on_image] = on_mask_bits
+            
             complete[in_ranges] = temp_complete
 
         return complete

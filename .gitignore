@@ -2,3 +2,7 @@
 *.c
 *.so
 build/
+py2pac/workspace/
+.DS_Store
+*.ipynb
+*.fits
