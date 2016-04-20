@@ -1,11 +1,19 @@
 #External code
 import numpy as np
 from astropy.cosmology import default_cosmology
-from scipy import stats
 
 #===============================================================================
 #===============================================================================
 #===============================================================================
+
+'''
+The lookup table is a fairly hacky way to get the fit parameters for 
+Gaussians we fit to the magnitude distribution at certain bins of redshift and 
+stellar mass. The first column is the average of the redshift bin edges,
+the second is the same for log stellar mass, the third is the center of the 
+Gaussian fit, and the fourth is the standard deviation.
+'''
+
 lookup_table = np.array([[1.25,8.5,26.34667761,0.67892732],
                         [1.25,9.5,24.07570187,0.50435506],
                         [1.25,11.,22.33910589,0.56583984],
@@ -46,6 +54,9 @@ def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
     mstar : scalar, optional
         Log of stellar mass of fake galaxies
         Allowed values: 8.5, 9.5, 11
+    mstar : scalar, optional
+        Log of stellar mass of fake galaxies. Default is 9.5
+        Allowed values are 8.5, 9.5, and 11
 
     Returns
     ----------
@@ -56,14 +67,40 @@ def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
     """
     df = default_cosmology.get_cosmology_from_string('Planck13')
     dmod = df.distmod(z).value
-    mags = get_gaussian_mags(size, z, mstar)
+    mags = get_mags(size, z, mstar)
     absolute_mags = mags - dmod
     radii = get_radii(absolute_mags)
-    mags[mags < min_mag] = min_mag
+    mags[mags < min_mag] = min_mag # force mags to be within constraints
     mags[mags > max_mag] = max_mag
     return mags, radii
 
-def get_gaussian_mags(size, z, mstar, lookup_table = lookup_table):
+def get_mags(size, z, mstar, lookup_table = lookup_table):
+    '''
+    Queries the lookup table for appropriate Gaussian parameters for 
+    the magnitude distribution and generates a random sample with those
+
+    Parameters
+    ----------
+    size : int
+        Number of magnitudes + radii to generate
+        
+    z : scalar
+        Redshift of fake galaxies. Default is 1.25
+        Allowed values are 1.25, 2, 4.5, and 5.25
+
+    mstar : scalar
+        Log of stellar mass of fake galaxies. Default is 9.5
+        Allowed values are 8.5, 9.5, and 11
+
+    lookup_table : array of shape N x 4
+        Table of parameters for Gaussian magnitude distribution at
+        z and mstar; described more fully above
+
+    Returns
+    ----------
+        mags : array
+            Array of apparent magnitudes for randoms
+    '''
     row = lookup_table[(lookup_table[:,0] == z) & (lookup_table[:,1] == mstar)][0]
     loc, scale = row[2], row[3]
     mags = np.random.normal(loc=loc,scale=scale,size=size)
@@ -105,3 +142,4 @@ def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
     log_rand[log_rand > 2.5] = 2.5
     log_rand[log_rand < -1.] = -1.
     return log_rand
+
