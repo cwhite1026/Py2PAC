@@ -2,9 +2,9 @@
 import numpy as np
 import warnings
 
-#===============================================================================
-#===============================================================================
-#===============================================================================
+#==========================================================================
+#==========================================================================
+#==========================================================================
 
 class CompletenessFunction:
     """
@@ -14,8 +14,8 @@ class CompletenessFunction:
     Parameters
     ----------
     completeness_array : 1- or 2D array
-        This is an array describing completeness as a function of magnitude only
-        if 1D and of magnitude and radius if 2D.
+        This is an array describing completeness as a function of magnitude 
+        only if 1D and of magnitude and radius if 2D.
         
     mag_range : 1D array-like
         Range of magnitudes 
@@ -25,8 +25,8 @@ class CompletenessFunction:
 
     Notes
     -----
-    Can be constructed so as to either be only dependent on magnitude, or on
-    both magnitude and radius.
+    Can be constructed so as to either be only dependent on magnitude, or 
+    on both magnitude and radius.
     """
 
     #----------------------------------------------------------------------
@@ -255,8 +255,8 @@ class CompletenessFunction:
         mag_list = np.asarray(mag_list)
         if (np.min(mag_list) < self._min_mag) or \
         (np.max(mag_list) > self._max_mag):
-            raise ValueError("Your magnitude array contains values outside "
-                             "the specified range.")
+            raise ValueError("Your magnitude array contains values "
+                             "outside the specified range.")
         # find magnitude bin that each input mag falls into
         mag_condition = np.hstack([np.where((mag >= self._mag_range) &
             (mag < self._mag_range + self._mag_bin_size))[0][0] for mag in mag_list])
@@ -275,8 +275,8 @@ class CompletenessFunction:
             # do the same processing for radius as magnitude
             if (np.min(r_list) < self._min_r) or \
             (np.max(r_list) > self._max_r):
-                raise ValueError("Your radius array contains values outside "
-                                 "the specified range.")
+                raise ValueError("Your radius array contains values "
+                                 "outside the specified range.")
             r_condition = np.hstack([np.where((r >= self._r_range) &
                 (r < self._r_range + self._r_bin_size))[0][0] for r in r_list])
             r_condition[r_condition == len(self._r_range)] = len(self._r_range) - 1
@@ -285,8 +285,8 @@ class CompletenessFunction:
             try:
                 completeness = self._completeness_array[r_condition, mag_condition]
             except:
-                print('Oops, something went wrong; setting completeness to 0'
-                      'and trying again')
+                print('Oops, something went wrong; setting completeness to'
+                      ' 0 and trying again')
                 completeness = np.array([0])
         else:
             completeness = self._completeness_array[mag_condition]
