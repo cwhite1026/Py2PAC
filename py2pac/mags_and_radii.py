@@ -2,16 +2,16 @@
 import numpy as np
 from astropy.cosmology import default_cosmology
 
-#===============================================================================
-#===============================================================================
-#===============================================================================
+#==========================================================================
+#==========================================================================
+#==========================================================================
 
 '''
 The lookup table is a fairly hacky way to get the fit parameters for 
-Gaussians we fit to the magnitude distribution at certain bins of redshift and 
-stellar mass. The first column is the average of the redshift bin edges,
-the second is the same for log stellar mass, the third is the center of the 
-Gaussian fit, and the fourth is the standard deviation.
+Gaussians we fit to the magnitude distribution at certain bins of redshift 
+and  stellar mass. The first column is the average of the redshift bin 
+edges, the second is the same for log stellar mass, the third is the center 
+of the Gaussian fit, and the fourth is the standard deviation.
 '''
 
 lookup_table = np.array([[1.25,8.5,26.34667761,0.67892732],
@@ -29,8 +29,8 @@ lookup_table = np.array([[1.25,8.5,26.34667761,0.67892732],
 
 def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
     """
-    This is a function that generates fake magnitudes and optionally radii for
-    randoms.
+    This is a function that generates fake magnitudes and optionally radii 
+    for randoms.
 
     Parameters
     ----------
@@ -62,6 +62,9 @@ def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
         radii : array
             Array of log of radii in pixels for randoms
     """
+        
+    print z, mstar
+    
     df = default_cosmology.get_cosmology_from_string('Planck13')
     dmod = df.distmod(z).value
     mags = get_mags(size, z, mstar)
@@ -99,13 +102,15 @@ def get_mags(size, z, mstar, lookup_table = lookup_table):
             Array of apparent magnitudes for randoms
     '''
     row = lookup_table[(lookup_table[:,0] == z) & (lookup_table[:,1] == mstar)][0]
+    print row
     loc, scale = row[2], row[3]
     mags = np.random.normal(loc=loc,scale=scale,size=size)
     return mags
 
 def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
     """
-    Generates artificial galaxy radii given magnitudes. Parameters from here:
+    Generates artificial galaxy radii given magnitudes. Parameters from 
+    here:
     http://iopscience.iop.org/article/10.1088/0004-637X/765/1/68/pdf
 
     Parameters

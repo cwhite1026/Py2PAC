@@ -28,7 +28,8 @@ class ImageMask:
     access directly.  There are more user-friendly class methods that allow
     mask definition from various sources.
     
-    Class methods are ImageMask.from_FITS_file, ImageMask.from_array, ImageMask.from_ranges
+    Class methods are ImageMask.from_FITS_file, ImageMask.from_array, and
+    ImageMask.from_ranges
 
     Parameters
     ----------
@@ -42,7 +43,7 @@ class ImageMask:
 
     wcs_moveable : bool
         True if the WCS instance can be moved on the sky.  False if it
-        can't.  The WCS instances that are created froms scratch by the
+        can't.  The WCS instances that are created from scratch by the
         class methods from_ranges and from_array cannot be moved.  This is
         a bug that will be fixed later.  Default is True
     """
@@ -54,7 +55,8 @@ class ImageMask:
     #------------------#
     #- Initialization -#
     #------------------#
-    def __init__(self, mask, wcs_instance, wcs_moveable=True, completeness_dict=None, levels=None):
+    def __init__(self, mask, wcs_instance, wcs_moveable=True, 
+                completeness_dict=None, levels=None):
         """
         Takes the mask and WCS instance and stores them, along with
         extracting some useful information from them
@@ -139,6 +141,7 @@ class ImageMask:
             levels=None
 
         #Make and return the mask
+        print "Making the image mask"
         immask = cls(mask, wcs_instance, levels=levels)
         return immask
 
@@ -435,7 +438,8 @@ class ImageMask:
     #--------------------------------#
     #- Generate randoms on the mask -#
     #--------------------------------#
-    def generate_random_sample(self, number_to_make, complicated_completeness = False):
+    def generate_random_sample(self, number_to_make, 
+            use_mags_and_radii = True, **kwargs):
         """
         Generate a given number of random points within the mask.
 
@@ -444,6 +448,15 @@ class ImageMask:
         number_to_make : scalar
             Number of randomly placed objects within the mask area
             returned.
+            
+        use_mags_and_radii : bool (optional)
+            Controls whether or not the random points are assigned a 
+            magnitude and radius.  Default is True
+        
+        **kwargs : (optional)
+            Arguments to be passed to get_mags_and_radii if 
+            use_mags_and_radii == True.  See documentation for the
+            get_mags_and_radii function.
 
         Returns
         -------
@@ -454,12 +467,33 @@ class ImageMask:
         dec : numpy ndarray
             The Decs of the randomly placed objects within the mask.  Unit
             is degrees.  The array shape is (number_to_make,)
+            
+        random_completeness : numpy ndarray
+            The completenesses associated with each of the random points
+        
+        magnitudes : numpy ndarray or None
+            If use_mags_and_radii == True, the magnitudes associated
+            with the random points will be returned.  If not, None will be
+            returned
+        
+        radii : numpy ndarray or None
+            If use_mags_and_radii == True, the radii associated with
+            the random points will be returned.  If not, None will be
+            returned.
         """
         
         #Check that we have an integer number of objects
         if int(number_to_make) != number_to_make:
             raise ValueError("You must give me an integer number of "
                              "objects.  You entered "+str(number_to_make))
+        
+        #Check that if we have a level map, we also need a completeness
+        if self._levels:
+            if not self._completeness_dict:
+                raise ValueError("There are levels in this ImageMask, "
+                                "which means that there should also be "
+                                "a completeness dictionary.  Come back "
+                                "when you have one.")
 
         #Make the first pass of randoms
         ra_R, dec_R = corr.uniform_sphere(self._ra_range, self._dec_range,
@@ -469,14 +503,14 @@ class ImageMask:
         #- Mask and add more if undershot
         #----------------------------------
         #Get completenesses and see which to use
-        if complicated_completeness:
-            mags, radii = get_mags_and_radii(number_to_make)
+        if use_mags_and_radii:
+            mags, radii = get_mags_and_radii(number_to_make, **kwargs)
             #galtype = np.random.randint(2, size=number_to_make)
         else:
             mags = None
             radii = None
         random_completeness = self.return_completenesses(ra_R, dec_R, mags,
-            radii, complicated_completeness)
+                                                 radii, use_mags_and_radii)
         compare_to = rand.random(size=len(ra_R))
         use = compare_to < random_completeness
         #Mask down to the ones that survived
@@ -503,7 +537,7 @@ class ImageMask:
                    "more.")
 
             ask_for = number_left_to_make
-            newguys = self.generate_random_sample(ask_for, complicated_completeness)
+            newguys = self.generate_random_sample(ask_for, use_mags_and_radii=use_mags_and_radii, **kwargs)
             #Unpack
             more_ras, more_decs, more_comps, more_mag, more_rad = newguys
             
@@ -529,8 +563,7 @@ class ImageMask:
             random_completeness = random_completeness[0:number_to_make]
         else:
             print ("ImageMask.generate_random_sample says: "
-                  "I made exactly the right number!  It's like winning "
-                  "the lottery but not actually fun...")
+                  "All done!")
                 
         #Return things!
         return ra_R, dec_R, random_completeness, mags, radii
@@ -540,127 +573,127 @@ class ImageMask:
     #----------------------------------------------------------------#
     #- Generate the random-random counts required to compute the IC -#
     #----------------------------------------------------------------#
-    def generate_rr(self, nbins, logbins=True, min_sep=1/3600., 
-                    set_n_randoms=None, set_random_density = None,
-                    save_to=None, n_chunks=1):
-        """
-        Do random-random counts over the entire mask.  Calculates both the
-        raw RR counts and the Gp defined in Landy and Szalay.
- 
-        The default number of randoms needed was estimated by
-        playing with the number of randoms in the GOODS-S field and seeing
-        when the RR counts converged to the "way too many" curve.  139300
-        per 1.43e-5 steradians (the area of GOODS-S) was what I settled on.
-        If there's a set_random_density or set_n_randoms, it will ignore my
-        estimate.
-
-        Parameters
-        ----------
-        nbins : int
-            The number of theta bins to calculate the RRs for.
-            
-        logbins : bool (optional)
-            Should the bins be even in separation or log separation?
-            If True, the bins will be even in log space.  If False, bins
-            will be even in linear space.  Default is True.
-            
-        min_sep : float (optional)
-            The minimum separation to consider.  Default is 1/3600 degrees
-            (1 arcsecond).
-            
-        set_n_randoms : int (optional)
-            A set number of randoms to compute RR with.  This will override
-            the default number density but not the set_random_density
-            keyword argument.  If set_random_density is also given, then
-            the set_random_density will be used and not set_n_randoms.
-
-        set_random_density : float (optional)
-            A denisty of randoms in number per square degree.  This
-            overrides both the default number density and set_n_randoms.
-            (The default number density is ~9.74e9 galaxies per steradian.)
-            
-        save_to : string (optional)
-            A file name with the path from / to save the info to.  Default
-            is None and just returns the Gp object.
-            
-        n_chunks : int (optional)
-            Number of chunks to break the integration into to lessen
-            computation time.  Takes the total number of objects that you
-            ask for and does the RR calculation on number/n_chunks of them
-            n_chunks times and adds the results together.  This will muck up
-            the normalization of RR but not of Gp, which is the more
-            important one (to the code, at least).
-        """
-        
-        #Figure out how many random's we'll need total
-        if set_random_density is not None:
-            area = self.masked_area_solid_angle()
-            number_needed = set_random_density * area
-        elif set_n_randoms is not None:
-            number_needed=force_n_randoms
-        else:
-            default_density = 139300. / 1.43e-5
-            area = self.masked_area_solid_angle()
-            number_needed = default_density * area
-
-        #If we're doing more than one chunk, divide the number we need into
-        #n_chunks chunks
-        if n_chunks > 1:
-            number_needed = np.ceil(float(number_needed)/n_chunks)
-            number_needed = number_needed.astype(int)
-        total_number = number_needed * n_chunks
-
-        #Range of separations to make bins over
-        min_ra, max_ra = self._ra_range
-        min_dec, max_dec = self._dec_range
-        max_sep = misc.ang_sep(min_ra, min_dec, max_ra, max_dec,
-                               radians_in=False, radians_out=False)
-
-        #Make the bins
-        theta_bins = binclass.ThetaBins(min_sep, max_sep, nbins,
-                                           unit='d', logbins=logbins)
-        centers, theta_bins = theta_bins.get_thetas(unit='degrees')
-
-        #Do the loop over chunks
-        G_p = np.zeros(nbins)
-        rr_counts = np.zeros(nbins)
-        for n_i in np.arange(n_chunks):
-            print "doing chunk #", n_i
-            #Make a random sample
-            ra, dec, ___ = self.generate_random_sample(number_needed)
-        
-            #Code snippet shamelessly copied from astroML.correlations
-            xyz_data = corr.ra_dec_to_xyz(ra, dec)
-            data_R = np.asarray(xyz_data, order='F').T
-            random_tree = BallTree(data_R, leaf_size=2)                
-            bins = corr.angular_dist_to_euclidean_dist(theta_bins)
-            Nbins = len(bins) - 1
-            counts_RR = np.zeros(Nbins + 1)
-            for i in range(Nbins + 1):
-                counts_RR[i] = np.sum(random_tree.query_radius(data_R, bins[i],
-                                                               count_only=True))
-            rr = np.diff(counts_RR)
-            #Landy and Szalay define G_p(theta) as <N_p(theta)>/(n(n-1)/2)
-            G_p += rr/(number_needed*(number_needed-1)) 
-            rr_counts += rr
-        
-        #I divide out the bin width because just using the method
-        #that L&S detail gives you a {G_p,i} with the property that
-        #Sum[G_p,i]=1.  This is not equivalent to Integral[G_p d(theta)]=1,
-        #which is what they assume everywhere else.
-        #Dividing out the bin width gives you that and lets you pretend
-        #G_p is a continuous but chunky-looking function and integrate it.
-        G_p /= np.diff(use_theta_bins)                    
-        G_p /= n_chunks                                   
-        rr_ngals=[total_number, n_chunks]
-        Gp_object = gpclass.Gp(min_sep, max_sep, nbins, G_p, total_number,
-                               n_chunks, logbins=logbins, unit='d',
-                               RR=rr_counts)
-
-        if save_to is not None:
-            Gp_object(save_to)
-
-        return Gp_object
+#     def generate_rr(self, nbins, logbins=True, min_sep=1/3600., 
+#                     set_n_randoms=None, set_random_density = None,
+#                     save_to=None, n_chunks=1):
+#         """
+#         Do random-random counts over the entire mask.  Calculates both the
+#         raw RR counts and the Gp defined in Landy and Szalay.
+#  
+#         The default number of randoms needed was estimated by
+#         playing with the number of randoms in the GOODS-S field and seeing
+#         when the RR counts converged to the "way too many" curve.  139300
+#         per 1.43e-5 steradians (the area of GOODS-S) was what I settled on.
+#         If there's a set_random_density or set_n_randoms, it will ignore my
+#         estimate.
+# 
+#         Parameters
+#         ----------
+#         nbins : int
+#             The number of theta bins to calculate the RRs for.
+#             
+#         logbins : bool (optional)
+#             Should the bins be even in separation or log separation?
+#             If True, the bins will be even in log space.  If False, bins
+#             will be even in linear space.  Default is True.
+#             
+#         min_sep : float (optional)
+#             The minimum separation to consider.  Default is 1/3600 degrees
+#             (1 arcsecond).
+#             
+#         set_n_randoms : int (optional)
+#             A set number of randoms to compute RR with.  This will override
+#             the default number density but not the set_random_density
+#             keyword argument.  If set_random_density is also given, then
+#             the set_random_density will be used and not set_n_randoms.
+# 
+#         set_random_density : float (optional)
+#             A denisty of randoms in number per square degree.  This
+#             overrides both the default number density and set_n_randoms.
+#             (The default number density is ~9.74e9 galaxies per steradian.)
+#             
+#         save_to : string (optional)
+#             A file name with the path from / to save the info to.  Default
+#             is None and just returns the Gp object.
+#             
+#         n_chunks : int (optional)
+#             Number of chunks to break the integration into to lessen
+#             computation time.  Takes the total number of objects that you
+#             ask for and does the RR calculation on number/n_chunks of them
+#             n_chunks times and adds the results together.  This will muck up
+#             the normalization of RR but not of Gp, which is the more
+#             important one (to the code, at least).
+#         """
+#         
+#         #Figure out how many random's we'll need total
+#         if set_random_density is not None:
+#             area = self.masked_area_solid_angle()
+#             number_needed = set_random_density * area
+#         elif set_n_randoms is not None:
+#             number_needed=force_n_randoms
+#         else:
+#             default_density = 139300. / 1.43e-5
+#             area = self.masked_area_solid_angle()
+#             number_needed = default_density * area
+# 
+#         #If we're doing more than one chunk, divide the number we need into
+#         #n_chunks chunks
+#         if n_chunks > 1:
+#             number_needed = np.ceil(float(number_needed)/n_chunks)
+#             number_needed = number_needed.astype(int)
+#         total_number = number_needed * n_chunks
+# 
+#         #Range of separations to make bins over
+#         min_ra, max_ra = self._ra_range
+#         min_dec, max_dec = self._dec_range
+#         max_sep = misc.ang_sep(min_ra, min_dec, max_ra, max_dec,
+#                                radians_in=False, radians_out=False)
+# 
+#         #Make the bins
+#         theta_bins = binclass.ThetaBins(min_sep, max_sep, nbins,
+#                                            unit='d', logbins=logbins)
+#         centers, theta_bins = theta_bins.get_thetas(unit='degrees')
+# 
+#         #Do the loop over chunks
+#         G_p = np.zeros(nbins)
+#         rr_counts = np.zeros(nbins)
+#         for n_i in np.arange(n_chunks):
+#             print "doing chunk #", n_i
+#             #Make a random sample
+#             ra, dec, ___ = self.generate_random_sample(number_needed)
+#         
+#             #Code snippet shamelessly copied from astroML.correlations
+#             xyz_data = corr.ra_dec_to_xyz(ra, dec)
+#             data_R = np.asarray(xyz_data, order='F').T
+#             random_tree = BallTree(data_R, leaf_size=2)                
+#             bins = corr.angular_dist_to_euclidean_dist(theta_bins)
+#             Nbins = len(bins) - 1
+#             counts_RR = np.zeros(Nbins + 1)
+#             for i in range(Nbins + 1):
+#                 counts_RR[i] = np.sum(random_tree.query_radius(data_R, bins[i],
+#                                                                count_only=True))
+#             rr = np.diff(counts_RR)
+#             #Landy and Szalay define G_p(theta) as <N_p(theta)>/(n(n-1)/2)
+#             G_p += rr/(number_needed*(number_needed-1)) 
+#             rr_counts += rr
+#         
+#         #I divide out the bin width because just using the method
+#         #that L&S detail gives you a {G_p,i} with the property that
+#         #Sum[G_p,i]=1.  This is not equivalent to Integral[G_p d(theta)]=1,
+#         #which is what they assume everywhere else.
+#         #Dividing out the bin width gives you that and lets you pretend
+#         #G_p is a continuous but chunky-looking function and integrate it.
+#         G_p /= np.diff(use_theta_bins)                    
+#         G_p /= n_chunks                                   
+#         rr_ngals=[total_number, n_chunks]
+#         Gp_object = gpclass.Gp(min_sep, max_sep, nbins, G_p, total_number,
+#                                n_chunks, logbins=logbins, unit='d',
+#                                RR=rr_counts)
+# 
+#         if save_to is not None:
+#             Gp_object(save_to)
+# 
+#         return Gp_object
 
 #==========================================================================
 #==========================================================================
@@ -898,10 +931,12 @@ class ImageMask:
             x2=[x2edges[0], x2edges[0], x2edges[1]]
             y2=[y2edges[0], y2edges[1], y2edges[0]]
             ra_box, dec_box=self.xy_to_ra_dec(x2, y2)
-            y_side=misc.ang_sep(ra_box[0], dec_box[0], ra_box[1], dec_box[1],
-                               radians_in=False, radians_out=False) * 3600
-            x_side=misc.ang_sep(ra_box[0], dec_box[0], ra_box[2], dec_box[2],
-                               radians_in=False, radians_out=False) * 3600
+            y_side=misc.ang_sep(ra_box[0], dec_box[0], ra_box[1], 
+                                dec_box[1], radians_in=False, 
+                                radians_out=False) * 3600
+            x_side=misc.ang_sep(ra_box[0], dec_box[0], ra_box[2], 
+                                dec_box[2], radians_in=False, 
+                                radians_out=False) * 3600
 
             #Print out the parameters
             ax.text(.05, .95, "theta= "+str(np.degrees(use_theta))[0:5],
@@ -1191,7 +1226,8 @@ class ImageMask:
     #------------------------------------------#
     #- Queries completeness for given catalog -#
     #------------------------------------------#
-    def return_completenesses(self, ra_list, dec_list, mag_list=None, rad_list=None, complicated_completeness=False):
+    def return_completenesses(self, ra_list, dec_list, mag_list=None, 
+                            rad_list=None, use_mags_and_radii=True):
         """
         Takes a list of RAs and Decs and returns the completenesses for
         each point.  This version only supports completeness with no
@@ -1206,7 +1242,21 @@ class ImageMask:
         dec_list : 1D array-like
             A list of the Decs in degrees for the objects to query for
             completeness.
-
+            
+        use_mags_and_radii : bool (optional)
+            Controls whether or not the random points need magnitudes and
+            radii.  Default is True
+            
+        mag_list : 1D array-like (optional)
+            A list of magnitudes associated with the randoms.  Default is 
+            None.  If use_mags_and_radii is True, then you must have 
+            magnitudes.
+        
+        rad_list : 1D array-like (optional)
+            A list of radii associated with the randoms.  Default is None.  
+            If use_mags_and_radii is True and the completeness function
+            depends on radius, then you need radii.
+        
         Returns
         -------
         completeness : 1D numpy array
@@ -1216,6 +1266,14 @@ class ImageMask:
             if that number is less than or equal to the completeness,
             include the object.
         """
+        
+        #Check that if we have a level map, we also need a completeness
+        if self._levels:
+            if not self._completeness_dict:
+                raise ValueError("There are levels in this ImageMask, "
+                                 "which means that there should also be "
+                                 "a completeness dictionary.  Come back "
+                                 "when you have one.")
 
         #Check that the lists are the same length and convert to np arrays
         ra_list = np.array(ra_list)
@@ -1260,7 +1318,7 @@ class ImageMask:
             on_mask_bits = self._mask[xinds[on_image],yinds[on_image]]
             # use completeness functions if they exist
             # this doesn't work with all options yet
-            if complicated_completeness:
+            if use_mags_and_radii:
                 # iterate over levels
                 for level in self._levels:
                     level_string = str(int(level))
@@ -1277,7 +1335,8 @@ class ImageMask:
                                 if rad_list is not None:
                                     rads_in_ranges = rad_list[in_ranges]
                                     rads = rads_in_ranges[at_level]
-                                temp_complete[at_level] = cf.query(mags, r_list=rads)
+                                temp_complete[at_level] = cf.query(mags, 
+                                                                r_list=rads)
             else:
                 temp_complete[on_image] = on_mask_bits
             
