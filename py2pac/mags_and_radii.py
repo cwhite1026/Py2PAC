@@ -48,9 +48,12 @@ def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
         Numerically highest (dimmest) allowable magnitude
 
     z : scalar, optional
-        Redshift of fake galaxies. Default is 1.25
-        Allowed values are 1.25, 2, 4.5, and 5.25
+        Redshift of fake galaxies
+        Allowed values: 1.25, 2, 3.5, 5.25
 
+    mstar : scalar, optional
+        Log of stellar mass of fake galaxies
+        Allowed values: 8.5, 9.5, 11
     mstar : scalar, optional
         Log of stellar mass of fake galaxies. Default is 9.5
         Allowed values are 8.5, 9.5, and 11
@@ -132,9 +135,9 @@ def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
         log_rand : array
             Array of log of radii in pixels
     """
-    exp = 10**(0.4*(m0 - m))
+    exp = 10**(-0.4*(m - m0))
     mean = r0 * exp**beta
-    rand = np.random.lognormal(mean, sigma)
+    rand = np.random.lognormal(np.log(mean), sigma)
     log_rand = np.log10(rand)
     if type(log_rand).__name__ != 'ndarray':
         log_rand = np.array([log_rand])
