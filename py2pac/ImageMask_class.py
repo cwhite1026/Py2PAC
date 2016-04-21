@@ -14,7 +14,7 @@ import miscellaneous as misc
 import image_mask_cybits as cybits
 import correlations as corr
 import ThetaBins_class as binclass
-from CompletenessFunction_class import CompletenessFunction
+import CompletenessFunction_class as compclass
 from mags_and_radii import get_mags_and_radii
 
 
@@ -505,7 +505,6 @@ class ImageMask:
         #Get completenesses and see which to use
         if use_mags_and_radii:
             mags, radii = get_mags_and_radii(number_to_make, **kwargs)
-            #galtype = np.random.randint(2, size=number_to_make)
         else:
             mags = None
             radii = None
@@ -523,47 +522,60 @@ class ImageMask:
         number_we_have = len(ra_R)
         print ("ImageMask.generate_random_sample says: "
                " We made "+str(number_we_have))
-        print "      We need", number_to_make, "total"
-        print "      We will make", number_to_make - number_we_have, "more"
 
         #Check to see by how many we've overshot
         number_left_to_make = number_to_make - number_we_have
         
         #If we've actually made too few, make more    
-        # else:
-        if number_left_to_make > 0:
-            print ("ImageMask.generate_random_sample says: I have "
-                   "made too few objects within the target area. Making "
-                   "more.")
+        while number_left_to_make > 0:
+            print number_left_to_make, "left to make"
 
-            ask_for = number_left_to_make
-            newguys = self.generate_random_sample(ask_for, use_mags_and_radii=use_mags_and_radii, **kwargs)
-            #Unpack
-            more_ras, more_decs, more_comps, more_mag, more_rad = newguys
+            #Make some more
+            ask_for = number_left_to_make * 2
+            new_ra, new_dec = corr.uniform_sphere(self._ra_range, 
+                                              self._dec_range,
+                                              size=ask_for)
+            print "ras and decs generated within:", min(new_ra), max(new_ra), min(new_dec), max(new_dec)
+            if use_mags_and_radii:
+                new_mags, new_radii = get_mags_and_radii(ask_for, **kwargs)
+            else:
+                new_mags = None
+                new_radii = None
+            new_completeness = self.return_completenesses(new_ra, new_dec, 
+                                                    new_mags, new_radii, 
+                                                    use_mags_and_radii)
+            #Mask down to the ones that survive
+            new_compare_to = rand.random(size=len(new_ra))
+            new_use = new_compare_to < new_completeness
+            new_ra = new_ra[new_use]
+            new_dec = new_dec[new_use]
+            new_compare_to = new_compare_to[new_use]
+            new_completeness = new_completeness[new_use]
             
             #Add these galaxies to the existing arrays
-            ra_R = np.concatenate((ra_R, more_ras))
-            dec_R = np.concatenate((dec_R, more_decs))
+            ra_R = np.concatenate((ra_R, new_ra))
+            dec_R = np.concatenate((dec_R, new_dec))
             random_completeness = np.concatenate((random_completeness,
-                                                  more_comps))
+                                                  new_completeness))
             number_we_have = len(ra_R)
             number_left_to_make = number_to_make - number_we_have
-            if number_left_to_make > 0:
-                raise RuntimeError("Cathy screwed up something major this "
-                                   "time.  We didn't make the right number"
-                                   " after falling short and calling "
-                                   "generate_randoms again.")
+            
+        #Come out of the while loop and cut off any excess
+        if number_left_to_make > 0:
+            raise RuntimeError("Cathy screwed up something major this "
+                               "time.  We didn't end up with enough after "
+                               "the while loop")
 
         #If we overshot, cut some off
         elif number_left_to_make < 0:
             print ("ImageMask.generate_random_sample says: "
-                  "Cutting down to exactly as many objects as we need.")
+                   "Cutting down to exactly as many objects as we need.")
             ra_R =ra_R[0:number_to_make]
             dec_R =dec_R[0:number_to_make]
             random_completeness = random_completeness[0:number_to_make]
         else:
             print ("ImageMask.generate_random_sample says: "
-                  "All done!")
+                   "All done!")
                 
         #Return things!
         return ra_R, dec_R, random_completeness, mags, radii
@@ -1211,7 +1223,7 @@ class ImageMask:
         #Check that the lists are the same length and convert to np arrays
         completeness_dict = {}
         for arg in args:
-            if not isinstance(arg, CompletenessFunction):
+            if not isinstance(arg, compclass.CompletenessFunction):
                 raise TypeError("Arguments passed to make_completeness_dict "
                                 "must be CompletenessFunction instances")
             elif not hasattr(arg, '_level'):

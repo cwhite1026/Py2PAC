@@ -62,8 +62,6 @@ def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
         radii : array
             Array of log of radii in pixels for randoms
     """
-        
-    print z, mstar
     
     df = default_cosmology.get_cosmology_from_string('Planck13')
     dmod = df.distmod(z).value
@@ -102,7 +100,6 @@ def get_mags(size, z, mstar, lookup_table = lookup_table):
             Array of apparent magnitudes for randoms
     '''
     row = lookup_table[(lookup_table[:,0] == z) & (lookup_table[:,1] == mstar)][0]
-    print row
     loc, scale = row[2], row[3]
     mags = np.random.normal(loc=loc,scale=scale,size=size)
     return mags
@@ -137,7 +134,7 @@ def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
     """
     exp = 10**(0.4*(m0 - m))
     mean = r0 * exp**beta
-    rand = np.random.lognormal(mean, sigma)
+    rand = np.random.lognormal(np.log(mean), sigma)
     log_rand = np.log10(rand)
     if type(log_rand).__name__ != 'ndarray':
         log_rand = np.array([log_rand])
