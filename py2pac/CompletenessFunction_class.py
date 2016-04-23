@@ -285,8 +285,9 @@ class CompletenessFunction:
             try:
                 completeness = self._completeness_array[r_condition, mag_condition]
             except:
-                print('Oops, something went wrong; setting completeness to'
-                      ' 0 and trying again')
+                print r_condition, mag_condition, self._completeness_array.shape
+#                 print('Oops, something went wrong; setting completeness to'
+#                       ' 0 and trying again')
                 completeness = np.array([0])
         else:
             completeness = self._completeness_array[mag_condition]
