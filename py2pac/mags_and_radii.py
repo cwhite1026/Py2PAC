@@ -107,11 +107,12 @@ def get_mags(size, z, mstar, min_mag, max_mag, lookup_table = lookup_table):
     mags = np.array([])
     while n_needed > 0:
         new_mags = np.random.normal(loc=loc,scale=scale,size=n_needed)
-        new_mags = new_mags[ma.masked_inside(new_mags, min_mag, max_mag).mask]
-        mags = np.concatenate((mags, new_mags))
+        masked_mags = ma.masked_inside(new_mags, min_mag, max_mag)
+        n_valid = n_needed - len(masked_mags.compressed())
+        if n_valid > 0:
+            new_mags = new_mags[masked_mags.mask]
+            mags = np.concatenate((mags, new_mags))
         n_needed = size - len(mags)
-    
-    print len(mags), size
     
     return mags
 
