@@ -1,5 +1,6 @@
 #External code
 import numpy as np
+import numpy.ma as ma
 from astropy.cosmology import default_cosmology
 
 #==========================================================================
@@ -68,14 +69,12 @@ def get_mags_and_radii(size, min_mag = 20, max_mag = 28, z = 1.25, mstar = 9.5):
     
     df = default_cosmology.get_cosmology_from_string('Planck13')
     dmod = df.distmod(z).value
-    mags = get_mags(size, z, mstar)
+    mags = get_mags(size, z, mstar, min_mag, max_mag)
     absolute_mags = mags - dmod
     radii = get_radii(absolute_mags)
-    mags[mags < min_mag] = min_mag # force mags to be within constraints
-    mags[mags > max_mag] = max_mag
     return mags, radii
 
-def get_mags(size, z, mstar, lookup_table = lookup_table):
+def get_mags(size, z, mstar, min_mag, max_mag, lookup_table = lookup_table):
     '''
     Queries the lookup table for appropriate Gaussian parameters for 
     the magnitude distribution and generates a random sample with those
@@ -104,7 +103,16 @@ def get_mags(size, z, mstar, lookup_table = lookup_table):
     '''
     row = lookup_table[(lookup_table[:,0] == z) & (lookup_table[:,1] == mstar)][0]
     loc, scale = row[2], row[3]
-    mags = np.random.normal(loc=loc,scale=scale,size=size)
+    n_needed = size
+    mags = np.array([])
+    while n_needed > 0:
+        new_mags = np.random.normal(loc=loc,scale=scale,size=n_needed)
+        new_mags = new_mags[ma.masked_inside(new_mags, min_mag, max_mag).mask]
+        mags = np.concatenate((mags, new_mags))
+        n_needed = size - len(mags)
+    
+    print len(mags), size
+    
     return mags
 
 def get_radii(m, r0 = 0.21 / 0.06, m0 = -21., beta = 0.3, sigma = 0.7):
