@@ -1,12 +1,17 @@
 import numpy as np
 import subprocess
 import os
+import glob
+
+import CompletenessFunction_class as compclass
+
 
 #--------------------------------------------------------------------------
 #Some constants
 arcsec_opts = ['arcseconds', 'arcsecond', 'arcsec', 'a']
 radian_opts = ['radians', 'radian', 'rad', 'r']
 degree_opts = ['degrees', 'degree', 'deg', 'd']
+
 
 #--------------------------------------------------------------------------
 def ang_sep(ra1, dec1, ra2, dec2, radians_out=True, radians_in=False):
