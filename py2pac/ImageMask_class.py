@@ -566,9 +566,9 @@ class ImageMask:
             random_completeness = np.concatenate((random_completeness,
                                                   new_completeness))
             if new_mags is not None:
-                mags = np.concatenate(mags, new_mags)
+                mags = np.concatenate((mags, new_mags))
             if new_radii is not None:
-                radii = np.concatenate(radii, new_radii)
+                radii = np.concatenate((radii, new_radii))
             number_we_have = len(ra_R)
             number_left_to_make = number_to_make - number_we_have
             
