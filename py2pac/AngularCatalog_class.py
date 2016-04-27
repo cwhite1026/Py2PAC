@@ -48,6 +48,9 @@ class AngularCatalog(object):
         Any additional properties that you want to carry around with the
         angular positions.  This isn't used at all by AngularCatalog, but
         makes it easier to access things.
+        
+    weight_file : string (optional)
+        The file name of a FITS file to read in.
 
     image_mask : ImageMask instance (optional)
         An instance of an ImageMask object to be used as this catalog's 
@@ -62,9 +65,9 @@ class AngularCatalog(object):
 
     #------------------#
     #- Initialization -#
-    #------------------#Your data and masked data will be the same
+    #------------------#
     def __init__(self, ra, dec, properties=None, weight_file=None, 
-        image_mask=None):
+        image_mask=None, fits_file_type='weight'):
         """
         The init function for the AngularCatalog class
         """
@@ -92,6 +95,8 @@ class AngularCatalog(object):
         self._n_objects = None
 
         #Store the info from keywords
+        self._weight_file_name = weight_file
+        self._fits_file_type = fits_file_type
         self._image_mask = image_mask
         self._properties = properties
 
@@ -100,13 +105,13 @@ class AngularCatalog(object):
         self.cfs={}
 
         #Make blank things so I can ask "is None" rather than "exists"
-        self._weight_file_name = None
         self._data_tree=None
         self._random_tree=None
         self._ra_random=None
         self._dec_random=None
         self._random_number_type=None
         self._random_quantity=None
+        self._random_gen_kwargs={}
         self._Gp=None
         self._completeness=None
         self._use=None
@@ -187,6 +192,9 @@ class AngularCatalog(object):
     def mask_from_weight_file(self, filename):
         """
         Set the weight file name and make an image mask out of the file.
+        This is specifically for weight files, where the array value at a
+        particular position is related to the RMS- I need to ask exactly 
+        how...
 
         Parameters
         ----------
@@ -195,9 +203,35 @@ class AngularCatalog(object):
             a weight mask.  The file name should be specified from /
         """
         self._weight_file_name=filename
-        self._image_mask= imclass.ImageMask.from_FITS_weight_file(filename)
+        self._fits_file_type = 'weight'
+        self._image_mask= imclass.ImageMask.from_FITS_file(filename,
+                                    fits_file_type = self._fits_file_type)
         self.setup_mask()
         return
+        
+    #----------------------------------------------------------------------       
+    #--------------------------------------#
+    #- Set the image mask from a flag map -#
+    #--------------------------------------#
+    def mask_from_levels_file(self, filename):
+        """
+        This routine sets up an ImageMask with a levels file- a FITS file
+        that contains integers indicating the exposure level at that 
+        position
+
+        Parameters
+        ----------
+        filename : string
+            The location of the FITS file that you want to process to
+            a flag map.  The file name should be specified from /
+        """
+        self._weight_file_name=filename
+        self._fits_file_type = 'levels'
+        self._image_mask= imclass.ImageMask.from_FITS_file(filename,
+                                    fits_file_type = self._fits_file_type)
+        self.setup_mask()
+        return        
+        
 
     #----------------------------------------------------------------------
     #----------------------------------#
@@ -351,7 +385,7 @@ class AngularCatalog(object):
     #- Generate randoms -#
     #--------------------#
     def generate_random_sample(self, number_to_make=None, 
-                            multiple_of_data=None, density_on_sky=None):
+                     multiple_of_data=None, density_on_sky=None, **kwargs):
         """
         This routine calls the image mask's masked random generation to
         create a random sample to compare the data to.  The number of
@@ -376,7 +410,15 @@ class AngularCatalog(object):
             The number of randoms to place per square degree on the sky.
             This is not the most exact procedure because the calculation
             of the mask's footprint is approximate.
+            
+        **kwargs : (optional)
+            Keyword arguments to be passed to 
+            ImageMask.generate_random_sample.  See documentation for 
+            options.
         """
+        
+        #Store how we called generate random sample
+        self._random_gen_kwargs = kwargs
 
         #Figure out how many randoms we're making
         if density_on_sky is not None:
@@ -406,7 +448,8 @@ class AngularCatalog(object):
         N_make = int(N_make)
 
         #Get the RAs and Decs from the ImageMask and store
-        ra, dec, __ = self._image_mask.generate_random_sample(N_make)
+        ra, dec, __ = self._image_mask.generate_random_sample(N_make, 
+                                                                **kwargs)
         self._ra_random = ra
         self._dec_random = dec
 
@@ -428,21 +471,28 @@ class AngularCatalog(object):
         #random_quantity should be passed to.
         if self._random_number_type == 'density':
             self.generate_random_sample(density_on_sky =
-                                        self._random_quantity)
+                                        self._random_quantity, 
+                                        **self._random_gen_kwargs)
             
         elif self._random_number_type == 'multiple':
             self.generate_random_sample(multiple_of_data =
-                                        self._random_quantity)
+                                        self._random_quantity,
+                                        **self._random_gen_kwargs)
             
         elif self._random_number_type == 'number':
             self.generate_random_sample(number_to_make =
-                                        self._random_quantity)
+                                        self._random_quantity,
+                                        **self._random_gen_kwargs)
 
         else:
             raise ValueError("rerun_randoms says: Not sure how you managed"
                              " this, but you have an invalid random_number"
                              "_type.")
-        
+                             
+    #----------------------------------------------------------------------
+    #------------------#
+    #- Subdivide mask -#
+    #------------------#        
     def subdivide_mask(self, **kwargs):
         """
         Calls the image mask's subdivide_mask routine- see the 

@@ -165,7 +165,7 @@ class ImageMask:
 
         In short- this routine is basically unusable until I figure out 
         what perverse bit of WCS is doing this and beat it into 
-        submission.
+        submission unless you just want a square of 1s.  That it can do.
 
         -------
 
