@@ -128,7 +128,7 @@ class AngularCatalog(object):
     #--------------------------------------------#
     @classmethod
     def random_catalog(cls, n_randoms, image_mask = None, ra_range=None,
-                       dec_range=None):
+                       dec_range=None, **kwargs):
         """
         Creates an AngularCatalog populated with RAs and Decs placed
         randomly within the mask.  This can be passed either an image
@@ -160,12 +160,19 @@ class AngularCatalog(object):
             The minimum and maximum Dec you would like your randoms to have.
             This is an alternative to the image_mask option.  This must be
             combined with the ra_range argument.
+            
+        **kwargs : keyword arguments (optional)
+            Keyword arguments to be passed to 
+            ImageMask.generate_random_sample().
 
         Returns
         -------
         cat : AngularCatalog object
             An AngularCatalog instance with n_randoms distributed over
-            either the image_mask or over the RA and Dec range.
+            either the image_mask or over the RA and Dec range.  If the
+            generate_random_sample call returns magnitudes and radii, they
+            will be stored in cat._properties with keys "magnitude" and
+            "radius".
         """
 
         #Make an image mask from the RA and Dec ranges if we don't have an
@@ -176,8 +183,15 @@ class AngularCatalog(object):
 
         #Use the ImageMask to create random RAs and Decs and make them into
         #an AngularCatalog with the corresponding mask.
-        ra, dec, comp = image_mask.generate_random_sample(n_randoms)
-        return AngularCatalog(ra, dec, image_mask=image_mask)
+        temp = image_mask.generate_random_sample(n_randoms, )
+        ra, dec, comp, mags, radii = temp
+        props = {}
+        if mags is not None:
+            props['magnitude'] = mags
+        if radii is not None:
+            props['radius'] = radii
+        return AngularCatalog(ra, dec, image_mask=image_mask, 
+                                properties=props)
     
 #==========================================================================
 #==========================================================================

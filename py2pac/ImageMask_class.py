@@ -515,6 +515,10 @@ class ImageMask:
         #Mask down to the ones that survived
         ra_R = ra_R[use]
         dec_R = dec_R[use]
+        if mags is not None:
+            mags = mags[use]
+        if radii is not None:
+            radii = radii[use]
         compare_to = compare_to[use]
         random_completeness = random_completeness[use]
 
@@ -549,6 +553,10 @@ class ImageMask:
             new_use = new_compare_to < new_completeness
             new_ra = new_ra[new_use]
             new_dec = new_dec[new_use]
+            if new_mags is not None:
+                new_mags = new_mags[new_use]
+            if new_radii is not None:
+                new_radii = new_radii[new_use]
             new_compare_to = new_compare_to[new_use]
             new_completeness = new_completeness[new_use]
             
@@ -557,6 +565,10 @@ class ImageMask:
             dec_R = np.concatenate((dec_R, new_dec))
             random_completeness = np.concatenate((random_completeness,
                                                   new_completeness))
+            if new_mags is not None:
+                mags = np.concatenate(mags, new_mags)
+            if new_radii is not None:
+                radii = np.concatenate(radii, new_radii)
             number_we_have = len(ra_R)
             number_left_to_make = number_to_make - number_we_have
             
