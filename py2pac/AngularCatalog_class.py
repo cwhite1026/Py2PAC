@@ -125,7 +125,12 @@ class AngularCatalog(object):
                     
         #Setup the mask if we have one.
         if self._image_mask:
-            self.setup_mask()
+            try:
+                self.setup_mask()
+            except:
+                warnings.warn("Something went wrong with setting up the "
+                              "image mask. You need to fix it before you "
+                              "can do anything with the catalog.")
 
     #----------------------------------------------------------------------
     #--------------------------------------------#
@@ -225,7 +230,9 @@ class AngularCatalog(object):
         self._fits_file_type = type
         self._image_mask= imclass.ImageMask.from_FITS_file(filename,
                                     fits_file_type = self._fits_file_type)
-        self.setup_mask()
+        if self._fits_file_type != "levels":
+            self.setup_mask()
+            
         return
         
     #----------------------------------------------------------------------       
