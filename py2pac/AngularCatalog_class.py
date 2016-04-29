@@ -118,6 +118,10 @@ class AngularCatalog(object):
         self._use_random=None
         self._subregion_number=None
 
+        #If we have a weight file name and a fits file type, set that up
+        if (weight_file is not None) and (fits_file_type is not None):
+            self.mask_from_FITS_file(weight_file, fits_file_type) 
+                    
         #Setup the mask if we have one.
         if self._image_mask:
             self.setup_mask()
@@ -203,7 +207,7 @@ class AngularCatalog(object):
     #-----------------------------------------#
     #- Set the image mask from a weight file -#
     #-----------------------------------------#
-    def mask_from_weight_file(self, filename):
+    def mask_from_FITS_file(self, filename, type):
         """
         Set the weight file name and make an image mask out of the file.
         This is specifically for weight files, where the array value at a
@@ -217,7 +221,7 @@ class AngularCatalog(object):
             a weight mask.  The file name should be specified from /
         """
         self._weight_file_name=filename
-        self._fits_file_type = 'weight'
+        self._fits_file_type = type
         self._image_mask= imclass.ImageMask.from_FITS_file(filename,
                                     fits_file_type = self._fits_file_type)
         self.setup_mask()
@@ -227,24 +231,24 @@ class AngularCatalog(object):
     #--------------------------------------#
     #- Set the image mask from a flag map -#
     #--------------------------------------#
-    def mask_from_levels_file(self, filename):
-        """
-        This routine sets up an ImageMask with a levels file- a FITS file
-        that contains integers indicating the exposure level at that 
-        position
-
-        Parameters
-        ----------
-        filename : string
-            The location of the FITS file that you want to process to
-            a flag map.  The file name should be specified from /
-        """
-        self._weight_file_name=filename
-        self._fits_file_type = 'levels'
-        self._image_mask= imclass.ImageMask.from_FITS_file(filename,
-                                    fits_file_type = self._fits_file_type)
-        self.setup_mask()
-        return        
+#     def mask_from_levels_file(self, filename):
+#         """
+#         This routine sets up an ImageMask with a levels file- a FITS file
+#         that contains integers indicating the exposure level at that 
+#         position
+# 
+#         Parameters
+#         ----------
+#         filename : string
+#             The location of the FITS file that you want to process to
+#             a flag map.  The file name should be specified from /
+#         """
+#         self._weight_file_name=filename
+#         self._fits_file_type = 'levels'
+#         self._image_mask= imclass.ImageMask.from_FITS_file(filename,
+#                                     fits_file_type = self._fits_file_type)
+#         self.setup_mask()
+#         return        
         
 
     #----------------------------------------------------------------------
