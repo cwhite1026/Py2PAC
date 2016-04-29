@@ -109,6 +109,7 @@ class AngularCatalog(object):
         self._random_tree=None
         self._ra_random=None
         self._dec_random=None
+        self._random_properties={}
         self._random_number_type=None
         self._random_quantity=None
         self._random_gen_kwargs={}
@@ -119,7 +120,7 @@ class AngularCatalog(object):
         self._subregion_number=None
 
         #If we have a weight file name and a fits file type, set that up
-        if (weight_file is not None) and (fits_file_type is not None):
+        if (weight_file is not None):
             self.mask_from_FITS_file(weight_file, fits_file_type) 
                     
         #Setup the mask if we have one.
@@ -187,7 +188,7 @@ class AngularCatalog(object):
 
         #Use the ImageMask to create random RAs and Decs and make them into
         #an AngularCatalog with the corresponding mask.
-        temp = image_mask.generate_random_sample(n_randoms, )
+        temp = image_mask.generate_random_sample(n_randoms, **kwargs)
         ra, dec, comp, mags, radii = temp
         props = {}
         if mags is not None:
@@ -466,11 +467,14 @@ class AngularCatalog(object):
         N_make = int(N_make)
 
         #Get the RAs and Decs from the ImageMask and store
-        ra, dec, __ = self._image_mask.generate_random_sample(N_make, 
-                                                                **kwargs)
+        temp = self._image_mask.generate_random_sample(N_make, **kwargs)
+        ra, dec, random_completeness, mags, radii = temp
         self._ra_random = ra
         self._dec_random = dec
-
+        self._random_properties['magnitude'] = mags
+        self._random_properties['radius'] = radii
+        self._random_properties['completeness'] = random_completeness
+        
         #Rerun the random tree
         self._make_random_tree()
         
