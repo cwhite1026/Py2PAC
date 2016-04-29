@@ -324,7 +324,7 @@ class AngularCatalog(object):
         
         #Ask the mask for the completenesses of each data object
         self._completeness=self._image_mask.return_completenesses(self._ra,
-                                                                 self._dec)
+                                       self._dec, use_mags_and_radii=False)
 
         #Store the old _use array if we have one- if not, create a bogus one
         if self._use is not None:
