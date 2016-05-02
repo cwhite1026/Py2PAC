@@ -539,7 +539,7 @@ class ImageMask:
             new_ra, new_dec = corr.uniform_sphere(self._ra_range, 
                                               self._dec_range,
                                               size=ask_for)
-            print "ras and decs generated within:", min(new_ra), max(new_ra), min(new_dec), max(new_dec)
+#             print "ras and decs generated within:", min(new_ra), max(new_ra), min(new_dec), max(new_dec)
             if use_mags_and_radii:
                 new_mags, new_radii = get_mags_and_radii(ask_for, **kwargs)
             else:
@@ -851,7 +851,7 @@ class ImageMask:
         """
         
         #Start by putting down a bunch of randoms.
-        ra, dec, __ = self.generate_random_sample(5.e4)
+        ra, dec, __, __, __ = self.generate_random_sample(5.e4)
         x1, y1=self.ra_dec_to_xy(ra, dec)
 
         #Set the padding on each side
