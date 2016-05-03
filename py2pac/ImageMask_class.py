@@ -851,7 +851,7 @@ class ImageMask:
         """
         
         #Start by putting down a bunch of randoms.
-        ra, dec, __, __, __ = self.generate_random_sample(5.e4)
+        ra, dec, __, __, __ = self.generate_random_sample(5.e4, use_mags_and_radii=False)
         x1, y1=self.ra_dec_to_xy(ra, dec)
 
         #Set the padding on each side

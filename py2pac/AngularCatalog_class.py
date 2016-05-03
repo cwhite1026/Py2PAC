@@ -401,9 +401,9 @@ class AngularCatalog(object):
         """
         
         return self._image_mask.move_mask_on_sky(delta_ra=delta_ra,
-                                                 delta_dec=delta_dec,
-                                                 theta_degrees=theta_degrees,
-                                                 preview=preview)
+                                               delta_dec=delta_dec,
+                                               theta_degrees=theta_degrees,
+                                               preview=preview)
     
     #----------------------------------------------------------------------
 
