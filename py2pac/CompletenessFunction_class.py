@@ -1,6 +1,8 @@
 #External code
 import numpy as np
+import numpy.ma as ma
 import warnings
+from copy import deepcopy
 
 #==========================================================================
 #==========================================================================
@@ -251,15 +253,25 @@ class CompletenessFunction:
         Assumes equal bin widths and increasing bin edges.
         """
 
-        # check for valid magnitude input
+        # Mask down to just guys that fall in our completeness function.
+        #The ones that aren't will be returned as 0 completeness
         mag_list = np.asarray(mag_list)
-        if (np.min(mag_list) < self._min_mag) or \
-        (np.max(mag_list) > self._max_mag):
-            raise ValueError("Your magnitude array contains values "
-                             "outside the specified range.")
+        msk = ma.masked_inside(mag_list, self._min_mag, self._max_mag).mask
+        if hasattr(self, '_r_range'):
+            # check if mag and radius input are same size
+            if len(r_list) != len(inside_range_maglist):
+                raise ValueError("Your magnitude and radius arrays are "
+                                 "not the same size:", len(inside_range_maglist),
+                                 len(r_list))
+            rmsk = ma.masked_inside(r_list, self._min_r, self._max_r).mask
+            msk= msk & rmsk
+        all_completeness = np.zeros(len(mag_list))
+        inside_range_maglist = mag_list[msk]
+
         # find magnitude bin that each input mag falls into
         mag_condition = np.hstack([np.where((mag >= self._mag_range) &
-            (mag < self._mag_range + self._mag_bin_size))[0][0] for mag in mag_list])
+            (mag < self._mag_range + self._mag_bin_size))[0][0] for mag in inside_range_maglist])
+            
         # if any values equal the last magnitude value, set their index to
         # one smaller so they fit in the completeness array
         # this is a hack
@@ -267,16 +279,7 @@ class CompletenessFunction:
         mag_condition = mag_condition.ravel()
         if hasattr(self, '_r_range'):
             r_list = np.array(r_list)
-            # check if mag and radius input are same size
-            if len(r_list) != len(mag_list):
-                raise ValueError("Your magnitude and radius arrays are "
-                                 "not the same size:", len(mag_list),
-                                 len(r_list))
             # do the same processing for radius as magnitude
-            if (np.min(r_list) < self._min_r) or \
-            (np.max(r_list) > self._max_r):
-                raise ValueError("Your radius array contains values "
-                                 "outside the specified range.")
             r_condition = np.hstack([np.where((r >= self._r_range) &
                 (r < self._r_range + self._r_bin_size))[0][0] for r in r_list])
             r_condition[r_condition == len(self._r_range)] = len(self._r_range) - 1
@@ -286,11 +289,10 @@ class CompletenessFunction:
                 completeness = self._completeness_array[r_condition, mag_condition]
             except:
                 print r_condition, mag_condition, self._completeness_array.shape
-#                 print('Oops, something went wrong; setting completeness to'
-#                       ' 0 and trying again')
                 completeness = np.array([0])
         else:
             completeness = self._completeness_array[mag_condition]
         # flatten out the array
         completeness = completeness.ravel()
-        return completeness
+        all_completeness[msk] = completeness
+        return all_completeness
