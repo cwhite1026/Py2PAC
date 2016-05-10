@@ -259,9 +259,9 @@ class CompletenessFunction:
         msk = ma.masked_inside(mag_list, self._min_mag, self._max_mag).mask
         if hasattr(self, '_r_range'):
             # check if mag and radius input are same size
-            if len(r_list) != len(inside_range_maglist):
+            if len(r_list) != len(mag_list):
                 raise ValueError("Your magnitude and radius arrays are "
-                                 "not the same size:", len(inside_range_maglist),
+                                 "not the same size:", len(mag_list),
                                  len(r_list))
             rmsk = ma.masked_inside(r_list, self._min_r, self._max_r).mask
             msk= msk & rmsk
