@@ -20,6 +20,7 @@ def completeness_list_from_file(filestr, which_bit = 5):
     print filestr
     compfcns = []
     for i in glob.glob(filestr):
+        print "level", i.split('_')[which_bit]
         compfcn = compclass.CompletenessFunction.from_npz_file(i, level=i.split('_')[which_bit])
         compfcns.append(compfcn)
     
