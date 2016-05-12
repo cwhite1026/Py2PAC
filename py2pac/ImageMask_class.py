@@ -1359,9 +1359,10 @@ class ImageMask:
                                 if rad_list is not None:
                                     rads_in_ranges = rad_list[in_ranges]
                                     rads = rads_in_ranges[at_level]
-                                print at_level, len(temp_complete[at_level])
-                                temp_complete[at_level] = cf.query(mags, 
-                                                                r_list=rads)
+                                print len(at_level), len(temp_complete[at_level])
+                                temp = cf.query(mags, r_list=rads)
+                                print len(temp), temp
+                                temp_complete[at_level] = temp
             else:
                 temp_complete[on_image] = on_mask_bits
             
