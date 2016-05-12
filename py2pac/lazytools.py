@@ -6,7 +6,7 @@ import glob
 import CompletenessFunction_class as compclass
 
 #--------------------------------------------------------------------------
-def completeness_list_from_file(filestr):
+def completeness_list_from_file(filestr, which_bit = 5):
     """
     Takes a string that describes the file names of the completeness 
     functions, reads them in, and turns them into something you can feed
@@ -20,7 +20,7 @@ def completeness_list_from_file(filestr):
     print filestr
     compfcns = []
     for i in glob.glob(filestr):
-        compfcn = compclass.CompletenessFunction.from_npz_file(i, level=i.split('_')[5])
+        compfcn = compclass.CompletenessFunction.from_npz_file(i, level=i.split('_')[which_bit])
         compfcns.append(compfcn)
     
     return compfcns
