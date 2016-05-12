@@ -17,7 +17,7 @@ def completeness_list_from_file(filestr):
     compfcns = miscellaneous.completeness_list_from_file("/path/to/files/*_s_*_expdisk_XYH.npz")
     immask.make_completeness_dict(*cfs)
     """
-
+    print filestr
     compfcns = []
     for i in glob.glob(filestr):
         compfcn = compclass.CompletenessFunction.from_npz_file(i, level=i.split('_')[5])
