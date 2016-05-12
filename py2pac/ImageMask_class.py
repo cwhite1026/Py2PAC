@@ -531,11 +531,16 @@ class ImageMask:
         number_left_to_make = number_to_make - number_we_have
         
         #If we've actually made too few, make more    
+        fraction_through = float(number_we_have)/number_to_make
+        make_ceiling = max(number_to_make, 1e6)
         while number_left_to_make > 0:
             print number_left_to_make, "left to make"
 
-            #Make some more
-            ask_for = number_left_to_make * 2
+            #Make some more- adjust for how many seem to be getting through
+            #each time.  However, if it's really inefficient, don't make
+            #a bazillion
+            ask_for = number_left_to_make / fraction_through
+            ask_for = min(ask_for, make_ceiling)
             new_ra, new_dec = corr.uniform_sphere(self._ra_range, 
                                               self._dec_range,
                                               size=ask_for)
