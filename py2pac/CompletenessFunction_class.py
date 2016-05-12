@@ -267,6 +267,13 @@ class CompletenessFunction:
             msk= msk & rmsk
         all_completeness = np.zeros(len(mag_list))
         inside_range_maglist = mag_list[msk]
+        
+        #If we don't have any guys inside both the magnitude and radius
+        #bounds, return all zeros
+        try:
+            n_mags = len(inside_range_maglist)
+        except TypeError:
+            return all_completeness
 
         # find magnitude bin that each input mag falls into
         mag_condition = np.hstack([np.where((mag >= self._mag_range) &
