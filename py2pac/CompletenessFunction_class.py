@@ -215,8 +215,30 @@ class CompletenessFunction:
         """
         
         completeness_data = np.load(npz_file)
-        mag_range = completeness_data['X']
-        r_range = completeness_data['Y']
+        
+        #Get the magnitude bin edges
+        if len(completeness_data['X'].shape)==1:
+            mag_range = completeness_data['X']
+        elif len(completeness_data['X'].shape)==2:
+            mag_range = completeness_data['X'][0,:]
+        else:
+            raise ValueError("I don't recognize the shape of the 'X' "
+                             "matrix.  It can either be a 1D array or a "
+                             "2D matrix where the rows are copies of the "
+                             "magnitude bin edges.")
+                             
+        #Get the radius bin edges
+        if len(completeness_data['Y'].shape)==1:
+            r_range = completeness_data['Y']
+        elif len(completeness_data['Y'].shape)==2:
+            r_range = completeness_data['Y'][:,0]
+        else:
+            raise ValueError("I don't recognize the shape of the 'Y' "
+                             "matrix.  It can either be a 1D array or a "
+                             "2D matrix where the columns are copies of "
+                             "the magnitude bin edges.")
+                             
+        #Make the completeness function
         completeness_array = completeness_data['H']
         completeness_function_npz = cls(completeness_array, mag_range,
             r_range=r_range, **kwargs)
