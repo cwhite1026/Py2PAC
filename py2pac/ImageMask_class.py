@@ -1359,7 +1359,7 @@ class ImageMask:
                                 if rad_list is not None:
                                     rads_in_ranges = rad_list[in_ranges]
                                     rads = rads_in_ranges[at_level]
-                                print len(mags), len(rads), sum(at_level)
+                                print at_level
                                 return temp_complete, at_level, rads, mags
                                 temp_complete[at_level] = cf.query(mags, 
                                                                 r_list=rads)
