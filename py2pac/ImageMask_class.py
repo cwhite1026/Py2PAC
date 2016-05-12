@@ -540,7 +540,7 @@ class ImageMask:
             #each time.  However, if it's really inefficient, don't make
             #a bazillion
             ask_for = number_left_to_make / fraction_through
-            ask_for = min(ask_for, make_ceiling)
+            ask_for = np.ceil(min(ask_for, make_ceiling))
             new_ra, new_dec = corr.uniform_sphere(self._ra_range, 
                                               self._dec_range,
                                               size=ask_for)
