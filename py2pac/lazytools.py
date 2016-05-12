@@ -19,7 +19,7 @@ def completeness_list_from_file(filestr):
     """
 
     compfcns = []
-    for i in glob.glob('/user/mdurbin/candels/for_cathy/for_yotam/completeness/*_s_*_expdisk_XYH.npz'):
+    for i in glob.glob(filestr):
         compfcn = compclass.CompletenessFunction.from_npz_file(i, level=i.split('_')[5])
         compfcns.append(compfcn)
     
