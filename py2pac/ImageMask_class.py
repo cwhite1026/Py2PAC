@@ -1350,7 +1350,7 @@ class ImageMask:
                         # get completeness object corresponding to level
                         cf = self._completeness_dict[level_string]
                         # find all galaxies located within level
-                        at_level = np.where(on_mask_bits == int(level))
+                        at_level = np.where(on_mask_bits == int(level))[0]
                         num_to_generate = len(temp_complete[at_level])
                         print "num to generate", num_to_generate
                         if num_to_generate > 0:
