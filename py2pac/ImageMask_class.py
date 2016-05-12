@@ -1352,7 +1352,6 @@ class ImageMask:
                         # find all galaxies located within level
                         at_level = np.where(on_mask_bits == int(level))[0]
                         num_to_generate = len(temp_complete[at_level])
-                        print "num to generate", num_to_generate
                         if num_to_generate > 0:
                             if mag_list is not None:
                                 mags_in_ranges = mag_list[in_ranges]
@@ -1360,9 +1359,7 @@ class ImageMask:
                                 if rad_list is not None:
                                     rads_in_ranges = rad_list[in_ranges]
                                     rads = rads_in_ranges[at_level]
-                                print "len(at_level)",len(at_level),"len(temp_complete[at_level])", len(temp_complete[at_level])
                                 temp = cf.query(mags, r_list=rads)
-                                print "len(temp)", len(temp)
                                 temp_complete[at_level] = temp
             else:
                 temp_complete[on_image] = on_mask_bits

@@ -299,9 +299,6 @@ class CompletenessFunction:
             return all_completeness
 
         # find magnitude bin that each input mag falls into
-        print "mag_range:", self._mag_range 
-        print "mag_bin_size:", self._mag_bin_size
-        print "inside_range_maglist:", inside_range_maglist
         mag_condition = np.hstack([np.where((mag >= self._mag_range) &
             (mag < self._mag_range + self._mag_bin_size))[0][0] for mag in inside_range_maglist])
             
