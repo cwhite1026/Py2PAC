@@ -531,7 +531,7 @@ class ImageMask:
         number_left_to_make = number_to_make - number_we_have
         
         #If we've actually made too few, make more    
-        fraction_through = float(number_we_have)/number_to_make
+        fraction_through = max(float(number_we_have)/number_to_make, 1e-4)
         make_ceiling = max(number_to_make, 1e6)
         while number_left_to_make > 0:
             print number_left_to_make, "left to make"
