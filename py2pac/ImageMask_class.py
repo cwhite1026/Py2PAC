@@ -1350,7 +1350,7 @@ class ImageMask:
                         # get completeness object corresponding to level
                         cf = self._completeness_dict[level_string]
                         # find all galaxies located within level
-                        at_level = np.where(on_mask_bits == int(level))
+                        at_level = np.where(on_mask_bits == int(level))[0]
                         num_to_generate = len(temp_complete[at_level])
                         if num_to_generate > 0:
                             if mag_list is not None:
@@ -1359,8 +1359,7 @@ class ImageMask:
                                 if rad_list is not None:
                                     rads_in_ranges = rad_list[in_ranges]
                                     rads = rads_in_ranges[at_level]
-                                print at_level
-                                return temp_complete, at_level, rads, mags
+                                print at_level, len(temp_complete[at_level])
                                 temp_complete[at_level] = cf.query(mags, 
                                                                 r_list=rads)
             else:
