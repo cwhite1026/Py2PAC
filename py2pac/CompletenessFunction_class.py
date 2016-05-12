@@ -273,10 +273,11 @@ class CompletenessFunction:
         try:
             n_mags = len(inside_range_maglist)
         except TypeError:
+            print "returning all zeros"
             return all_completeness
 
         # find magnitude bin that each input mag falls into
-        return self._mag_range, self._mag_bin_size, inside_range_maglist
+        print self._mag_range, self._mag_bin_size, inside_range_maglist
         mag_condition = np.hstack([np.where((mag >= self._mag_range) &
             (mag < self._mag_range + self._mag_bin_size))[0][0] for mag in inside_range_maglist])
             
