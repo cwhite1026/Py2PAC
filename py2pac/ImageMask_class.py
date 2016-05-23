@@ -1345,6 +1345,8 @@ class ImageMask:
                    str(len(xinds[on_image])) +
                    " points that are actually on the image")
             on_mask_bits = self._mask[xinds[on_image],yinds[on_image]]
+            plt.hist(on_mask_bits)
+            plt.show()
             # use completeness functions if they exist
             # this doesn't work with all options yet
             if use_mags_and_radii:
