@@ -448,8 +448,16 @@ class AngularCatalog(object):
         Calls the image mask's subdivide_mask routine- see the 
         ImageMask_class documentation for all the options.
         """
+        
+        #Do the subdivision
         self._image_mask.subdivide_mask(**kwargs)
-        self._subregion_number = self._image_mask.return_subregions(
+        
+        #If it's not a preview, store the subdivision
+        preview=False
+        if 'preview' in kwargs.keys():
+            preview = kwargs['preview']
+        if not preview:
+            self._subregion_number = self._image_mask.return_subregions(
                                                     self._ra, self._dec)
         
 #==========================================================================
@@ -740,7 +748,8 @@ class AngularCatalog(object):
         self.cfs[name].set_cf(bootstrap_cf, bootstrap_cf_err,
                                iterations=bootstrap_boots)
         self.cfs[name].set_counts(RR=rr)
-        self.save_cf(save_file_base, cf_keys=[name])
+        if (save_file_base is not None):
+            self.save_cf(save_file_base, cf_keys=[name])
         
     #----------------------------------------------------------------------
 
@@ -1374,18 +1383,18 @@ class AngularCatalog(object):
         if (sample == 'data') | (sample == 'both'):
             if masked_data:
                 ax.scatter(self._ra[self._use], self._dec[self._use],
-                    color='b', label="Masked data")
+                    color='b', label="Masked data", zorder = 3)
             else:
                 ax.scatter(self._ra, self._dec, color='b', 
-                    label="Unmasked data")
+                    label="Unmasked data", zorder = 2)
 
         if (sample == 'random') | (sample == 'both'):
             ax.scatter(self._ra_random, self._dec_random, color='r',
-                label="Randoms")
+                label="Randoms", zorder = 1)
 
         #Make a legend
         handles, labels=ax.get_legend_handles_labels()
-        legnd=ax.legend(handles, labels, loc=4, labelspacing=.15, 
+        legnd=ax.legend(handles, labels, loc=0, labelspacing=.15, 
             fancybox=True, fontsize=8, handlelength=3)
         legnd.get_frame().set_alpha(0.)
 

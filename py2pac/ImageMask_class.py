@@ -461,8 +461,8 @@ class ImageMask:
         #How many do we have?
         number_we_have = len(ra_R)
         print ("ImageMask.generate_random_sample says: "
-               " We made "+str(number_we_have))
-        print "      We need ", number_to_make, " total"
+               " We made "+str(number_we_have)+" and we need"
+               " "+str(number_to_make)+".")
 
         #Check to see by how many we've overshot
         number_left_to_make = number_to_make - number_we_have
@@ -507,10 +507,10 @@ class ImageMask:
             ra_R=ra_R[0:number_to_make]
             dec_R=dec_R[0:number_to_make]
             random_completeness= random_completeness[0:number_to_make]
-        else:
-            print ("ImageMask.generate_random_sample says: "
-                  "I made exactly the right number!  It's like winning "
-                  "the lottery but not actually fun...")
+#         else:
+#             print ("ImageMask.generate_random_sample says: "
+#                   "I made exactly the right number!  It's like winning "
+#                   "the lottery but not actually fun...")
             
                 
         #Return things!
@@ -720,7 +720,7 @@ class ImageMask:
     #- Set subregions within mask -#
     #------------------------------# 
     def subdivide_mask(self, n_shortside=3, n_longside=4, preview=False,
-                       rotation_angle=None, padding=None, only_show=None,
+                       rotation_angle=0, padding=None, only_show=None,
                        save_plot=None):
         """
         Subdivide mask takes the image mask, draws a rectangle around the
