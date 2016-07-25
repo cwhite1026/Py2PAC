@@ -69,6 +69,8 @@ class AngularCatalog(object):
         The init function for the AngularCatalog class
         """
 
+        print "weight file"
+
         #Make sure we have Numpy arrays
         ra = np.array(ra)
         dec = np.array(dec)
@@ -94,6 +96,7 @@ class AngularCatalog(object):
 
         #Read in the FITS file
         if weight_file is not None:
+            print "Trying to make the image mask"
             self.mask_from_weight_file(self._weight_file_name)
 
         #Store the info from keywords
