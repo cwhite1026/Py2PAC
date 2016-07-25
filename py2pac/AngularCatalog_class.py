@@ -89,7 +89,12 @@ class AngularCatalog(object):
         self._dec_range = np.array([dec.min(), dec.max()])
         self._dec_span = np.diff(self._dec_range)[0]
         self._input_n_objects = ra.size
+        self._weight_file_name = weight_file
         self._n_objects = None
+
+        #Read in the FITS file
+        if weight_file is not None:
+            self.mask_from_weight_file(self._weight_file_name)
 
         #Store the info from keywords
         self._image_mask = image_mask
@@ -100,7 +105,6 @@ class AngularCatalog(object):
         self.cfs={}
 
         #Make blank things so I can ask "is None" rather than "exists"
-        self._weight_file_name = None
         self._data_tree=None
         self._random_tree=None
         self._ra_random=None
