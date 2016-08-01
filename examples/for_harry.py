@@ -1,7 +1,7 @@
 import AngularCatalog_class as ac
 import astropy.io.fits as fits
 from numpy import ma
-import fitting as fit
+# import fitting as fit
 
 #Where things are
 catalogdir = "/Users/hcferguson/Box Sync/Ferguson/CANDELS Catalog Team Release May 2015/merged_catalogs/"
@@ -32,7 +32,7 @@ cat.cf_bootstrap(n_boots=20, clobber=True, name="single_gal_cf", save_file_base=
 cat.plot_cfs(which_cfs=['single_gal_cf'], labels=["Single gal bootstrap"], fmt='o-')
 
 #Fit the correlation function
-fit_results = fit.bootstrap_fit(cat, IC_method="offset", 
-                                n_fit_boots=200, return_envelope=True, 
-                                return_boots=True)
+# fit_results = fit.bootstrap_fit(cat, IC_method="offset", 
+#                                 n_fit_boots=200, return_envelope=True, 
+#                                 return_boots=True)
 
