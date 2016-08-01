@@ -5,7 +5,7 @@ import math as mth
 import struct as st
 import numpy.ma as ma
 # import pyfits as pf
-import cosmo as cos
+import cosmology as cos
 import reading as r
 from reading import *
 from writing import *
