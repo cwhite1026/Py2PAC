@@ -4,21 +4,15 @@ import numpy.ma as ma
 import numpy.random as rand
 import matplotlib.pyplot as plt
 import cf_useful_things as cu
-from sklearn.mixture import GMM
-from sklearn.cluster import KMeans
 from scipy import optimize as opt
-from scipy.interpolate import interp1d
 import bias_tools as t
 import scipy.integrate as intg
 import scipy.stats as stat
-import emcee as mc
-from astropy.modeling import models, fitting
 import diagnostics as diag
 import statsmodels.robust as robust
 from copy import deepcopy
 
 #ALL ANGLES ARE ASSUMED TO BE IN DEGREES
-
 
 #==========================================================================
 def bootstrap_candels_fields(before_field, after_field, **kwargs):
@@ -704,26 +698,11 @@ def extract_cf_from_catalog(catalog, which_cf):
     #This bit of code is showing up enough that it makes sense to make
     #it a function
 
-    #Pull out the CF thetas
-    cf_thetas = catalog._cf_thetas
-    cf_theta_bins = catalog._cf_theta_bins
-    
-    #Get the CF from the catalog
-    if which_cf == 'cf':
-        cf = catalog._cf
-        cf_error = np.zeros(n_bins)
-    elif which_cf == 'bootstrap':
-        cf = catalog._bootstrap_cf
-        cf_error = catalog._bootstrap_cf_err
-    elif which_cf == 'block_bootstrap':
-        cf = catalog._block_bootstrap_cf
-        cf_error = catalog._block_bootstrap_cf_err
-    elif which_cf == 'jackknife':
-        cf = catalog._jackknife_cf
-        cf_error = catalog._jackknife_cf_err
+    if which_cf not in catalog.cfs.keys():
+        raise KeyError("This catalog doesn't have a CF by that name")
     else:
-        raise ValueError("extract_cf_from_catalog says: you have chosen "
-                            "an invalid which_cf.")    
+        cf_thetas, cf_theta_bins = catalog.cfs[which_cf].get_thetas(unit='d')
+        cf, cf_error = catalog.cfs[which_cf].get_cf() 
 
     return np.array(cf_thetas), np.array(cf_theta_bins), np.array(cf), np.array(cf_error)
 
@@ -752,11 +731,17 @@ def theta_bins_from_centers(centers):
     return edges
 
 #==========================================================================
-def get_info_from_catalog_set(fields, theta_min=0., theta_max=360.,
-                              which_cf='bootstrap', **kwargs):
+def get_info_from_catalog_set(fields, which_cf, theta_min=0., 
+                              theta_max=360., **kwargs):
     #Arrange the correlation functions, thetas, and errors from N catalogs
     #into a digestible format.
     
+    #Make sure we have the CF in all the fields
+    for field in fields:
+        if which_cf not in field.cfs.keys():
+            raise KeyError("The correlation function name you've specified"
+                           " doesn't exist in all the fields")
+                
     thetas=[]
     cfs=[]
     errs=[]
