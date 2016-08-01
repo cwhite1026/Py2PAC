@@ -83,6 +83,12 @@ class AngularCatalog(object):
         if dec.size != ra.size:
             raise ValueError('RA and Dec arrays must be the same length')
 
+        #Check to make sure we don't have two specifications for the
+        #image mask
+        if (image_mask is not None) and (weight_file is not None):
+            raise ValueError("You can't specify both an already-made image"
+                            " mask and a weight file for the image mask.")
+
         #Now store the RA and Dec information
         self._ra = ra
         self._dec = dec
@@ -93,11 +99,6 @@ class AngularCatalog(object):
         self._input_n_objects = ra.size
         self._weight_file_name = weight_file
         self._n_objects = None
-
-        #Read in the FITS file
-        if weight_file is not None:
-            print "Trying to make the image mask"
-            self.mask_from_weight_file(self._weight_file_name)
 
         #Store the info from keywords
         self._image_mask = image_mask
@@ -119,6 +120,11 @@ class AngularCatalog(object):
         self._use=None
         self._use_random=None
         self._subregion_number=None
+
+        #Read in the FITS file if it exists
+        if weight_file is not None:
+            print "Trying to make the image mask"
+            self.mask_from_weight_file(self._weight_file_name)
 
         #Setup the mask if we have one.
         if self._image_mask:
