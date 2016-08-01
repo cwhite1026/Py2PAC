@@ -6,13 +6,13 @@ import numpy.ma as ma
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
 import fitting as fit
-import cosmo as cos
+import cosmology as cos
 import matplotlib.pyplot as plt
-import angular_catalog as ac
-import multiz as mz
+import AngularCatalog_class as ac
+# import multiz as mz
 import subprocess
 import os
-import image_mask as im
+import ImageMask_class as im
 import bias_tools as t
 
 arcsec_opts = ['arcseconds', 'arcsecond', 'arcsec', 'a']
