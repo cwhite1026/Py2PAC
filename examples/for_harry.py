@@ -4,8 +4,9 @@ from numpy import ma
 import fitting as fit
 
 #Where things are
-catalogdir = "/Users/hcferguson/Box Sync/Ferguson/CANDELS Catalog Team Release May 2015/merged_catalogs/"
-imagedir = "/Users/hcferguson/data/candels/goodss/mosaics/current/goods_s_all_combined_v0.5/"
+# catalogdir = "/Users/hcferguson/Box Sync/Ferguson/CANDELS Catalog Team Release May 2015/merged_catalogs/"
+# imagedir = "/Users/hcferguson/data/candels/goodss/mosaics/current/goods_s_all_combined_v0.5/"
+catalogdir = ""
 
 #Read in the data
 data = fits.open(catalogdir + "gds.fits")
