@@ -7,8 +7,8 @@ import numpy.ma as ma
 # import pyfits as pf
 import cosmology as cos
 import reading as r
-from reading import *
-from writing import *
+# from reading import *
+# from writing import *
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter1d
 import pickle
