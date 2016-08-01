@@ -6,7 +6,7 @@ import struct as st
 import numpy.ma as ma
 # import pyfits as pf
 import cosmology as cos
-import reading as r
+# import reading as r
 # from reading import *
 # from writing import *
 from scipy.interpolate import interp1d
