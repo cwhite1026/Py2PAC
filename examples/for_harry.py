@@ -15,7 +15,7 @@ data = data[1].data
 msk = ma.masked_less(data['Hmag'], 26).mask
 
 #Generate an AngularCatalog with the ImageMask from the appropriate weight file
-weight_file = 'goods_s_all_combined_v0.5/gs_all_candels_ers_udf_f160w_060mas_v0.5_wht.fits'
+weight_file = 'gs_all_candels_ers_udf_f160w_060mas_v0.5_wht.fits'
 weight_file = imagedir + weight_file
 cat = ac.AngularCatalog(data['RAdeg'][msk], data['DECdeg'][msk], weight_file = weight_file)
 
