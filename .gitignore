@@ -2,3 +2,4 @@
 *.c
 *.so
 build/
+examples/hlsp_candels_hst_wfc3_gs-tot-sect33_f160w_v1.0_wht.fits
