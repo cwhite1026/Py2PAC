@@ -13,6 +13,8 @@ cat_names = ["cosmos", "egs", "goodsn", "goodss", "uds"]
 bin_name = "_logMstar9_10_z_best1.5_2.5.txt"
 cfdir = "/user/caviglia/research/correlations/data_mass_grid_03_16/cfs/"
 ngals = [1591, 2915, 2359, 2112, 2282]
+nrands = [163572.317361, 91835.7304948, 145270, 139114.574719, 166153.910042]
+nchunks = [1, 1, 10, 1, 1]
 rrdir = "/user/caviglia/research/correlations/rrs/"
 rr_names = ["cosmos_rr_gp.txt", "egs_rr_gp.txt", "gn_rr_gp_new.txt", "gs_rr_gp.txt", "uds_rr_gp.txt"]
 for i in np.arange(5):
@@ -20,8 +22,8 @@ for i in np.arange(5):
     this_theta = tb.ThetaBins.from_centers(cf_dict['theta'])
     gp_dict = read_numtab(rrdir + rr_names[i], lastcomment=True)
     gp_thetas = tb.ThetaBins.from_centers(gp_dict['theta'])
-    this_gp = gp.Gp(gp_dict['G_p'], 163573, 10, thetabins_object=deepcopy(gp_thetas), RR=gp_dict['rr'], creation_string=None)
-    this_cf = cfclass.CorrelationFunction(name='cf', cf_type='single_galaxy_boot', ngals=ngals[i], estimator="landy-szalay", theta_bin_object=deepcopy(this_theta), verbose=True, gp_object=None)
+    this_gp = gp.Gp(gp_dict['G_p'], nrands[i], nchunks[i], thetabins_object=deepcopy(gp_thetas), RR=gp_dict['rr'], creation_string=None)
+    this_cf = cfclass.CorrelationFunction(name='cf', cf_type='single_galaxy_boot', ngals=ngals[i], estimator="landy-szalay", theta_bin_object=deepcopy(this_theta), verbose=True, gp_object=this_gp)
 
 
 #Where things are

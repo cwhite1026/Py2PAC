@@ -170,7 +170,7 @@ class CorrelationFunction(object):
     #- Functions to set/retrieve properties -#
     #----------------------------------------#
     
-    def integral_constraint(A, beta, param_unit='d'):
+    def integral_constraint(self, A, beta, param_unit='d'):
         """
         Calculate the Adelberger integral constraint for this correlation 
         function's Gp (assuming one is associated with the object) and the 
