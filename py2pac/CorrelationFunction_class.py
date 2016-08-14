@@ -171,10 +171,27 @@ class CorrelationFunction(object):
     #----------------------------------------#
     
     def integral_constraint(A, beta, param_unit='d'):
-    """
-    Calculate the integral constraint for this 
+        """
+        Calculate the Adelberger integral constraint for this correlation 
+        function's Gp (assuming one is associated with the object) and the 
+        given A and beta.  If there is no Gp, the IC can't be calculated.
     
-    """
+        Power law = A * theta^(-beta)
+    
+        Parameters
+        ----------
+        A : float
+            The value the power law amplitude A fit to the correlation 
+            function with theta units in param_unit.
+    
+        beta : float
+            The slope of the power law fit to the correlation function.
+    
+        param_unit : string (optional)
+            The unit of theta for which the power law was fit.  This only 
+            affects A.  The options are 'a', 'arcsec', 'arcseconds'; 'd', 
+            'deg', 'degrees'; 'r', 'rad', 'radians'.  Default is 'd' 
+        """
         if self._Gp is None:
             raise ValueError("You have not included a Gp object with this "
                             "CorrelationFunction.  Please load one before "
