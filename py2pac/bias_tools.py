@@ -14,7 +14,10 @@ c=3.e5  #km/s
 
 options={}
 options['fname']="planck_for_hmf_transfer_out.dat"
-mf=hmf.MassFunction(transfer_fit="FromFile", transfer_options=options, z=0)
+hmf_cosmo = hmf.cosmo.get_cosmo("Planck15")
+mod = hmf.transfer_models.FromFile(hmf_cosmo, **options)
+trans = hmf.transfer.get_model(FromFile, mod, z=0)
+mf = hmf.MassFunction(transfer_model=mod, z=0)
 delta_c = mf.delta_c
 
 #==========================================================================

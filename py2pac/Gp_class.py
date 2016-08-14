@@ -15,12 +15,6 @@ class Gp(object):
 
     Parameters
     ----------
-    min_theta : float
-        The minimum of the theta bin edges for constructing the theta bins.
-    max_theta : float
-        The maximum of the theta bin edges for constructing the theta bins
-    nbins : float
-        The number of theta bins
     Gp : array of length nbins
         The Gp function from Landy and Szalay 1993, with the modification
         that the bin width is divided out of how they tell you to calculate
@@ -29,24 +23,48 @@ class Gp(object):
         which is what they assume everywhere else.  Dividing out the bin
         width gives you that and lets you pretend G_p is a continuous but
         chunky-looking function.
+        
     n_randoms : scalar
         The total number of randoms used to calculate G_p
+        
     n_chunks : scalar
         The number of pieces into which n_randoms was broken into in
         order to keep the integration time down.  If n_chunks > 1,
         G_p was calculated n_chunks time for n_randoms/n_chunks randoms
         in each and then averaged.
+        
     logbins : True | False (optional)
         Sets theta bins to be even in log space if True and and linear
         space if False.  Default is True.
+        
+    min_theta : float (optional)
+        The minimum of the theta bin edges for constructing the theta bins.
+        This is superceded by a ThetaBins object passed as 
+        thetabins_object.  Default is None.
+        
+    max_theta : float (optional)
+        The maximum of the theta bin edges for constructing the theta bins.
+        This is superceded by a ThetaBins object passed as 
+        thetabins_object.  Default is None.
+        
+    nbins : float (optional)
+        The number of theta bins.  This is superceded by a ThetaBins object 
+        passed as thetabins_object.  Default is None.
+        
+    thetabins_object : ThetaBins instance (optional)
+        An instance of ThetaBins that corresponds to the Gp.  Default is 
+        None.
+        
     unit : string (optional)
-        Tells the theta bin object what unit min_theta and max_theta are in.
-        The options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees';
-        'r', 'rad', 'radians'.  Default is 'arcseconds'
+        Tells the theta bin object what unit min_theta and max_theta are 
+        in. The options are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 
+        'degrees';'r', 'rad', 'radians'.  Default is 'arcseconds'
+        
     RR : array of length nbins (optional)
         The non-normalized RR counts that the G_p came from.  This does not
         have the bin width divided out because it doesn't need to be
         integrated anywhere.  Default is None.
+        
     creation_string : string (optional)
         A time stamp of when the G_p function was actually calculated.
         Default is None, at which point it's generated to be the time
@@ -58,16 +76,22 @@ class Gp(object):
     #------------------#
     #- Initialization -#
     #------------------#
-    def __init__(self, min_theta, max_theta, nbins, Gp, n_randoms,
-                 n_chunks, logbins=True, unit='arcsec', RR=None,
-                 creation_string=None):
+    def __init__(self, Gp, n_randoms, n_chunks, thetabins_object=None, 
+                 logbins=True,  min_theta=None, max_theta=None, nbins=None,
+                 unit='arcsec', RR=None, creation_string=None):
         """
         Creates the ThetaBins object, stores the values given, and
         creates the timestamp if creation_string isn't defined.
         """
-        #Make the ThetaBins object and store things
-        self._theta_bins = binclass.ThetaBins(min_theta, max_theta, nbins,
-                                              unit=unit, logbins=logbins)
+        #Figure out what's going on with the ThetaBins object
+        if thetabins_object is None:
+            self._theta_bins = binclass.ThetaBins(min_theta, max_theta, 
+                                              nbins, unit=unit, 
+                                              logbins=logbins)
+        else:
+            self._theta_bins = thetabins_object
+        
+        #Store the rest of the information
         self._Gp = np.array(Gp)
         self._n_randoms = n_randoms
         self._RR = RR
@@ -591,7 +615,31 @@ class Gp(object):
 
         return res
 
+    #----------------------------------------------------------------------
+    def integral_constraint(self, A, beta, param_unit='d'):
+        """
+        Calls w_Omega.
 
+        Parameters
+        ----------
+        A : float
+            The amplitude of the power law for theta in units param_unit
+        beta : float
+            The power in the power law
+        param_unit : string (optional)
+            The units of theta for which A was calculated.  The options
+            are 'a', 'arcsec', 'arcseconds'; 'd', 'deg', 'degrees'; 'r',
+            'rad', 'radians'.  Default is 'd'
 
+        Returns
+        -------
+        w_Omega : float
+            The constant w_Omega from Landy and Szalay.
+                w_Omega = integral[ G_p(theta) * w(theta) d(theta)]
+        """
+
+        #Get thetas to figure out what range to integrate over
+
+        return self.w_Omega(A, beta, param_unit=param_unit)
 
 

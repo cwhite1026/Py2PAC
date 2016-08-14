@@ -169,7 +169,21 @@ class CorrelationFunction(object):
     #----------------------------------------#
     #- Functions to set/retrieve properties -#
     #----------------------------------------#
-
+    
+    def integral_constraint(A, beta, param_unit='d'):
+    """
+    Calculate the integral constraint for this 
+    
+    """
+        if self._Gp is None:
+            raise ValueError("You have not included a Gp object with this "
+                            "CorrelationFunction.  Please load one before "
+                            "trying to calculate the integral constraint.")
+        
+        return self._Gp.integral_constraint(A, beta, param_unit=param_unit)
+        
+    #----------------------------------------------------------------------
+    
     def set_thetas(self, min_theta, max_theta, nbins, unit='a',
                    logbins=None):
         """
