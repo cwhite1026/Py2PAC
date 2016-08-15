@@ -633,8 +633,9 @@ class CorrelationFunction(object):
             else:
                 RR = None
             #Create the Gp object
-            self._Gp = gpclass.Gp(edges[0], edges[-1], nbins, Gp,
-                                  n_randoms, n_chunks, logbins = logbins,
+            self._Gp = gpclass.Gp(Gp, n_randoms, n_chunks, 
+                                  logbins = logbins, min_theta = edges[0], 
+                                  max_theta = edges[-1], nbins= nbins, 
                                   unit = unit, RR = RR,
                                   creation_string = time_created)
         else:
