@@ -482,6 +482,38 @@ def minimize_fit_to_cf(thetas, cf, cf_err, fixed_beta=None, offset=True,
     #measure
     return A, beta, offset, distance
 
+#==========================================================================
+def envelope(As, betas, offsets, theta_range, n_thetas=100):
+    #Takes random draws from the distribution of parameters given by
+    #bootstrap_params and extracts the ci confidence interval for the
+    #power law fit from it
+
+    #How many boots do we have?
+    n_fit_boots = len(As)
+    
+    #Do we have more than 1 fields' worth of ICs?  If we do, we'll return
+    #the NON-IC-CORRECTED envelope.
+    offsets = np.array(offsets)
+    if len(offsets.shape)==2:
+        if offsets.shape[1] > 1:
+            use_offsets = np.zeros(n_fit_boots)
+        else:
+            use_offsets = offsets.reshape(n_fit_boots)
+    else:
+        use_offsets = offsets
+        
+    #Make the theta grid and calculate all the curves on it
+    theta_grid=np.logspace(np.log10(theta_range[0]), np.log10(theta_range[1]), n_thetas)
+    all_curves = np.zeros((n_fit_boots, n_thetas))
+    for i in np.arange(n_fit_boots):
+        all_curves[i] = As[i] * theta_grid**(-betas[i]) - use_offsets[i]
+
+    #Find the ci confidence interval for each theta
+    median_fit=np.median(all_curves, axis=0)
+    mads = robust.scale.mad(all_curves, center=median_fit, axis=0)
+    
+    return theta_grid, median_fit - mads, median_fit, median_fit + mads
+
 
     
 #==========================================================================
