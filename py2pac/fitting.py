@@ -71,6 +71,133 @@ def bootstrap_fit(cf_objects, IC_method="offset", n_fit_boots=200,
     return results
 
 #==========================================================================
+def bootstrap_fit_with_offset(cf_objects, n_fit_boots=200, fixed_beta=None, 
+                              allowed_failure_rate=0.1, **kwargs):
+    #Run the bootstrapping with the IC fit as an offset.  Returns the 
+    #bootstraps
+    
+    thetas, cfs, errs = get_info_from_catalog_set(cf_objects, **kwargs)
+
+    #See how many CFs we have to bootstrap
+    n_cfs = cfs.shape[0]
+
+    #How many failures do we allow?
+    n_allowed_errors = n_fit_boots * allowed_failure_rate
+    n_errors=0
+
+    #Set up arrays to hold the parameters
+    As = -np.ones(n_fit_boots)
+    chi2 = -np.ones(n_fit_boots)      
+    offsets = -np.ones(n_fit_boots)    
+    if fixed_beta:
+        betas = np.full(n_fit_boots, fixed_beta)
+    else:
+        betas = -np.ones(n_fit_boots)
+
+    #Do the bootstrap loop
+    for i in np.arange(n_fit_boots, dtype=np.int):
+        indices = rand.randint(0, n_cfs, n_cfs)
+
+        #Average the selected correlation functions
+        avg_cf = np.mean(cfs[indices], axis=0)
+        #Get the error on the mean
+        error_bars = np.sqrt(np.sum(errs[indices]**2., axis=0))/n_cfs
+        #Fit the average 
+        try:
+            res = minimize_fit_to_cf(thetas, avg_cf, error_bars, 
+                                offset=True, fixed_beta=fixed_beta,
+                                **kwargs)
+        except RuntimeError:
+            res = (-1, -1, -1, -1)  
+            n_errors += 1
+            if n_errors > n_allowed_errors:
+                print "Too many errors caught: aborting."
+                raise RuntimeError("minimize_bootstrap_cf_fit says: "
+                                   "while iterating the fit over the "
+                                   "bootstrapped CFs, the fitter failed to"
+                                   " find a good fit to too many "
+                                   "combinations of CFs.  Examine your CFs"
+                                   " to see if they're too ugly.")
+            else:
+                print ("Minimization failure caught on boot "+str(i)+
+                           " of " + str(n_fit_boots))
+                           
+        #Store what we have
+        As[i] = res[0]
+        betas[i] = res[1]
+        offsets[i] = res[2]
+        chi2[i] = res[3]
+        
+    #Screen down to just the ones that succeeded
+    successful_fits = ma.masked_not_equal(As, -1).mask
+    to_mask = [As, betas, offsets, chi2]
+    for guy in to_mask:
+        guy = guy[successful_fits]
+            
+    return As, betas, offsets, chi2
+    
+#==========================================================================
+def bootstrap_fit_with_adelberger(cf_objects, n_fit_boots=200, fixed_beta=None, 
+                                  theta_min=0., theta_max=360., 
+                                  allowed_failure_rate=0.1, **kwargs):
+    #Run the bootstrapping with the IC from Adelberger.  Returns the 
+    #bootstraps    
+
+    #See how many CFs we have to bootstrap
+    try:
+        n_cfs = len(cf_objects)
+    except TypeError:
+        cf_objects = [cf_objects]
+        n_cfs = len(cf_objects)
+    #And make sure we can index it conveniently
+    cf_objects= np.array(cf_objects)
+    
+    #How many failures do we allow?
+    n_allowed_errors = n_fit_boots * allowed_failure_rate
+    n_errors=0
+
+    #Set up arrays to hold the parameters
+    As = -np.ones(n_fit_boots)
+    offsets = -np.ones((n_fit_boots, n_cfs))
+    chi2 = -np.ones(n_fit_boots)
+    if fixed_beta:
+        betas = np.full(n_fit_boots, fixed_beta)
+    else:
+        betas = -np.ones(n_fit_boots)
+
+    for i in np.arange(n_fit_boots, dtype=np.int):
+        indices = rand.randint(0, n_cfs, n_cfs)
+        temp_cf_objects = cf_objects[indices]
+        try:
+            res = iterative_fit(temp_cf_objects, fixed_beta=fixed_beta, 
+                                    **kwargs)
+        except RuntimeError:
+            n_errors += 1
+            if n_errors > n_allowed_errors:
+                print "Too many errors caught: aborting."
+                raise RuntimeError("minimize_bootstrap_cf_fit says: "
+                                   "while iterating the fit over the "
+                                   "bootstrapped CFs, the fitter failed to"
+                                   " find a good fit to too many "
+                                   "combinations of CFs.  Examine your CFs"
+                                   " to see if they're too ugly.")
+            res = (-1, -1, -np.ones(n_cfs), -1)
+        As[i] = res[0]
+        betas[i] = res[1]
+        offsets[i,:] = res[2]
+        chi2[i] = res[3]
+            
+    #Screen down to just the ones that succeeded
+    successful_fits = ma.masked_not_equal(As, -1).mask
+    to_mask = [As, betas, offsets, chi2]
+    for guy in to_mask:
+        guy = guy[successful_fits]
+            
+    return As, betas, offsets, chi2
+
+
+
+#==========================================================================
 def iterative_fit(cf_objects, fixed_beta=None, A_change_tol=.01, 
                   max_iterations = 50, **kwargs):
     #Take a set of cf_objects and iteratively fit the power law and IC
