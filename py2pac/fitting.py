@@ -4,8 +4,8 @@ import numpy.ma as ma
 from scipy import optimize as opt
 import matplotlib.pyplot as plt
 from copy import deepcopy
+import numpy.random as rand
 
-# import numpy.random as rand
 # import cf_useful_things as cu
 # import bias_tools as t
 # import scipy.integrate as intg
