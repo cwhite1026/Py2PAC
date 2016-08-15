@@ -76,7 +76,7 @@ def bootstrap_fit_with_offset(cf_objects, n_fit_boots=200, fixed_beta=None,
     #Run the bootstrapping with the IC fit as an offset.  Returns the 
     #bootstraps
     
-    thetas, cfs, errs = get_info_from_catalog_set(cf_objects, **kwargs)
+    thetas, cfs, errs = get_info_from_cf_set(cf_objects, **kwargs)
 
     #See how many CFs we have to bootstrap
     n_cfs = cfs.shape[0]
