@@ -5,12 +5,12 @@ from scipy import optimize as opt
 import matplotlib.pyplot as plt
 from copy import deepcopy
 import numpy.random as rand
+import statsmodels.robust as robust
 
 # import cf_useful_things as cu
 # import bias_tools as t
 # import scipy.integrate as intg
 # import scipy.stats as stat
-# import statsmodels.robust as robust
 
 
 #==========================================================================
@@ -481,6 +481,52 @@ def minimize_fit_to_cf(thetas, cf, cf_err, fixed_beta=None, offset=True,
     #Return the values that we've gotten and the value of the distance 
     #measure
     return A, beta, offset, distance
+
+
+    
+#==========================================================================
+def process_bootstraps_to_errors(theta_range, boots, return_envelope=True, 
+                                    return_boots=True, **kwargs):
+    #Take the bootstrap results and return the median and MAD for all the
+    #things
+    As, betas, offsets, chi2 = boots
+
+    #Now we have the n_fit_boots estimates and their errors
+    #Get the median and median absolute deviation (MAD)
+    median_A = np.median(As)
+    median_A_mad = robust.scale.mad(As, center=median_A)
+    median_beta = np.median(betas)
+    median_beta_mad = robust.scale.mad(betas, center=median_beta)
+    median_offset = np.median(offsets, axis=0)
+    median_offset_mad = robust.scale.mad(offsets, center=median_offset, 
+                                        axis=0)
+
+    #Compile into easier to return lists
+    medians = [median_A, median_beta, median_offset]
+    median_mads = [median_A_mad, median_beta_mad, median_offset_mad]
+
+    to_return = {"median_A"       : median_A, 
+                "median_beta"     : median_beta,
+                "median_IC"       : median_offset,
+                "median_A_mad"    : median_A_mad,
+                "median_beta_mad" : median_beta_mad,
+                "median_IC_mad"   : median_offset_mad, 
+                }
+                 
+    if return_boots:
+        to_return["bootstrap_As"] = As
+        to_return["bootstrap_betas"] = betas
+        to_return["bootstrap_ICs"] = offsets
+        to_return["bootstrap_chi2s"] = chi2
+    if return_envelope:
+        env = envelope(As, betas, offsets, theta_range)
+        #theta_grid, median_fit - mads, median_fit, median_fit + mads
+        to_return["envelope_theta_grid"] = env[0]
+        to_return["envelope_lower"] = env[1]
+        to_return["envelope_median"] = env[2]
+        to_return["envelope_upper"] = env[3]            
+    return to_return        
+    
 
 
 #==========================================================================
