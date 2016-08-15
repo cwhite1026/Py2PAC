@@ -1,18 +1,16 @@
 #This is for the power law fitting the right way
 import numpy as np
 import numpy.ma as ma
+from scipy import optimize as opt
+import matplotlib.pyplot as plt
+from copy import deepcopy
 
-# from scipy import optimize as opt
-# from copy import deepcopy
 # import numpy.random as rand
-# import matplotlib.pyplot as plt
 # import cf_useful_things as cu
 # import bias_tools as t
 # import scipy.integrate as intg
 # import scipy.stats as stat
-# import diagnostics as diag
 # import statsmodels.robust as robust
-
 
 
 #==========================================================================
@@ -340,8 +338,10 @@ def minimize_fit_to_cf(thetas, cf, cf_err, fixed_beta=None, offset=True,
         ax=fig.add_subplot(111)
         ax.set_xlabel('theta (deg)')
         ax.set_ylabel('w(theta)')
-        diag.put_cf_and_fit_on_axis(ax, thetas, cf, cf_err, A, beta, 
-                                    IC=offset)
+        ax.errorbar(thetas, cf, yerr=cf_err, fmt='o')
+        theta_grid = np.logspace(np.log10(thetas[0]), np.log10(thetas[-1]), 100)
+        fit_vals = A * theta_grid**(-beta) - offset
+        ax.plot(theta_grid, fit_vals, lw=2, color='r')
         ax.set_xscale('log')
         ax.set_yscale('log')
         handles, labels=ax.get_legend_handles_labels()
@@ -355,7 +355,6 @@ def minimize_fit_to_cf(thetas, cf, cf_err, fixed_beta=None, offset=True,
     #measure
     return A, beta, offset, distance
 
-    
 
 #==========================================================================
 def get_info_from_cf_set(cf_objects, theta_min=0., theta_max=360.,
