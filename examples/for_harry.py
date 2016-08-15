@@ -75,7 +75,7 @@ for i in np.arange(5):
     gp_thetas = tb.ThetaBins.from_centers(gp_dict['theta'])
     this_gp = gp.Gp(gp_dict['G_p'], nrands[i], nchunks[i], thetabins_object=deepcopy(gp_thetas), RR=gp_dict['rr'], creation_string=None)
     
-    cf_dict = read_numtab(cfdir+cat_names[0]+bin_name, lastcomment=True)
+    cf_dict = read_numtab(cfdir+cat_names[i]+bin_name, lastcomment=True)
     this_cf = cfclass.CorrelationFunction(name='cf', cf_type='single_galaxy_boot', ngals=ngals[i], estimator="landy-szalay", verbose=True, gp_object=this_gp)
     this_cf.set_thetas_from_edges(cf_dict['theta'], unit='d')
     #This next line could include the boots as a dictionary passed to

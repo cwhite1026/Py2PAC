@@ -746,6 +746,10 @@ class CorrelationFunction(object):
                 
         thetas, __ = self.get_thetas(unit=theta_unit)
         cf, errs = self.get_cf()
+        print "thetas", thetas
+        print "cf", cf
+        print "errs", errs
+        print len(thetas), len(cf), len(errs)
         ax.errorbar(thetas, cf, yerr = errs, **kwargs)
         
         #If we have a save_to, save the figure
