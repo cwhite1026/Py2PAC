@@ -5,7 +5,14 @@ import numpy as np
 from numpy import ma
 import fitting as fit
 import matplotlib.pyplot as plt
-# import bias_tools as t
+import bias_tools as t
+import miscellaneous as misc
+
+
+r0=6.86952397413   
+gamma=1.6 
+z_center=1.92541925419
+b = t.bias(r0, gamma, z_center)
 
 #============================================================
 #============================================================
@@ -13,13 +20,14 @@ import matplotlib.pyplot as plt
 
 #Pull in the correlation functions
 cfs = []
+file_prefix = "/Users/cathy/code/py2pac/py2pac/CANDELS_files/"
 file_names = ["cosmos.npz", "egs.npz", "goodsn.npz", "goodss.npz", "uds.npz"]
 for fn in file_names:
-    cfs.append(cfclass.CorrelationFunction.from_file(fn))
+    cfs.append(cfclass.CorrelationFunction.from_file(file_prefix+fn))
 cfs = np.array(cfs)
     
 #Plot them   
-plot_file = "cf_set.pdf"
+plot_file = file_prefix+"cf_set.pdf"
 fig= plt.figure()
 ax=fig.add_subplot(111)
 ax.set_xscale('log')
@@ -27,15 +35,28 @@ ax.set_yscale('log')
 ax.set_xlabel("theta (deg)")
 ax.set_ylabel("w(theta)")
 for i in range(5):
-    ax = cfs[i].plot(ax=ax, theta_unit="arcsec", return_axis=True)
+    ax = cfs[i].plot(ax=ax, theta_unit="arcsec", return_axis=True, fmt='o')
 plt.savefig(plot_file, bbox_inches='tight')
 plt.close()
 
-fit_results = fit.bootstrap_fit(cfs, IC_method="offset", 
+method = 'offset'
+fit_results = fit.bootstrap_fit(cfs, IC_method=method, 
                                 n_fit_boots=200, return_envelope=True, 
                                 return_boots=True, fixed_beta=0.6)
+misc.save_pickle(fit_results, file_prefix+method+"_fits.PICKLE")
 
+#------------------------------------------------------------
+# Turn fit into a bias and then a halo mass.
 
+#Get the N(z) function ready
+nz_file = file_prefix+"avg_median.txt"
+nzs = misc.read_scalar_dictionary(nz_file)
+key = "logMstar9_10_z_best1.5_2.5"
+this_nzs = nzs[key]
+nz_func = t.make_Nz_func_from_table(this_nzs)
+
+#Call the function that does all the things
+bias_mhalo_results = t.fit_results_to_halo_mass(fit_results, 2., use_Nz="custom", Nz=nz_func, z_high=10)
 
 #============================================================
 #============================================================

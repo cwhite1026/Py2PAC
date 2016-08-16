@@ -1,6 +1,7 @@
 import numpy as np
 import subprocess
 import os
+import pickle
 
 #--------------------------------------------------------------------------
 #Some constants
@@ -233,3 +234,77 @@ def put_thetas_in_degrees(thetas, unit):
         raise ValueError("You chose an invalid value of unit.")
         
     return thetas
+
+
+#==========================================================================
+#==========================================================================
+#==========================================================================
+
+def save_pickle(obj, filen):
+    with open(filen, 'wb') as f:
+        pickle.dump(obj, f)
+
+#==========================================================================
+#==========================================================================
+#==========================================================================
+
+def load_pickle(filen):
+    with open(filen, 'rb') as f:
+        obj = pickle.load(f)
+    return obj
+    
+    
+#==========================================================================
+#==========================================================================
+#==========================================================================
+
+def read_scalar_dictionary(filename):
+    #read a dictionary that has the format
+    #  # key = str(dic[k])
+
+    try:
+        tabfile=open(filename, 'r')
+    except IOError:
+        print "read_scalar_dictionary says: You fail- I find no file called ", filename
+
+    out_dic={}
+    for line in tabfile:
+        #Take off the return character
+        linetemp=line.rstrip('\n')	
+        #Split the line up
+        bits=linetemp.split()
+        #Grab the key, which is the second element
+        key=bits[1]
+        #The value is the rest of it- it can be a couple things
+        val_strs=bits[3:]
+        #Pull off the array brackets if there are any
+        n_vals=len(val_strs)
+        val_strs[0] = val_strs[0].lstrip('[')
+        val_strs[-1] = val_strs[-1].rstrip(']')
+        #Pull off commas
+        for i, val in enumerate(val_strs):
+            val_strs[i] = val_strs[i].rstrip(',')
+
+        #See if we can make it into a float
+        vals=[]
+        try:
+            if n_vals > 1:
+                for val in val_strs:
+                    vals.append(np.float(val))
+                vals=np.array(vals)
+            else:
+                vals=np.float(val_strs[0])
+        #If not, make it a string
+        except ValueError:
+            vals=''
+            for val in val_strs:
+                vals= vals + val + ' '
+            vals=vals.lstrip().rstrip()
+        
+        #Store
+        out_dic[key] = vals
+
+    #Close the file and return our dictionary
+    tabfile.close()
+    return out_dic
+    
