@@ -1,23 +1,39 @@
 import AngularCatalog_class as ac
 import CorrelationFunction_class as cfclass
 import astropy.io.fits as fits
+import numpy as np
 from numpy import ma
 import fitting as fit
-import bias_tools as t
+import matplotlib.pyplot as plt
+# import bias_tools as t
 
 #============================================================
 #============================================================
 # Fit correlation functions
 
-#Fit the correlation function
+#Pull in the correlation functions
 cfs = []
 file_names = ["cosmos.npz", "egs.npz", "goodsn.npz", "goodss.npz", "uds.npz"]
 for fn in file_names:
     cfs.append(cfclass.CorrelationFunction.from_file(fn))
+cfs = np.array(cfs)
     
+#Plot them   
+plot_file = "cf_set.pdf"
+fig= plt.figure()
+ax=fig.add_subplot(111)
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel("theta (deg)")
+ax.set_ylabel("w(theta)")
+for i in range(5):
+    ax = cfs[i].plot(ax=ax, theta_unit="arcsec", return_axis=True)
+plt.savefig(plot_file, bbox_inches='tight')
+plt.close()
+
 fit_results = fit.bootstrap_fit(cfs, IC_method="offset", 
                                 n_fit_boots=200, return_envelope=True, 
-                                return_boots=True)
+                                return_boots=True, fixed_beta=0.6)
 
 
 
@@ -77,7 +93,7 @@ for i in np.arange(5):
     
     cf_dict = read_numtab(cfdir+cat_names[i]+bin_name, lastcomment=True)
     this_cf = cfclass.CorrelationFunction(name='cf', cf_type='single_galaxy_boot', ngals=ngals[i], estimator="landy-szalay", verbose=True, gp_object=this_gp)
-    this_cf.set_thetas_from_edges(cf_dict['theta'], unit='d')
+    this_cf.set_thetas_from_centers(cf_dict['theta'], unit='d')
     #This next line could include the boots as a dictionary passed to
     # iterations, but I didn't feel it was necessary
     this_cf.set_cf(cf_dict['galaxy_boot_cf'], cf_dict['galaxy_boot_err'])
